@@ -1,0 +1,56 @@
+[
+  {
+    "id": 1,
+    "input": {
+      "x": 121
+    },
+    "expected": true,
+    "is_hidden": false,
+    "explanation": "121 reads as 121 from left to right and from right to left."
+  },
+  {
+    "id": 2,
+    "input": {
+      "x": -121
+    },
+    "expected": false,
+    "is_hidden": false,
+    "explanation": "From left to right, it reads -121. From right to left, it becomes 121-. Therefore it is not a palindrome."
+  },
+  {
+    "id": 3,
+    "input": {
+      "x": 10
+    },
+    "expected": false,
+    "is_hidden": false,
+    "explanation": "Reads 01 from right to left. Therefore it is not a palindrome."
+  },
+  {
+    "id": 4,
+    "input": {
+      "x": 0
+    },
+    "expected": true,
+    "is_hidden": true,
+    "explanation": "Zero is the same read forwards and backwards."
+  },
+  {
+    "id": 5,
+    "input": {
+      "x": 12321
+    },
+    "expected": true,
+    "is_hidden": true,
+    "explanation": "A standard multi-digit odd-length palindrome."
+  },
+  {
+    "id": 6,
+    "input": {
+      "x": 2147483647
+    },
+    "expected": false,
+    "is_hidden": true,
+    "explanation": "Tests the upper limit of a 32-bit signed integer."
+  }
+]
