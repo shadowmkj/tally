@@ -1,7 +1,8 @@
 # id=70 slug=climbing-stairs lang=python3
 
+from typing import List
+
+
 class Solution:
-    def climbStairs(self, n: int) -> int:
-        if n == 0 or n == 1:
-            return 1
-        return self.climbStairs(n-1) + self.climbStairs(n-2)
+    def twoSum(self, nums: List[int], target: int) -> int:
+        return [0, 1]

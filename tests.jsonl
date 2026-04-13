@@ -1,0 +1,38 @@
+[
+  {
+    "id": 1,
+    "input": {
+      "n": 1
+    },
+    "expected": 1,
+    "is_hidden": false,
+    "explanation": "Only one way to climb 1 step: [1]."
+  },
+  {
+    "id": 2,
+    "input": {
+      "n": 2
+    },
+    "expected": 2,
+    "is_hidden": false,
+    "explanation": "Two ways: [1, 1] or [2]."
+  },
+  {
+    "id": 3,
+    "input": {
+      "n": 3
+    },
+    "expected": 3,
+    "is_hidden": false,
+    "explanation": "Three ways: [1, 1, 1], [1, 2], or [2, 1]."
+  },
+  {
+    "id": 4,
+    "input": {
+      "n": 5
+    },
+    "expected": 8,
+    "is_hidden": false,
+    "explanation": "Standard Fibonacci progression: f(1)=1, f(2)=2, f(3)=3, f(4)=5, f(5)=8."
+  }
+]
