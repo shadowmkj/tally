@@ -63,11 +63,17 @@ async fn main() -> Result<(), anyhow::Error> {
 
     // Summary
     let total = results.len();
-    let passed = results.iter().filter(|r| r.verdict == Verdict::Accepted).count();
+    let passed = results
+        .iter()
+        .filter(|r| r.verdict == Verdict::Accepted)
+        .count();
     if passed == total {
         println!("\n🎉 All {} test cases passed!", total);
     } else {
-        println!("\n💥 {}/{} test cases passed. Stopped at first failure.", passed, total);
+        println!(
+            "\n💥 {}/{} test cases passed. Stopped at first failure.",
+            passed, total
+        );
     }
 
     Ok(())
