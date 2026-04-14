@@ -57,8 +57,21 @@ pub struct TestCaseResult {
 }
 
 /// Supported submission languages.
-#[derive(Debug, Clone, clap::ValueEnum, PartialEq, Eq)]
+#[derive(Debug, Clone, clap::ValueEnum, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum Language {
+    #[serde(alias = "python3", alias = "python")]
     Python,
+    #[serde(alias = "java")]
     Java,
+}
+
+/// Incoming job payload from Redis queue.
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct Job {
+    pub problem_id: i32,
+    pub problem_slug: String,
+    pub language: Language,
+    pub method_name: String,
+    pub code: String,
 }

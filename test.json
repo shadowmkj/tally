@@ -1,0 +1,7 @@
+{
+    "problem_id": 1,
+    "problem_slug": "two-sum",
+    "language": "python3",
+    "method_name": "twoSum",
+    "code": "# id=70 slug=climbing-stairs lang=python3 \nfrom typing import List \nclass Solution: \n    def twoSum(self, nums: List[int], target: int) -> int: \n        seen = {} \n        for i, num in enumerate(nums): \n            complement = target - num \n            if complement in seen: \n                return [seen[complement], i] \n            seen[num] = i \n        return [] "
+}
