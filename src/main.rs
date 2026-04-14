@@ -2,7 +2,7 @@ use std::fs;
 
 use bollard::{API_DEFAULT_VERSION, Docker};
 use clap::Parser;
-use crust::models::{Language, TestCase};
+use crust::models::{Language, TestCase, Verdict};
 use crust::runner;
 
 #[derive(Parser, Debug)]
@@ -37,29 +37,37 @@ async fn main() -> Result<(), anyhow::Error> {
     println!("Successfully connected to Docker daemon.");
 
     // Read the user's solution source code
-    let solution_code = std::fs::read_to_string(&cli.code)
+    let solution_code = fs::read_to_string(&cli.code)
         .map_err(|e| anyhow::anyhow!("Failed to read solution file '{}': {}", cli.code, e))?;
     let solution_code = prepare_solution_file(&solution_code, &cli.language);
+
     // Read test cases from JSON file
     let tests_path = std::path::Path::new("code_tests");
     let tests_file = tests_path.join(&cli.tests);
-    let test_cases: Vec<TestCase> = serde_json::from_reader(std::fs::File::open(tests_file)?)?;
+    let test_cases: Vec<TestCase> = serde_json::from_reader(fs::File::open(tests_file)?)?;
 
-    // Run the execution pipeline
-    for test_case in test_cases {
-        println!("Executing Test Case ID: {}", test_case.id);
-        match runner::execute_submission(
-            &docker,
-            test_case,
-            &cli.language,
-            &cli.method_name,
-            &solution_code,
-        )
-        .await
-        {
-            Ok(verdict) => println!("{}", verdict),
-            Err(e) => eprintln!("Error executing test case: {}", e),
-        }
+    // Run all test cases in a single container
+    let results = runner::run_all(
+        &docker,
+        test_cases,
+        &cli.language,
+        &cli.method_name,
+        &solution_code,
+    )
+    .await?;
+
+    // Print results
+    for result in &results {
+        println!("Test Case {}: {}", result.id, result.verdict);
+    }
+
+    // Summary
+    let total = results.len();
+    let passed = results.iter().filter(|r| r.verdict == Verdict::Accepted).count();
+    if passed == total {
+        println!("\n🎉 All {} test cases passed!", total);
+    } else {
+        println!("\n💥 {}/{} test cases passed. Stopped at first failure.", passed, total);
     }
 
     Ok(())

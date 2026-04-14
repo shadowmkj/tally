@@ -29,6 +29,8 @@ pub enum Verdict {
     WrongAnswer { expected: Value, got: Value },
     /// Solution crashed at runtime (e.g. ZeroDivisionError, IndexError).
     RuntimeError(String),
+    /// Solution execution took too long (infinite loop or inefficient algorithm).
+    TimeLimitExceeded,
     /// Container produced no parseable stdout (driver crash, timeout, etc.).
     NoOutput,
 }
@@ -41,9 +43,17 @@ impl fmt::Display for Verdict {
                 write!(f, "❌ WRONG ANSWER (WA) — expected {expected}, got {got}")
             }
             Verdict::RuntimeError(msg) => write!(f, "❌ RUNTIME ERROR (RE) — {msg}"),
+            Verdict::TimeLimitExceeded => write!(f, "⏱️ TIME LIMIT EXCEEDED (TLE)"),
             Verdict::NoOutput => write!(f, "❌ NO OUTPUT"),
         }
     }
+}
+
+/// The result of judging a single test case.
+#[derive(Debug, Clone)]
+pub struct TestCaseResult {
+    pub id: i32,
+    pub verdict: Verdict,
 }
 
 /// Supported submission languages.

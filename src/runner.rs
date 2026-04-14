@@ -1,3 +1,4 @@
+use anyhow::Result;
 use bollard::Docker;
 use bollard::container::{
     AttachContainerOptions, AttachContainerResults, Config, CreateContainerOptions,
@@ -10,7 +11,7 @@ use std::path::{Path, PathBuf};
 use tokio::io::AsyncWriteExt;
 
 use crate::judger;
-use crate::models::{DriverResponse, Language, TestCase, Verdict};
+use crate::models::{DriverResponse, Language, TestCase, TestCaseResult, Verdict};
 
 /// Returns the root directory of the crate (where Cargo.toml lives).
 fn crate_root() -> PathBuf {
@@ -22,10 +23,7 @@ fn crate_root() -> PathBuf {
 ///   - The user's solution code written as the appropriate solution file
 ///
 /// Returns the `TempDir` handle — dropping it cleans up the directory.
-fn prepare_workspace(
-    language: &Language,
-    solution_code: &str,
-) -> Result<tempfile::TempDir, Box<dyn std::error::Error>> {
+fn prepare_workspace(language: &Language, solution_code: &str) -> Result<tempfile::TempDir> {
     let dir = tempfile::tempdir()?;
     let root = crate_root();
 
@@ -68,18 +66,26 @@ fn prepare_workspace(
     Ok(dir)
 }
 
-/// Run a single test case inside a Docker container and return the judging verdict.
+/// Run ALL test cases inside a single Docker container and return results.
 ///
-/// `solution_code` — the raw source code of the user's solution.
-/// A temporary workspace is created with the driver + this code, mounted
-/// into the container, and cleaned up automatically after execution.
-pub async fn execute_submission(
+/// The driver reads test inputs line-by-line from stdin and writes one JSON
+/// response per line to stdout. We send all inputs at once, then read
+/// responses in order, judging each against the expected output.
+///
+/// Execution stops early on the first non-Accepted verdict. The returned
+/// vector contains results up to and including that failure (or all results
+/// if every test case passes).
+pub async fn run_all(
     docker: &Docker,
-    test_case: TestCase,
+    test_cases: Vec<TestCase>,
     language: &Language,
     method_name: &str,
     solution_code: &str,
-) -> Result<Verdict, Box<dyn std::error::Error>> {
+) -> Result<Vec<TestCaseResult>> {
+    if test_cases.is_empty() {
+        return Ok(vec![]);
+    }
+
     // 1. Build a temp workspace with driver + user solution
     let workspace = prepare_workspace(language, solution_code)?;
     let workspace_path = workspace.path().to_string_lossy().into_owned();
@@ -95,9 +101,6 @@ pub async fn execute_submission(
             ("python:3.9-slim", cmd)
         }
         Language::Java => {
-            // Java needs two steps: compile (javac) then run (java).
-            // The workspace is mounted read-only at /app, so we copy
-            // sources to a writable /work directory, compile there, then run.
             let shell_cmd = format!(
                 "mkdir -p /work && \
                  cp /app/*.java /work/ && cp -r /app/lib /work/ && \
@@ -130,8 +133,8 @@ pub async fn execute_submission(
         attach_stdin: Some(true),
         attach_stdout: Some(true),
         attach_stderr: Some(true),
-        open_stdin: Some(true),    // Keep stdin open so we can pipe to it
-        stdin_once: Some(true),    // Close stdin after the first attach disconnects (signals EOF)
+        open_stdin: Some(true), // Keep stdin open so we can pipe to it
+        stdin_once: Some(true), // Close stdin after the first attach disconnects (signals EOF)
         ..Default::default()
     };
 
@@ -142,8 +145,6 @@ pub async fn execute_submission(
     let container_id = container.id;
 
     // 5. Attach to the Container's IO Streams BEFORE starting.
-    // This avoids a race condition where the container produces output
-    // before our attach request is processed, causing us to miss it.
     let AttachContainerResults { mut output, input } = docker
         .attach_container(
             &container_id,
@@ -162,47 +163,103 @@ pub async fn execute_submission(
         .start_container(&container_id, None::<StartContainerOptions<String>>)
         .await?;
 
-    // 7. Pipe the JSON input into the container via a spawned task.
-    // We must write stdin and read stdout concurrently to avoid deadlocks.
-    // Dropping `input` after writing signals EOF to the container's stdin,
-    // which lets the driver's `for line in sys.stdin` loop terminate.
-    let input_payload = serde_json::to_string(&test_case.input)? + "\n";
+    // 7. Send ALL test case inputs at once (one JSON line per test case),
+    //    then close stdin so the driver knows there's no more input.
+    let mut payload = String::new();
+    for tc in &test_cases {
+        payload.push_str(&serde_json::to_string(&tc.input)?);
+        payload.push('\n');
+    }
 
     tokio::spawn(async move {
         let mut input = input;
-        if let Err(e) = input.write_all(input_payload.as_bytes()).await {
+        if let Err(e) = input.write_all(payload.as_bytes()).await {
             eprintln!("stdin write error: {:#?}", e);
         }
         if let Err(e) = input.shutdown().await {
             eprintln!("stdin shutdown error: {:#?}", e);
         }
-        // `input` is dropped here, closing the container's stdin pipe.
     });
 
-    // 8. Read the Results from stdout and judge
-    let mut verdict = Verdict::NoOutput;
+    // 8. Read responses from stdout and judge each against the corresponding test case.
+    //    The driver outputs one JSON line per input, in the same order.
+    let mut results: Vec<TestCaseResult> = Vec::with_capacity(test_cases.len());
+    let mut tc_iter = test_cases.iter();
+    let mut failed = false;
 
-    while let Some(res) = output.next().await {
-        if let Ok(log_output) = res {
-            match log_output {
-                bollard::container::LogOutput::StdOut { message } => {
-                    let stdout_str = String::from_utf8_lossy(&message);
-                    println!("Raw Container Output: {}", stdout_str);
+    let timeout_duration = std::time::Duration::from_secs(8);
+    let mut is_tle = false;
 
-                    if let Ok(driver_res) = serde_json::from_str::<DriverResponse>(&stdout_str) {
-                        verdict = judger::judge(&driver_res, &test_case.expected);
+    loop {
+        match tokio::time::timeout(timeout_duration, output.next()).await {
+            Ok(Some(res)) => {
+                if let Ok(log_output) = res {
+                    match log_output {
+                        bollard::container::LogOutput::StdOut { message } => {
+                            let stdout_str = String::from_utf8_lossy(&message);
+
+                            // stdout may contain multiple lines in a single chunk
+                            for line in stdout_str.lines() {
+                                let line = line.trim();
+                                if line.is_empty() {
+                                    continue;
+                                }
+
+                                if let Ok(driver_res) = serde_json::from_str::<DriverResponse>(line)
+                                {
+                                    if let Some(tc) = tc_iter.next() {
+                                        let verdict = judger::judge(&driver_res, &tc.expected);
+                                        let is_failure = verdict != Verdict::Accepted;
+
+                                        results.push(TestCaseResult { id: tc.id, verdict });
+
+                                        if is_failure {
+                                            failed = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+
+                            if failed {
+                                break;
+                            }
+                        }
+                        bollard::container::LogOutput::StdErr { message } => {
+                            let stderr_str = String::from_utf8_lossy(&message);
+                            eprintln!("System Error Output: {}", stderr_str);
+                        }
+                        _ => {}
                     }
                 }
-                bollard::container::LogOutput::StdErr { message } => {
-                    let stderr_str = String::from_utf8_lossy(&message);
-                    eprintln!("System Error Output: {}", stderr_str);
-                }
-                _ => {}
+            }
+            Ok(None) => {
+                // Stream ended normally
+                break;
+            }
+            Err(_) => {
+                // Timeout elapsed!
+                is_tle = true;
+                break;
             }
         }
     }
 
-    // 9. Cleanup: Destroy the container immediately after execution.
+    // If we got fewer responses than test cases (e.g., driver crashed mid-run or TLE),
+    // mark the next unprocessed test case appropriately.
+    if !failed {
+        if let Some(tc) = tc_iter.next() {
+            let verdict = if is_tle {
+                Verdict::TimeLimitExceeded
+            } else {
+                Verdict::NoOutput
+            };
+
+            results.push(TestCaseResult { id: tc.id, verdict });
+        }
+    }
+
+    // 9. Cleanup: Destroy the container immediately.
     docker
         .remove_container(
             &container_id,
@@ -216,5 +273,5 @@ pub async fn execute_submission(
     // workspace (TempDir) is dropped here, cleaning up the temp directory.
     println!("Container {} finished.", &container_id[..12]);
 
-    Ok(verdict)
+    Ok(results)
 }
