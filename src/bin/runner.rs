@@ -21,12 +21,16 @@ struct Cli {
     #[arg(short, long, required_unless_present = "listen_queue")]
     code: Option<String>,
 
+    /// Optional type schema for languages like C (e.g. "[i],i:[i]")
+    #[arg(long)]
+    type_schema: Option<String>,
+
     /// Path to the JSON file containing test cases.
     #[arg(short, long, default_value = "two_sum.jsonl")]
     tests: String,
 
     /// Docker socket path.
-    #[arg(long, default_value = "unix:///Users/milan/.docker/run/docker.sock")]
+    #[arg(long, default_value = "unix:///var/run/docker.sock")]
     docker_socket: String,
 
     /// Redis URL to connect to.
@@ -96,6 +100,7 @@ async fn main() -> Result<(), anyhow::Error> {
                                 test_cases,
                                 &job.language,
                                 &job.method_name,
+                                job.type_schema.as_deref(),
                                 &solution_code,
                             )
                             .await
@@ -156,6 +161,7 @@ async fn main() -> Result<(), anyhow::Error> {
             test_cases,
             &language,
             &cli.method_name,
+            cli.type_schema.as_deref(),
             &solution_code,
         )
         .await?;
@@ -200,6 +206,9 @@ import itertools
             "\
 import java.util.*;
         "
+        }
+        Language::C => {
+            "#include <stdlib.h>\n#include <string.h>\n#include <stdio.h>\n#include <stdbool.h>\n"
         }
     };
     format!("{}{}", prelude, user_code)

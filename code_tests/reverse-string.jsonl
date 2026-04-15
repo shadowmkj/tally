@@ -1,0 +1,56 @@
+[
+  {
+    "id": 1,
+    "input": {
+      "s": "hello"
+    },
+    "expected": "olleh",
+    "is_hidden": false,
+    "explanation": "Standard lowercase string: 'h' moves to the end, 'o' moves to the front."
+  },
+  {
+    "id": 2,
+    "input": {
+      "s": "Algo"
+    },
+    "expected": "oglA",
+    "is_hidden": false,
+    "explanation": "Case sensitivity is maintained; the capital 'A' moves to the final position."
+  },
+  {
+    "id": 3,
+    "input": {
+      "s": "racecar"
+    },
+    "expected": "racecar",
+    "is_hidden": false,
+    "explanation": "A palindrome reads the same forwards and backwards."
+  },
+  {
+    "id": 4,
+    "input": {
+      "s": "123 !@#"
+    },
+    "expected": "#@! 321",
+    "is_hidden": false,
+    "explanation": "Includes numbers, spaces, and special characters which must all be reversed."
+  },
+  {
+    "id": 5,
+    "input": {
+      "s": ""
+    },
+    "expected": "",
+    "is_hidden": true,
+    "explanation": "An empty string reversed is still an empty string."
+  },
+  {
+    "id": 6,
+    "input": {
+      "s": "A"
+    },
+    "expected": "A",
+    "is_hidden": true,
+    "explanation": "A single character string remains unchanged."
+  }
+]

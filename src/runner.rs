@@ -61,6 +61,15 @@ fn prepare_workspace(language: &Language, solution_code: &str) -> Result<tempfil
             let mut f = std::fs::File::create(dir.path().join("Solution.java"))?;
             f.write_all(solution_code.as_bytes())?;
         }
+        Language::C => {
+            let c_driver_dir = root.join("src/c_driver");
+            std::fs::copy(c_driver_dir.join("driver.c"), dir.path().join("driver.c"))?;
+            std::fs::copy(c_driver_dir.join("cJSON.c"), dir.path().join("cJSON.c"))?;
+            std::fs::copy(c_driver_dir.join("cJSON.h"), dir.path().join("cJSON.h"))?;
+
+            let mut f = std::fs::File::create(dir.path().join("solution.c"))?;
+            f.write_all(solution_code.as_bytes())?;
+        }
     }
 
     Ok(dir)
@@ -80,6 +89,7 @@ pub async fn run_all(
     test_cases: Vec<TestCase>,
     language: &Language,
     method_name: &str,
+    type_schema: Option<&str>,
     solution_code: &str,
 ) -> Result<Vec<TestCaseResult>> {
     if test_cases.is_empty() {
@@ -111,6 +121,20 @@ pub async fn run_all(
             );
             let cmd = vec!["sh".to_string(), "-c".to_string(), shell_cmd];
             ("openjdk:27-ea-slim", cmd)
+        }
+        Language::C => {
+            let default_schema = "[i],i:[i]";
+            let schema = type_schema.unwrap_or(default_schema);
+            let shell_cmd = format!(
+                "mkdir -p /work && \
+                 cp /app/* /work/ && cd /work && \
+                 gcc -shared -fPIC -o solution.so solution.c && \
+                 gcc -o driver driver.c cJSON.c -ldl -lffi && \
+                 ./driver {} '{}'",
+                method_name, schema
+            );
+            let cmd = vec!["sh".to_string(), "-c".to_string(), shell_cmd];
+            ("buildpack-deps:bookworm", cmd)
         }
     };
 

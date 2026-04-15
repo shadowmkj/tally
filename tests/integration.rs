@@ -3,7 +3,7 @@ use crust::models::{Language, TestCase, Verdict};
 use crust::runner::run_all;
 use serde_json::json;
 
-const DOCKER_SOCKET: &str = "unix:///Users/milan/.docker/run/docker.sock";
+const DOCKER_SOCKET: &str = "unix:///var/run/docker.sock";
 
 fn docker() -> Docker {
     Docker::connect_with_unix(DOCKER_SOCKET, 120, API_DEFAULT_VERSION)
@@ -43,13 +43,25 @@ class Solution:
         make_test_case(3, json!({"n": 5}), json!(8)),
     ];
 
-    let results = run_all(&docker(), cases, &Language::Python, "climbStairs", code)
-        .await
-        .expect("run_all failed");
+    let results = run_all(
+        &docker(),
+        cases,
+        &Language::Python,
+        "climbStairs",
+        None,
+        code,
+    )
+    .await
+    .expect("run_all failed");
 
     assert_eq!(results.len(), 3, "Should have results for all 3 test cases");
     for r in &results {
-        assert_eq!(r.verdict, Verdict::Accepted, "Test case {} should be AC", r.id);
+        assert_eq!(
+            r.verdict,
+            Verdict::Accepted,
+            "Test case {} should be AC",
+            r.id
+        );
     }
 }
 
@@ -68,9 +80,16 @@ class Solution:
         make_test_case(3, json!({"n": 1}), json!(1)),
     ];
 
-    let results = run_all(&docker(), cases, &Language::Python, "climbStairs", code)
-        .await
-        .expect("run_all failed");
+    let results = run_all(
+        &docker(),
+        cases,
+        &Language::Python,
+        "climbStairs",
+        None,
+        code,
+    )
+    .await
+    .expect("run_all failed");
 
     // Should stop after the first failure
     assert_eq!(results.len(), 1, "Should stop after first WA");
@@ -96,14 +115,25 @@ class Solution:
         make_test_case(2, json!({"n": 2}), json!(2)),
     ];
 
-    let results = run_all(&docker(), cases, &Language::Python, "climbStairs", code)
-        .await
-        .expect("run_all failed");
+    let results = run_all(
+        &docker(),
+        cases,
+        &Language::Python,
+        "climbStairs",
+        None,
+        code,
+    )
+    .await
+    .expect("run_all failed");
 
     assert_eq!(results.len(), 1, "Should stop after first RE");
     match &results[0].verdict {
         Verdict::RuntimeError(msg) => {
-            assert!(msg.contains("boom"), "Error should contain 'boom', got: {}", msg);
+            assert!(
+                msg.contains("boom"),
+                "Error should contain 'boom', got: {}",
+                msg
+            );
         }
         other => panic!("Expected RuntimeError, got {:?}", other),
     }
@@ -121,15 +151,22 @@ class Solution:
 "#;
 
     let cases = vec![
-        make_test_case(1, json!({"n": 1}), json!(1)),   // n=1, expected 1 → AC (returns 1)
-        make_test_case(2, json!({"n": 2}), json!(2)),   // n=2, expected 2 → AC (returns 2)
-        make_test_case(3, json!({"n": 5}), json!(8)),   // n=5, expected 8 → WA (returns 5)
+        make_test_case(1, json!({"n": 1}), json!(1)), // n=1, expected 1 → AC (returns 1)
+        make_test_case(2, json!({"n": 2}), json!(2)), // n=2, expected 2 → AC (returns 2)
+        make_test_case(3, json!({"n": 5}), json!(8)), // n=5, expected 8 → WA (returns 5)
         make_test_case(4, json!({"n": 10}), json!(89)), // should not be reached
     ];
 
-    let results = run_all(&docker(), cases, &Language::Python, "climbStairs", code)
-        .await
-        .expect("run_all failed");
+    let results = run_all(
+        &docker(),
+        cases,
+        &Language::Python,
+        "climbStairs",
+        None,
+        code,
+    )
+    .await
+    .expect("run_all failed");
 
     assert_eq!(results.len(), 3, "2 AC + 1 WA, then stop");
     assert_eq!(results[0].verdict, Verdict::Accepted);
@@ -153,16 +190,27 @@ class Solution:
 
     let cases = vec![make_test_case(1, json!({"n": 1}), json!(1))];
 
-    let results = run_all(&docker(), cases, &Language::Python, "climbStairs", code)
-        .await
-        .expect("run_all failed");
+    let results = run_all(
+        &docker(),
+        cases,
+        &Language::Python,
+        "climbStairs",
+        None,
+        code,
+    )
+    .await
+    .expect("run_all failed");
 
     // The driver exits with an error before processing any input,
     // so no stdout response is produced → NoOutput.
     assert_eq!(results.len(), 1);
     match &results[0].verdict {
         Verdict::RuntimeError(msg) => {
-            assert!(msg.contains("not found"), "Should mention not found, got: {}", msg);
+            assert!(
+                msg.contains("not found"),
+                "Should mention not found, got: {}",
+                msg
+            );
         }
         Verdict::NoOutput => {} // also acceptable — driver exits before reading stdin
         other => panic!("Expected RuntimeError or NoOutput, got {:?}", other),
@@ -177,11 +225,21 @@ class Solution:
         return 1
 "#;
 
-    let results = run_all(&docker(), vec![], &Language::Python, "climbStairs", code)
-        .await
-        .expect("run_all failed");
+    let results = run_all(
+        &docker(),
+        vec![],
+        &Language::Python,
+        "climbStairs",
+        None,
+        code,
+    )
+    .await
+    .expect("run_all failed");
 
-    assert!(results.is_empty(), "No test cases should produce no results");
+    assert!(
+        results.is_empty(),
+        "No test cases should produce no results"
+    );
 }
 
 #[tokio::test]
@@ -196,9 +254,16 @@ class Solution:
 
     let cases = vec![make_test_case(1, json!({"n": 1}), json!(1))];
 
-    let results = run_all(&docker(), cases, &Language::Python, "climbStairs", code)
-        .await
-        .expect("run_all failed");
+    let results = run_all(
+        &docker(),
+        cases,
+        &Language::Python,
+        "climbStairs",
+        None,
+        code,
+    )
+    .await
+    .expect("run_all failed");
 
     assert_eq!(results.len(), 1, "Should time out and stop");
     assert_eq!(

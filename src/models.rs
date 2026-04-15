@@ -64,6 +64,8 @@ pub enum Language {
     Python,
     #[serde(alias = "java")]
     Java,
+    #[serde(alias = "c")]
+    C,
 }
 
 /// Incoming job payload from Redis queue.
@@ -73,5 +75,6 @@ pub struct Job {
     pub problem_slug: String,
     pub language: Language,
     pub method_name: String,
+    pub type_schema: Option<String>,
     pub code: String,
 }

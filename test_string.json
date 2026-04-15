@@ -1,0 +1,11 @@
+{
+    "problem_id": 3,
+    "problem_slug": "reverse-string",
+    "language": "c",
+    "method_name": "reverseString",
+    "type_schema": "s:s",
+    "code": "#include <stdlib.h>\n#include <string.h>\n\nchar *reverseString(char *s) {\n  int i = 0;\n  int j = strlen(s) - 1;\n  char *result = (char *)malloc(sizeof(char) * (strlen(s) + 1));\n  while (i < j) {\n    char temp = s[i];\n    s[i] = s[j];\n    s[j] = temp;\n    i++;\n    j--;\n  }\n  strcpy(result, s);\n  return result;\n}\n"
+}
+
+
+
