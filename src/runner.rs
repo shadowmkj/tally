@@ -23,7 +23,7 @@ fn crate_root() -> PathBuf {
 ///   - The user's solution code written as the appropriate solution file
 ///
 /// Returns the `TempDir` handle — dropping it cleans up the directory.
-fn prepare_workspace(language: &Language, solution_code: &str) -> Result<tempfile::TempDir> {
+fn prepare_workspace(language: &Language, solution_code: &str, method_name: &str, type_schema: Option<&str>) -> Result<tempfile::TempDir> {
     let dir = tempfile::tempdir()?;
     let root = crate_root();
 
@@ -70,6 +70,17 @@ fn prepare_workspace(language: &Language, solution_code: &str) -> Result<tempfil
             let mut f = std::fs::File::create(dir.path().join("solution.c"))?;
             f.write_all(solution_code.as_bytes())?;
         }
+        Language::Cpp => {
+            let cpp_driver_dir = root.join("src/cpp_driver");
+            std::fs::copy(cpp_driver_dir.join("json.hpp"), dir.path().join("json.hpp"))?;
+
+            let mut f = std::fs::File::create(dir.path().join("solution.cpp"))?;
+            f.write_all(solution_code.as_bytes())?;
+
+            let driver_code = generate_cpp_driver(method_name, type_schema.unwrap_or(""));
+            let mut f_d = std::fs::File::create(dir.path().join("driver.cpp"))?;
+            f_d.write_all(driver_code.as_bytes())?;
+        }
     }
 
     Ok(dir)
@@ -97,7 +108,7 @@ pub async fn run_all(
     }
 
     // 1. Build a temp workspace with driver + user solution
-    let workspace = prepare_workspace(language, solution_code)?;
+    let workspace = prepare_workspace(language, solution_code, method_name, type_schema)?;
     let workspace_path = workspace.path().to_string_lossy().into_owned();
 
     // 2. Resolve language-specific image and command
@@ -136,14 +147,23 @@ pub async fn run_all(
             let cmd = vec!["sh".to_string(), "-c".to_string(), shell_cmd];
             ("buildpack-deps:bookworm", cmd)
         }
+        Language::Cpp => {
+            let shell_cmd = "mkdir -p /work && \
+                             cp /app/* /work/ && cd /work && \
+                             g++ -O0 -std=c++20 -o driver driver.cpp && \
+                             ./driver"
+                .to_string();
+            let cmd = vec!["sh".to_string(), "-c".to_string(), shell_cmd];
+            ("buildpack-deps:bookworm", cmd)
+        }
     };
 
     let bind = format!("{}:/app:ro", workspace_path);
 
     // 3. Configure the Container (Strict Security Limits!)
     let host_config = HostConfig {
-        memory: Some(256 * 1024 * 1024),          // 256 MB RAM limit
-        memory_swap: Some(256 * 1024 * 1024),     // Disable swap
+        memory: Some(512 * 1024 * 1024),          // 512 MB RAM limit
+        memory_swap: Some(512 * 1024 * 1024),     // Disable swap
         network_mode: Some(String::from("none")), // NO INTERNET ACCESS
         binds: Some(vec![bind]),                  // Mount workspace as read-only
         ..Default::default()
@@ -211,7 +231,7 @@ pub async fn run_all(
     let mut tc_iter = test_cases.iter();
     let mut failed = false;
 
-    let timeout_duration = std::time::Duration::from_secs(8);
+    let timeout_duration = std::time::Duration::from_secs(30);
     let mut is_tle = false;
 
     loop {
@@ -298,4 +318,78 @@ pub async fn run_all(
     println!("Container {} finished.", &container_id[..12]);
 
     Ok(results)
+}
+
+fn generate_cpp_driver(method_name: &str, type_schema: &str) -> String {
+    let parts: Vec<&str> = type_schema.split(':').collect();
+    let in_schema = parts.first().copied().unwrap_or("");
+    let ret_schema = parts.get(1).copied().unwrap_or("v");
+
+    let in_tokens: Vec<&str> = if in_schema.is_empty() {
+        vec![]
+    } else {
+        in_schema.split(',').collect()
+    };
+
+    let mut args_decl = String::new();
+    let mut args_list = String::new();
+
+    for (i, tok) in in_tokens.iter().enumerate() {
+        let cpp_type = match *tok {
+            "i" | "b" => "int",
+            "d" => "double",
+            "s" => "std::string",
+            "[i]" => "std::vector<int>",
+            "[s]" => "std::vector<std::string>",
+            "[d]" => "std::vector<double>",
+            _ => "int",
+        };
+
+        args_decl.push_str(&format!("                auto arg{} = curr.value().get<{}>();\n                curr++;\n", i, cpp_type));
+        if i > 0 { args_list.push_str(", "); }
+        args_list.push_str(&format!("arg{}", i));
+    }
+
+    let call_stmt = if ret_schema == "v" {
+        format!("                sol.{}({});\n                resp[\"result\"] = nullptr;\n", method_name, args_list)
+    } else {
+        format!("                auto result = sol.{}({});\n                resp[\"result\"] = result;\n", method_name, args_list)
+    };
+
+    format!(r#"
+#include <iostream>
+#include <string>
+#include <vector>
+#include "json.hpp"
+#include "solution.cpp"
+
+using json = nlohmann::ordered_json;
+
+void print_error(const std::string& msg) {{
+    json resp;
+    resp["success"] = false;
+    resp["error"] = msg;
+    std::cout << resp.dump() << std::endl;
+}}
+
+int main() {{
+    std::string line;
+    while (std::getline(std::cin, line)) {{
+        if (line.empty()) continue;
+        try {{
+            json root = json::parse(line);
+            Solution sol;
+            auto curr = root.begin();
+{args_decl}
+            json resp;
+            resp["success"] = true;
+{call_stmt}
+            std::cout << resp.dump() << std::endl;
+        }} catch(const std::exception& e) {{
+            print_error(e.what());
+        }}
+    }}
+    return 0;
+}}
+"#, args_decl=args_decl, call_stmt=call_stmt)
 }

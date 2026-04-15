@@ -210,6 +210,9 @@ import java.util.*;
         Language::C => {
             "#include <stdlib.h>\n#include <string.h>\n#include <stdio.h>\n#include <stdbool.h>\n"
         }
+        Language::Cpp => {
+            "#include <iostream>\n#include <vector>\n#include <string>\n#include <unordered_map>\n#include <unordered_set>\n#include <algorithm>\n#include <queue>\n#include <stack>\nusing namespace std;\n"
+        }
     };
     format!("{}{}", prelude, user_code)
 }

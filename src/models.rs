@@ -66,6 +66,8 @@ pub enum Language {
     Java,
     #[serde(alias = "c")]
     C,
+    #[serde(alias = "cpp", alias = "c++")]
+    Cpp,
 }
 
 /// Incoming job payload from Redis queue.
