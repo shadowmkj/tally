@@ -1,0 +1,6 @@
+{
+  "name": "Wecode GCEK Platform",
+  "description": "LeetCode-style coding competition platform with 6-digit access code entry, live problem IDE dashboard, real-time leaderboard, and admin management portal.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
