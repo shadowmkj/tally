@@ -2,8 +2,8 @@ use std::fs::read_to_string;
 
 use anyhow::Result;
 use clap::Parser;
-use crust::models::Job;
 use redis::TypedCommands;
+use tally::models::Job;
 
 #[derive(Parser)]
 struct Cli {

@@ -3,10 +3,10 @@ use std::ops::Sub;
 
 use bollard::{API_DEFAULT_VERSION, Docker};
 use clap::Parser;
-use crust::models::{Job, Language, SubmissionResult, TestCase, Verdict};
-use crust::runner;
 use redis::AsyncCommands;
 use serde::{Deserialize, Serialize};
+use tally::models::{Job, Language, SubmissionResult, TestCase, Verdict};
+use tally::runner;
 
 #[derive(Parser, Debug)]
 #[command(version, about)]

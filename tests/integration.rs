@@ -1,7 +1,7 @@
 use bollard::{API_DEFAULT_VERSION, Docker};
-use crust::models::{Language, TestCase, Verdict};
-use crust::runner::run_all;
 use serde_json::json;
+use tally::models::{Language, TestCase, Verdict};
+use tally::runner::run_all;
 
 const DOCKER_SOCKET: &str = "unix:///var/run/docker.sock";
 
