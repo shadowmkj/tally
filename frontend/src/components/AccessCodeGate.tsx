@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { KeyRound, ShieldCheck, Sparkles, ArrowRight } from 'lucide-react';
-import { Competition, UserSession } from '@/types';
+import type { Competition, UserSession } from '@/context/CompetitionContext';
 
 interface AccessCodeGateProps {
   competitions: Competition[];

@@ -10,7 +10,7 @@ import {
   Minus,
   Flame
 } from 'lucide-react';
-import { Competition, Participant } from '@/types';
+import type { Competition, Participant } from '@/context/CompetitionContext';
 
 interface LeaderboardProps {
   competition: Competition;

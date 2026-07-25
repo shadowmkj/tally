@@ -12,7 +12,7 @@ import {
   ArrowRight, 
   Trophy
 } from 'lucide-react';
-import { Problem, Competition, SolvedProblemStatus } from '@/types';
+import type { Problem, Competition, SolvedProblemStatus } from '@/context/CompetitionContext';
 
 interface ProblemListProps {
   competition: Competition;
@@ -45,7 +45,8 @@ export const ProblemList: React.FC<ProblemListProps> = ({
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       const matchTitle = p.title.toLowerCase().includes(q);
-      const matchTag = p.tags.some(t => t.toLowerCase().includes(q));
+      const tagsArr = Array.isArray(p.tags) ? p.tags : [];
+      const matchTag = tagsArr.some((t: string) => t.toLowerCase().includes(q));
       if (!matchTitle && !matchTag) return false;
     }
 
@@ -229,7 +230,7 @@ export const ProblemList: React.FC<ProblemListProps> = ({
                       {/* Tags */}
                       <td className="py-4 px-4 hidden md:table-cell">
                         <div className="flex flex-wrap gap-1.5">
-                          {p.tags.map((tag) => (
+                          {(Array.isArray(p.tags) ? p.tags : []).map((tag: string) => (
                             <span
                               key={tag}
                               className="px-2 py-0.5 rounded bg-zinc-950 text-[10px] text-zinc-400 font-mono border border-zinc-800"

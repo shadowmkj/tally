@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Megaphone, Pin, Clock } from 'lucide-react';
-import { Announcement } from '@/types';
+import type { Announcement } from '@/context/CompetitionContext';
 
 interface AnnouncementsModalProps {
   announcements: Announcement[];

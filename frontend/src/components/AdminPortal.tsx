@@ -16,7 +16,7 @@ import {
   PlusCircle,
   LogOut
 } from 'lucide-react';
-import { Competition, Problem, Difficulty } from '@/types';
+import type { Competition, Problem, Difficulty } from '@/context/CompetitionContext';
 import { authClient } from '@/lib/auth-client';
 
 interface AdminPortalProps {

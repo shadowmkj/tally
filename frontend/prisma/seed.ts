@@ -1,5 +1,6 @@
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../src/app/generated/prisma/client';
+// @ts-ignore
 import { INITIAL_COMPETITIONS, INITIAL_PARTICIPANTS, INITIAL_SUBMISSIONS } from '../src/data/initialCompetitions';
 
 const dbUrl = process.env.DATABASE_URL || 'file:./dev.db';
