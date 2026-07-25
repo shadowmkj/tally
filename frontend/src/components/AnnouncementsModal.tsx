@@ -1,6 +1,8 @@
+'use client';
+
 import React from 'react';
-import { Bell, Megaphone, Check, Pin, Clock } from 'lucide-react';
-import { Announcement } from '../types';
+import { Megaphone, Pin, Clock } from 'lucide-react';
+import { Announcement } from '@/types';
 
 interface AnnouncementsModalProps {
   announcements: Announcement[];

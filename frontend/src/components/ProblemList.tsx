@@ -1,33 +1,31 @@
+'use client';
+
 import React, { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { 
   CheckCircle2, 
   XCircle, 
   Circle, 
   Search, 
   Filter, 
-  Sparkles, 
   ArrowRight, 
-  Trophy, 
-  Clock, 
-  Tag, 
-  BarChart2,
-  Code2
+  Trophy
 } from 'lucide-react';
-import { Problem, Competition, SolvedProblemStatus } from '../types';
+import { Problem, Competition, SolvedProblemStatus } from '@/types';
 
 interface ProblemListProps {
   competition: Competition;
   solvedStatus: Record<string, SolvedProblemStatus>;
-  onSelectProblem: (p: Problem) => void;
-  onOpenLeaderboard: () => void;
+  onOpenLeaderboard?: () => void;
 }
 
 export const ProblemList: React.FC<ProblemListProps> = ({
   competition,
   solvedStatus,
-  onSelectProblem,
   onOpenLeaderboard,
 }) => {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState<'All' | 'Easy' | 'Medium' | 'Hard'>('All');
   const [statusFilter, setStatusFilter] = useState<'All' | 'Solved' | 'Unsolved'>('All');
@@ -39,14 +37,11 @@ export const ProblemList: React.FC<ProblemListProps> = ({
   const filteredProblems = competition.problems.filter((p) => {
     const pStatus = solvedStatus[p.id]?.status || 'NONE';
     
-    // Difficulty
     if (difficultyFilter !== 'All' && p.difficulty !== difficultyFilter) return false;
 
-    // Status
     if (statusFilter === 'Solved' && pStatus !== 'AC') return false;
     if (statusFilter === 'Unsolved' && pStatus === 'AC') return false;
 
-    // Search query
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       const matchTitle = p.title.toLowerCase().includes(q);
@@ -100,13 +95,13 @@ export const ProblemList: React.FC<ProblemListProps> = ({
               ></div>
             </div>
 
-            <button
-              onClick={onOpenLeaderboard}
+            <Link
+              href="/leaderboard"
               className="w-full py-2 px-3 rounded-lg bg-zinc-800 hover:bg-zinc-700/80 text-amber-300 font-semibold text-xs flex items-center justify-center gap-2 border border-zinc-700/50 transition-colors"
             >
               <Trophy className="w-3.5 h-3.5" />
               <span>View Live Leaderboard</span>
-            </button>
+            </Link>
           </div>
         </div>
       </div>
@@ -174,7 +169,7 @@ export const ProblemList: React.FC<ProblemListProps> = ({
                   </td>
                 </tr>
               ) : (
-                filteredProblems.map((p, idx) => {
+                filteredProblems.map((p) => {
                   const statusInfo = solvedStatus[p.id];
                   const isSolved = statusInfo?.status === 'AC';
                   const isAttempted = statusInfo?.status === 'WA';
@@ -182,7 +177,7 @@ export const ProblemList: React.FC<ProblemListProps> = ({
                   return (
                     <tr
                       key={p.id}
-                      onClick={() => onSelectProblem(p)}
+                      onClick={() => router.push(`/problems/${p.id}`)}
                       className="group hover:bg-zinc-800/50 cursor-pointer transition-colors"
                     >
                       {/* Status Icon */}
@@ -247,16 +242,14 @@ export const ProblemList: React.FC<ProblemListProps> = ({
 
                       {/* Action CTA */}
                       <td className="py-4 px-4 text-right">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onSelectProblem(p);
-                          }}
+                        <Link
+                          href={`/problems/${p.id}`}
+                          onClick={(e) => e.stopPropagation()}
                           className="px-3 py-1.5 rounded-lg bg-zinc-800 group-hover:bg-amber-500 text-zinc-300 group-hover:text-zinc-950 font-bold text-xs inline-flex items-center gap-1.5 transition-all shadow-sm"
                         >
                           <span>Solve</span>
                           <ArrowRight className="w-3.5 h-3.5" />
-                        </button>
+                        </Link>
                       </td>
                     </tr>
                   );

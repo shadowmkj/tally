@@ -1,26 +1,21 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { 
   Trophy, 
   Search, 
   Download, 
-  RefreshCw, 
   Radio, 
   ShieldAlert, 
-  Award, 
-  Clock, 
-  User, 
-  CheckCircle2, 
-  XCircle, 
   Minus,
-  Sparkles,
   Flame
 } from 'lucide-react';
-import { Competition, Participant } from '../types';
+import { Competition, Participant } from '@/types';
 
 interface LeaderboardProps {
   competition: Competition;
   participants: Participant[];
-  onOpenCodeGate: () => void;
+  onOpenCodeGate?: () => void;
 }
 
 export const Leaderboard: React.FC<LeaderboardProps> = ({
@@ -30,9 +25,12 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [autoRefresh, setAutoRefresh] = useState(true);
-  const [lastUpdated, setLastUpdated] = useState<string>(new Date().toLocaleTimeString());
+  const [lastUpdated, setLastUpdated] = useState<string>('');
 
-  // Auto Refresh ticker simulation
+  useEffect(() => {
+    setLastUpdated(new Date().toLocaleTimeString());
+  }, []);
+
   useEffect(() => {
     if (!autoRefresh) return;
     const interval = setInterval(() => {
@@ -41,7 +39,6 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
     return () => clearInterval(interval);
   }, [autoRefresh]);
 
-  // Sort participants by Score (desc), then Penalty Time (asc)
   const sortedParticipants = [...participants].sort((a, b) => {
     if (b.totalScore !== a.totalScore) {
       return b.totalScore - a.totalScore;
@@ -55,7 +52,6 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
     return p.name.toLowerCase().includes(q) || p.collegeId.toLowerCase().includes(q);
   });
 
-  // Export CSV
   const handleExportCSV = () => {
     const headers = ['Rank', 'Participant Name', 'College Register ID', 'Total Score', 'Penalty Minutes'];
     competition.problems.forEach(p => headers.push(p.title));
@@ -111,7 +107,6 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
         {/* Action Controls */}
         <div className="flex flex-wrap items-center gap-3">
           
-          {/* Auto Refresh Toggle */}
           <button
             onClick={() => setAutoRefresh(!autoRefresh)}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-mono transition-all ${
@@ -124,7 +119,6 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
             <span>{autoRefresh ? 'Live Sync ON' : 'Paused'}</span>
           </button>
 
-          {/* Export CSV */}
           <button
             onClick={handleExportCSV}
             className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-200 font-semibold text-xs transition-colors shadow-sm"
@@ -177,7 +171,6 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                 <th className="py-3.5 px-4 w-24 text-center">Score</th>
                 <th className="py-3.5 px-4 w-24 text-center">Penalty</th>
 
-                {/* Columns for each problem */}
                 {competition.problems.map((p, idx) => (
                   <th key={p.id} className="py-3.5 px-3 text-center min-w-[90px]">
                     <div className="font-bold text-amber-300">P{idx + 1}</div>
@@ -208,7 +201,6 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                         rank === 1 ? 'bg-amber-500/5' : ''
                       }`}
                     >
-                      {/* Rank */}
                       <td className="py-4 px-4 text-center font-mono font-bold">
                         {rank === 1 ? (
                           <div className="w-7 h-7 rounded-lg bg-amber-500 text-zinc-950 flex items-center justify-center font-extrabold shadow-md mx-auto">
@@ -227,7 +219,6 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                         )}
                       </td>
 
-                      {/* Name & College ID */}
                       <td className="py-4 px-4">
                         <div className="font-bold text-zinc-100 flex items-center gap-1.5">
                           <span>{part.name}</span>
@@ -238,17 +229,14 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                         </div>
                       </td>
 
-                      {/* Total Score */}
                       <td className="py-4 px-4 text-center font-mono font-extrabold text-sm text-amber-300">
                         {part.totalScore}
                       </td>
 
-                      {/* Penalty Time */}
                       <td className="py-4 px-4 text-center font-mono text-zinc-400 text-xs">
                         {part.totalPenaltyTimeMinutes}m
                       </td>
 
-                      {/* Per Problem Status Matrix */}
                       {competition.problems.map((prob) => {
                         const statusObj = part.solvedProblems[prob.id];
                         const isAC = statusObj?.status === 'AC';

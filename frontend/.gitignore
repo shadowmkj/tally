@@ -6,5 +6,9 @@ coverage/
 *.log
 .env*
 !.env.example
+.agents
+.claude
+.windsurf
+.next
 
 /src/generated/prisma

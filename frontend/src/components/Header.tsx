@@ -1,47 +1,32 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { 
   Code2, 
   Trophy, 
-  ListOrdered, 
   ShieldCheck, 
   KeyRound, 
-  Moon, 
-  Sun, 
   Timer, 
-  User, 
-  Radio, 
-  Sparkles,
   ChevronRight,
   LogOut,
   Bell
 } from 'lucide-react';
-import { Competition, UserSession } from '../types';
+import { useCompetition } from '@/context/CompetitionContext';
 
-interface HeaderProps {
-  activeCompetition: Competition | null;
-  session: UserSession | null;
-  currentView: 'problems' | 'ide' | 'leaderboard' | 'admin';
-  setCurrentView: (view: 'problems' | 'ide' | 'leaderboard' | 'admin') => void;
-  onOpenCodeGate: () => void;
-  onLogoutSession: () => void;
-  theme: 'dark' | 'light';
-  setTheme: (t: 'dark' | 'light') => void;
-  unreadAnnouncementsCount: number;
-  onOpenAnnouncements: () => void;
-}
+export const Header: React.FC = () => {
+  const pathname = usePathname();
+  const { 
+    activeCompetition, 
+    session, 
+    setShowCodeGate, 
+    logoutSession, 
+    setShowAnnouncements,
+    theme,
+    setTheme
+  } = useCompetition();
 
-export const Header: React.FC<HeaderProps> = ({
-  activeCompetition,
-  session,
-  currentView,
-  setCurrentView,
-  onOpenCodeGate,
-  onLogoutSession,
-  theme,
-  setTheme,
-  unreadAnnouncementsCount,
-  onOpenAnnouncements,
-}) => {
   const [timeLeftStr, setTimeLeftStr] = useState<string>('');
 
   useEffect(() => {
@@ -69,14 +54,18 @@ export const Header: React.FC<HeaderProps> = ({
     return () => clearInterval(interval);
   }, [activeCompetition]);
 
+  const isProblems = pathname === '/' || pathname.startsWith('/problems');
+  const isLeaderboard = pathname.startsWith('/leaderboard');
+  const isAdmin = pathname.startsWith('/admin');
+
   return (
     <header className="sticky top-0 z-40 bg-zinc-900/95 border-b border-zinc-800 backdrop-blur-md text-zinc-100 w-full max-w-full">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4">
         
         {/* Left: Branding & Contest Info */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          <div 
-            onClick={() => setCurrentView('problems')}
+          <Link 
+            href="/problems"
             className="flex items-center gap-2 cursor-pointer group"
           >
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-zinc-950 font-bold shadow-lg shadow-amber-500/20 group-hover:scale-105 transition-transform shrink-0">
@@ -95,13 +84,13 @@ export const Header: React.FC<HeaderProps> = ({
                 Coding Competition Platform
               </p>
             </div>
-          </div>
+          </Link>
 
           {/* Active Access Code Badge */}
           {activeCompetition && (
             <div className="hidden md:flex items-center gap-2 ml-4 pl-4 border-l border-zinc-800">
               <div 
-                onClick={onOpenCodeGate}
+                onClick={() => setShowCodeGate(true)}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-800/80 hover:bg-zinc-800 border border-zinc-700/60 text-xs font-mono cursor-pointer transition-colors group"
                 title="Click to switch or enter new 6-digit access code"
               >
@@ -124,24 +113,24 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Center: Main Navigation Tabs */}
         <nav className="flex items-center gap-1 bg-zinc-950/60 p-1 rounded-xl border border-zinc-800/80 shrink-0">
-          <button
+          <Link
             id="nav-problems-btn"
-            onClick={() => setCurrentView('problems')}
+            href="/problems"
             className={`flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              currentView === 'problems' || currentView === 'ide'
+              isProblems
                 ? 'bg-zinc-800 text-amber-400 font-semibold shadow-sm'
                 : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
             }`}
           >
             <Code2 className="w-4 h-4" />
             <span className="hidden sm:inline">Problems</span>
-          </button>
+          </Link>
 
-          <button
+          <Link
             id="nav-leaderboard-btn"
-            onClick={() => setCurrentView('leaderboard')}
+            href="/leaderboard"
             className={`flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all relative ${
-              currentView === 'leaderboard'
+              isLeaderboard
                 ? 'bg-zinc-800 text-amber-400 font-semibold shadow-sm'
                 : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
             }`}
@@ -152,34 +141,34 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
             </span>
-          </button>
+          </Link>
 
-          <button
+          <Link
             id="nav-admin-btn"
-            onClick={() => setCurrentView('admin')}
+            href="/admin"
             className={`flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              currentView === 'admin'
+              isAdmin
                 ? 'bg-amber-500 text-zinc-950 font-bold shadow-md shadow-amber-500/20'
                 : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
             }`}
           >
             <ShieldCheck className="w-4 h-4" />
             <span className="hidden sm:inline">Admin Portal</span>
-          </button>
+          </Link>
         </nav>
 
-        {/* Right: User Profile, Announcements & Access Code CTA */}
+        {/* Right: User Profile & Announcements */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Announcement Bell Button */}
           <button
-            onClick={onOpenAnnouncements}
+            onClick={() => setShowAnnouncements(true)}
             className="relative p-2 rounded-lg text-zinc-400 hover:text-amber-400 hover:bg-zinc-800 transition-colors"
             title="Announcements"
           >
             <Bell className="w-4 h-4" />
-            {unreadAnnouncementsCount > 0 && (
+            {activeCompetition.announcements.length > 0 && (
               <span className="absolute top-1 right-1 px-1 py-0.2 min-w-[16px] h-4 text-[10px] font-bold text-zinc-950 bg-amber-400 rounded-full flex items-center justify-center animate-bounce">
-                {unreadAnnouncementsCount}
+                {activeCompetition.announcements.length}
               </span>
             )}
           </button>
@@ -199,7 +188,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </div>
               </div>
               <button
-                onClick={onLogoutSession}
+                onClick={logoutSession}
                 className="p-1 text-zinc-400 hover:text-red-400 hover:bg-zinc-700/50 rounded transition-colors"
                 title="Change Participant Identity / Exit Code"
               >
@@ -208,7 +197,7 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           ) : (
             <button
-              onClick={onOpenCodeGate}
+              onClick={() => setShowCodeGate(true)}
               className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 font-bold text-xs shadow-md shadow-amber-500/20 transition-all"
             >
               <KeyRound className="w-3.5 h-3.5" />

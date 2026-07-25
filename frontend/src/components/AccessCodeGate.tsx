@@ -1,6 +1,8 @@
+'use client';
+
 import React, { useState } from 'react';
-import { KeyRound, ShieldCheck, UserCheck, Sparkles, ArrowRight, CheckCircle2, Lock, BookOpen } from 'lucide-react';
-import { Competition, UserSession } from '../types';
+import { KeyRound, ShieldCheck, Sparkles, ArrowRight } from 'lucide-react';
+import { Competition, UserSession } from '@/types';
 
 interface AccessCodeGateProps {
   competitions: Competition[];
@@ -45,7 +47,6 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
       return;
     }
 
-    // Match against active competitions or allow if found
     const targetComp = competitions.find(c => c.accessCode.toUpperCase() === accessCode.toUpperCase());
 
     if (!targetComp) {

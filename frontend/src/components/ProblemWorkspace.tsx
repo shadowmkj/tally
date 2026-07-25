@@ -1,4 +1,8 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Editor from '@monaco-editor/react';
 import confetti from 'canvas-confetti';
 import { 
@@ -7,30 +11,23 @@ import {
   RotateCcw, 
   CheckCircle2, 
   XCircle, 
-  Clock, 
-  Cpu, 
   Copy, 
   Check, 
-  Sparkles, 
   ChevronDown, 
   ChevronUp, 
   Terminal, 
-  Code2, 
   FileText, 
   History, 
-  HelpCircle,
   Lightbulb,
-  ArrowLeft,
-  Flame,
-  Award
+  ArrowLeft
 } from 'lucide-react';
-import { Problem, Language, Submission, SubmissionStatus, TestCaseResult, UserSession } from '../types';
-import { runCodeOnTestCases } from '../utils/codeRunner';
+import { Problem, Language, Submission, SubmissionStatus, TestCaseResult, UserSession } from '@/types';
+import { runCodeOnTestCases } from '@/utils/codeRunner';
 
 interface ProblemWorkspaceProps {
   problem: Problem;
   session: UserSession | null;
-  onBackToList: () => void;
+  onBackToList?: () => void;
   onSubmitFinished: (sub: Submission) => void;
   previousSubmissions: Submission[];
 }
@@ -42,6 +39,7 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
   onSubmitFinished,
   previousSubmissions,
 }) => {
+  const router = useRouter();
   const [language, setLanguage] = useState<Language>('python');
   const [code, setCode] = useState<string>(problem.starterTemplates[language] || '');
   const [leftTab, setLeftTab] = useState<'description' | 'submissions' | 'hints'>('description');
@@ -49,7 +47,6 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
   const [bottomTab, setBottomTab] = useState<'testcase' | 'result'>('testcase');
   
   const [customInput, setCustomInput] = useState<string>(problem.sampleTestCases[0]?.input || '');
-  const [selectedSampleIndex, setSelectedSampleIndex] = useState<number>(0);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   const [isRunning, setIsRunning] = useState<boolean>(false);
@@ -67,19 +64,18 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
     isSubmitMode?: boolean;
   } | null>(null);
 
-  // Update starter code when language changes
   useEffect(() => {
     setCode(problem.starterTemplates[language] || '');
   }, [language, problem]);
 
-  // Handle Copying Sample Case
   const handleCopySample = (text: string, idx: number) => {
-    navigator.clipboard.writeText(text);
+    if (typeof navigator !== 'undefined') {
+      navigator.clipboard.writeText(text);
+    }
     setCopiedIndex(idx);
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
-  // Run Code against Sample Cases / Custom Input
   const handleRunCode = () => {
     setIsRunning(true);
     setBottomDrawerOpen(true);
@@ -95,7 +91,6 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
     }, 600);
   };
 
-  // Submit Code against All Hidden Judge Test Cases
   const handleSubmitCode = () => {
     setIsSubmitting(true);
     setBottomDrawerOpen(true);
@@ -109,7 +104,6 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
       });
       setIsSubmitting(false);
 
-      // Trigger Confetti if Accepted!
       if (result.status === 'Accepted') {
         confetti({
           particleCount: 80,
@@ -118,7 +112,6 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
         });
       }
 
-      // Record Submission
       const newSubmission: Submission = {
         id: `sub-${Date.now()}`,
         competitionId: 'wecode-annual-2026',
@@ -151,14 +144,14 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
       {/* Workspace Sub-Header */}
       <div className="h-11 bg-zinc-900 border-b border-zinc-800 px-2 sm:px-4 flex items-center justify-between gap-2 shrink-0 overflow-x-hidden max-w-full">
         <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
-          <button
-            onClick={onBackToList}
+          <Link
+            href="/problems"
             className="flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-100 px-2 sm:px-2.5 py-1 rounded-lg bg-zinc-800/80 hover:bg-zinc-800 transition-colors shrink-0"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Problem List</span>
             <span className="sm:hidden">List</span>
-          </button>
+          </Link>
           <div className="h-4 w-px bg-zinc-800 shrink-0"></div>
           <span className="text-xs font-bold text-zinc-200 truncate max-w-[100px] xs:max-w-[140px] sm:max-w-xs">
             {problem.title}
@@ -205,7 +198,6 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
         {/* LEFT PANE: Problem Statement & Details */}
         <div className="w-full md:w-1/2 flex flex-col border-r border-zinc-800 bg-zinc-900/60 overflow-hidden">
           
-          {/* Navigation Tabs */}
           <div className="flex items-center gap-1 bg-zinc-900 px-3 border-b border-zinc-800 text-xs font-medium shrink-0 overflow-x-auto">
             <button
               onClick={() => setLeftTab('description')}
@@ -244,13 +236,11 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
             </button>
           </div>
 
-          {/* Tab Content Body */}
           <div className="flex-1 overflow-y-auto p-5 space-y-6 text-sm text-zinc-300">
             
             {leftTab === 'description' && (
               <div className="space-y-6">
                 
-                {/* Header info */}
                 <div>
                   <h1 className="text-xl font-bold text-zinc-100">{problem.title}</h1>
                   <div className="flex items-center gap-3 text-xs font-mono text-zinc-400 mt-2">
@@ -262,12 +252,10 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
                   </div>
                 </div>
 
-                {/* Description Text */}
                 <div className="prose prose-invert max-w-none text-xs sm:text-sm leading-relaxed whitespace-pre-line text-zinc-300">
                   {problem.description}
                 </div>
 
-                {/* Input / Output Specs */}
                 <div className="space-y-3 bg-zinc-950/60 p-4 rounded-xl border border-zinc-800">
                   <div>
                     <h3 className="text-xs font-mono font-bold text-amber-400 uppercase tracking-wider mb-1">Input Format</h3>
@@ -279,7 +267,6 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
                   </div>
                 </div>
 
-                {/* Sample Test Cases */}
                 <div className="space-y-4">
                   <h3 className="text-xs font-mono font-bold text-zinc-200 uppercase tracking-wider">
                     Sample Test Cases
@@ -317,7 +304,6 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
                   ))}
                 </div>
 
-                {/* Constraints */}
                 <div className="space-y-2 bg-zinc-950/40 p-4 rounded-xl border border-zinc-800">
                   <h3 className="text-xs font-mono font-bold text-zinc-300 uppercase tracking-wider">Constraints</h3>
                   <ul className="list-disc list-inside text-xs font-mono text-zinc-400 space-y-1">
@@ -398,10 +384,7 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
         {/* RIGHT PANE: Code Editor & Execution Drawer */}
         <div className="w-full md:w-1/2 flex flex-col bg-zinc-950 overflow-hidden">
           
-          {/* Editor Header Bar */}
           <div className="h-10 bg-zinc-900 border-b border-zinc-800 px-3 flex items-center justify-between gap-2 shrink-0 text-xs">
-            
-            {/* Language Selector */}
             <div className="flex items-center gap-2">
               <span className="text-zinc-500 font-mono text-[11px]">Lang:</span>
               <select
@@ -417,7 +400,6 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
               </select>
             </div>
 
-            {/* Reset Template */}
             <button
               onClick={() => setCode(problem.starterTemplates[language] || '')}
               className="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded transition-colors flex items-center gap-1"
@@ -428,7 +410,6 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
             </button>
           </div>
 
-          {/* Monaco Code Editor Container */}
           <div className="flex-1 relative overflow-hidden bg-[#1e1e1e]">
             <Editor
               height="100%"
@@ -448,12 +429,9 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
             />
           </div>
 
-          {/* Bottom Execution Console Drawer */}
           <div className={`border-t border-zinc-800 bg-zinc-900/95 flex flex-col transition-all duration-300 ${
             bottomDrawerOpen ? 'h-64' : 'h-9'
           }`}>
-            
-            {/* Drawer Header Toggle */}
             <div className="h-9 px-4 bg-zinc-950 border-b border-zinc-800 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
                 <button
@@ -499,11 +477,8 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
               </button>
             </div>
 
-            {/* Drawer Body */}
             {bottomDrawerOpen && (
               <div className="flex-1 overflow-y-auto p-4 font-mono text-xs text-zinc-300">
-                
-                {/* TESTCASE TAB */}
                 {bottomTab === 'testcase' && (
                   <div className="space-y-3">
                     <div className="flex items-center justify-between text-zinc-400">
@@ -519,7 +494,6 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
                   </div>
                 )}
 
-                {/* TEST RESULT TAB */}
                 {bottomTab === 'result' && (
                   <div>
                     {!latestResult && !isRunning && !isSubmitting && (
@@ -539,8 +513,6 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
 
                     {latestResult && !isRunning && !isSubmitting && (
                       <div className="space-y-4">
-                        
-                        {/* LeetCode Result Outcome Header */}
                         <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-zinc-950 border border-zinc-800">
                           <div>
                             <div className="flex items-center gap-2">
@@ -565,7 +537,6 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
                             </div>
                           </div>
 
-                          {/* Runtime & Memory Stats */}
                           <div className="flex items-center gap-4 text-xs font-mono">
                             <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-center">
                               <div className="text-zinc-400 text-[10px]">Runtime</div>
@@ -581,7 +552,6 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
                           </div>
                         </div>
 
-                        {/* Error Log or Test Case Details */}
                         {latestResult.errorLog ? (
                           <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-mono whitespace-pre-wrap">
                             {latestResult.errorLog}

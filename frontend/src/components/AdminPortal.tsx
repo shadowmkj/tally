@@ -1,26 +1,23 @@
+'use client';
+
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   ShieldCheck, 
   KeyRound, 
   Plus, 
   Radio, 
   Megaphone, 
-  Clock, 
   Lock, 
   Unlock, 
   FileCode, 
-  Play, 
   Pause, 
-  Trash2, 
-  Edit3, 
   Check, 
-  Sparkles,
-  BarChart2,
-  RefreshCw,
   PlusCircle,
-  Code2
+  LogOut
 } from 'lucide-react';
-import { Competition, Problem, Language, Difficulty } from '../types';
+import { Competition, Problem, Difficulty } from '@/types';
+import { authClient } from '@/lib/auth-client';
 
 interface AdminPortalProps {
   competitions: Competition[];
@@ -38,19 +35,16 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [selectedCompCode, setSelectedCompCode] = useState<string>(competitions[0]?.accessCode || '');
   const activeComp = competitions.find(c => c.accessCode === selectedCompCode) || competitions[0];
 
-  // New Competition Form State
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newTitle, setNewTitle] = useState('Wecode Weekly CodeRush #4');
   const [newSubtitle, setNewSubtitle] = useState('Wecode Club - GCE Kannur');
   const [newCode, setNewCode] = useState('');
   const [newDuration, setNewDuration] = useState(90);
 
-  // Announcement Form State
   const [annTitle, setAnnTitle] = useState('');
   const [annText, setAnnText] = useState('');
   const [annSuccess, setAnnSuccess] = useState(false);
 
-  // New Problem Form State
   const [showAddProblemModal, setShowAddProblemModal] = useState(false);
   const [probTitle, setProbTitle] = useState('5. Subarray Sum Equals K');
   const [probDiff, setProbDiff] = useState<Difficulty>('Medium');
@@ -59,7 +53,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [probSampleIn, setProbSampleIn] = useState('3\n1 1 1\n2');
   const [probSampleOut, setProbSampleOut] = useState('2');
 
-  // Auto Generate 6-digit Alphanumeric Code
   const generateRandom6Char = () => {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let res = '';
@@ -69,7 +62,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     setNewCode(res);
   };
 
-  // Create Competition
   const handleCreateCompetition = (e: React.FormEvent) => {
     e.preventDefault();
     const finalCode = (newCode || 'WEC999').toUpperCase().slice(0, 6);
@@ -128,7 +120,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     setShowCreateModal(false);
   };
 
-  // Broadcast Announcement
   const handleBroadcast = (e: React.FormEvent) => {
     e.preventDefault();
     if (!annTitle.trim() || !annText.trim() || !activeComp) return;
@@ -140,7 +131,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     setTimeout(() => setAnnSuccess(false), 2500);
   };
 
-  // Add Problem to Selected Competition
   const handleAddProblem = (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeComp) return;
@@ -182,7 +172,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     setShowAddProblemModal(false);
   };
 
-  // Toggle Leaderboard Freeze
   const toggleFreeze = () => {
     if (!activeComp) return;
     onUpdateCompetition({
@@ -191,7 +180,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     });
   };
 
-  // Toggle Live State
   const toggleLiveState = () => {
     if (!activeComp) return;
     onUpdateCompetition({
@@ -217,17 +205,30 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           </p>
         </div>
 
-        {/* Create New Competition CTA */}
-        <button
-          onClick={() => {
-            generateRandom6Char();
-            setShowCreateModal(true);
-          }}
-          className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 font-extrabold text-xs flex items-center gap-2 shadow-lg shadow-amber-500/20 transition-all"
-        >
-          <Plus className="w-4 h-4 stroke-[3]" />
-          <span>New Competition (6-Digit Code)</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              generateRandom6Char();
+              setShowCreateModal(true);
+            }}
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 font-extrabold text-xs flex items-center gap-2 shadow-lg shadow-amber-500/20 transition-all"
+          >
+            <Plus className="w-4 h-4 stroke-[3]" />
+            <span>New Competition (6-Digit Code)</span>
+          </button>
+
+          <button
+            onClick={async () => {
+              await authClient.signOut();
+              window.location.href = '/admin/login';
+            }}
+            className="px-3 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-semibold text-xs flex items-center gap-1.5 transition-colors border border-zinc-700/60"
+            title="Sign Out of Admin Portal"
+          >
+            <LogOut className="w-3.5 h-3.5 text-rose-400" />
+            <span>Sign Out</span>
+          </button>
+        </div>
       </div>
 
       {/* Select Competition Control Bar */}
@@ -247,7 +248,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           </select>
         </div>
 
-        {/* Live Controls */}
         {activeComp && (
           <div className="flex items-center gap-2">
             <button
@@ -280,10 +280,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {activeComp && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* Column 1 & 2: Contest Details & Problem Management */}
           <div className="lg:col-span-2 space-y-6">
             
-            {/* Contest Info Card */}
             <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl space-y-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -301,7 +299,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               </div>
             </div>
 
-            {/* Problem List Management */}
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -319,7 +316,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               </div>
 
               <div className="space-y-3">
-                {activeComp.problems.map((p, idx) => (
+                {activeComp.problems.map((p) => (
                   <div
                     key={p.id}
                     className="p-4 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-between gap-4 text-xs font-mono"
@@ -345,10 +342,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
           </div>
 
-          {/* Column 3: Broadcast Announcement Panel */}
           <div className="space-y-6">
             
-            {/* Broadcast Box */}
             <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl space-y-4 shadow-xl">
               <div className="flex items-center gap-2">
                 <Megaphone className="w-5 h-5 text-amber-400" />
@@ -404,7 +399,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               </form>
             </div>
 
-            {/* Active Contest Announcements Feed */}
             <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl space-y-3">
               <h4 className="text-xs font-mono font-bold text-zinc-400 uppercase tracking-wider">
                 Recent Broadcast History
