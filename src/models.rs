@@ -15,13 +15,13 @@ pub struct TestCase {
 /// The JSON envelope returned by every language driver on stdout.
 #[derive(Debug, Deserialize)]
 pub struct DriverResponse {
-    pub success: bool,
-    pub result: Option<Value>,
-    pub error: Option<String>,
+    pub success: bool,         // If the code execution worked successfully
+    pub result: Option<Value>, // Result of the execution
+    pub error: Option<String>, // Error if execution failed (success = false)
 }
 
 /// The judging result for a single test case.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Verdict {
     /// Solution produced the correct output.
     Accepted,
@@ -50,7 +50,7 @@ impl fmt::Display for Verdict {
 }
 
 /// The result of judging a single test case.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TestCaseResult {
     pub id: i32,
     pub verdict: Verdict,
@@ -79,4 +79,38 @@ pub struct Job {
     pub method_name: String,
     pub type_schema: Option<String>,
     pub code: String,
+    pub user: String,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct SubmissionResult {
+    pub user: String,
+    pub tests: Vec<TestCaseResult>,
+    pub problem_id: i32,
+    pub problem_slug: String,
+    pub success: bool,
+    pub passed: u32,
+    pub failed: u32,
+}
+
+impl SubmissionResult {
+    pub fn new(
+        user: String,
+        tests: Vec<TestCaseResult>,
+        problem_id: i32,
+        problem_slug: String,
+        success: bool,
+        passed: u32,
+        failed: u32,
+    ) -> Self {
+        Self {
+            user,
+            tests,
+            problem_id,
+            problem_slug,
+            success,
+            passed,
+            failed,
+        }
+    }
 }

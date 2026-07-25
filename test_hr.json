@@ -1,0 +1,9 @@
+{
+    "problem_id": 4,
+    "problem_slug": "house-robber",
+    "user": "milan",
+    "language": "python",
+    "method_name": "houseRobber",
+    "code": "class Solution:\n\tdef houseRobber(self, nums: List[int]) -> int:\n\t\tif len(nums) == 1:\n\t\t\treturn nums[0]\n\t\tdp = [0 for _ in range(len(nums) + 1)]\n\t\tdp[0] = nums[0]\n\t\tdp[1] = max(dp[0], nums[1])\n\t\tfor i in range(2, len(nums)):\n\t\t\tdp[i] = max(dp[i - 1], dp[i - 2] + nums[i])\n\t\treturn dp[-2]"
+}
+

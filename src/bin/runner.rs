@@ -1,10 +1,12 @@
 use std::fs;
+use std::ops::Sub;
 
 use bollard::{API_DEFAULT_VERSION, Docker};
 use clap::Parser;
-use crust::models::{Job, Language, TestCase, Verdict};
+use crust::models::{Job, Language, SubmissionResult, TestCase, Verdict};
 use crust::runner;
 use redis::AsyncCommands;
+use serde::{Deserialize, Serialize};
 
 #[derive(Parser, Debug)]
 #[command(version, about)]
@@ -115,7 +117,22 @@ async fn main() -> Result<(), anyhow::Error> {
                                         "Job {}: {}/{} test cases passed.",
                                         job.problem_id, passed, total
                                     );
-                                    for result in &results {
+
+                                    let submission = SubmissionResult::new(
+                                        job.user,
+                                        results,
+                                        job.problem_id,
+                                        job.problem_slug,
+                                        passed == total,
+                                        passed as u32,
+                                        (total - passed) as u32,
+                                    );
+
+                                    let _: i64 = con
+                                        .lpush("results", serde_json::to_string(&submission)?)
+                                        .await?;
+
+                                    for result in &submission.tests {
                                         println!("  Test Case {}: {}", result.id, result.verdict);
                                     }
                                 }

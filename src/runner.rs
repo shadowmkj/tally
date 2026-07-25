@@ -23,7 +23,12 @@ fn crate_root() -> PathBuf {
 ///   - The user's solution code written as the appropriate solution file
 ///
 /// Returns the `TempDir` handle — dropping it cleans up the directory.
-fn prepare_workspace(language: &Language, solution_code: &str, method_name: &str, type_schema: Option<&str>) -> Result<tempfile::TempDir> {
+fn prepare_workspace(
+    language: &Language,
+    solution_code: &str,
+    method_name: &str,
+    type_schema: Option<&str>,
+) -> Result<tempfile::TempDir> {
     let dir = tempfile::tempdir()?;
     let root = crate_root();
 
@@ -158,14 +163,14 @@ pub async fn run_all(
         }
     };
 
-    let bind = format!("{}:/app:ro", workspace_path);
+    let bind = format!("{}:/app:ro", workspace_path); // Mount workspace as read-only
 
     // 3. Configure the Container (Strict Security Limits!)
     let host_config = HostConfig {
         memory: Some(512 * 1024 * 1024),          // 512 MB RAM limit
         memory_swap: Some(512 * 1024 * 1024),     // Disable swap
         network_mode: Some(String::from("none")), // NO INTERNET ACCESS
-        binds: Some(vec![bind]),                  // Mount workspace as read-only
+        binds: Some(vec![bind]),
         ..Default::default()
     };
 
@@ -345,18 +350,30 @@ fn generate_cpp_driver(method_name: &str, type_schema: &str) -> String {
             _ => "int",
         };
 
-        args_decl.push_str(&format!("                auto arg{} = curr.value().get<{}>();\n                curr++;\n", i, cpp_type));
-        if i > 0 { args_list.push_str(", "); }
+        args_decl.push_str(&format!(
+            "                auto arg{} = curr.value().get<{}>();\n                curr++;\n",
+            i, cpp_type
+        ));
+        if i > 0 {
+            args_list.push_str(", ");
+        }
         args_list.push_str(&format!("arg{}", i));
     }
 
     let call_stmt = if ret_schema == "v" {
-        format!("                sol.{}({});\n                resp[\"result\"] = nullptr;\n", method_name, args_list)
+        format!(
+            "                sol.{}({});\n                resp[\"result\"] = nullptr;\n",
+            method_name, args_list
+        )
     } else {
-        format!("                auto result = sol.{}({});\n                resp[\"result\"] = result;\n", method_name, args_list)
+        format!(
+            "                auto result = sol.{}({});\n                resp[\"result\"] = result;\n",
+            method_name, args_list
+        )
     };
 
-    format!(r#"
+    format!(
+        r#"
 #include <iostream>
 #include <string>
 #include <vector>
@@ -391,5 +408,8 @@ int main() {{
     }}
     return 0;
 }}
-"#, args_decl=args_decl, call_stmt=call_stmt)
+"#,
+        args_decl = args_decl,
+        call_stmt = call_stmt
+    )
 }

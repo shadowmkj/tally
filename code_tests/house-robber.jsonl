@@ -1,0 +1,56 @@
+[
+  {
+    "id": 1,
+    "input": {
+      "nums": [1, 2, 3, 1]
+    },
+    "expected": 4,
+    "is_hidden": false,
+    "explanation": "Standard case: Rob house 1 (money = 1) and house 3 (money = 3). Total = 1 + 3 = 4."
+  },
+  {
+    "id": 2,
+    "input": {
+      "nums": [2, 7, 9, 3, 1]
+    },
+    "expected": 12,
+    "is_hidden": false,
+    "explanation": "Rob house 1 (money = 2), house 3 (money = 9), and house 5 (money = 1). Total = 2 + 9 + 1 = 12."
+  },
+  {
+    "id": 3,
+    "input": {
+      "nums": [10]
+    },
+    "expected": 10,
+    "is_hidden": false,
+    "explanation": "Single house edge case. The only option is to rob the single house."
+  },
+  {
+    "id": 4,
+    "input": {
+      "nums": [2, 1, 1, 2]
+    },
+    "expected": 4,
+    "is_hidden": true,
+    "explanation": "Tests skipping two adjacent houses (robbing indices 0 and 3) to achieve a higher total score."
+  },
+  {
+    "id": 5,
+    "input": {
+      "nums": [100, 1, 1, 100]
+    },
+    "expected": 200,
+    "is_hidden": true,
+    "explanation": "Tests cases where skipping multiple smaller values yields the max profit (robbing index 0 and 3)."
+  },
+  {
+    "id": 6,
+    "input": {
+      "nums": [0, 0, 0]
+    },
+    "expected": 0,
+    "is_hidden": true,
+    "explanation": "Tests array filled with zeros."
+  }
+]
