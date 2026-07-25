@@ -255,17 +255,16 @@ pub async fn run_all(
                                 }
 
                                 if let Ok(driver_res) = serde_json::from_str::<DriverResponse>(line)
+                                    && let Some(tc) = tc_iter.next()
                                 {
-                                    if let Some(tc) = tc_iter.next() {
-                                        let verdict = judger::judge(&driver_res, &tc.expected);
-                                        let is_failure = verdict != Verdict::Accepted;
+                                    let verdict = judger::judge(&driver_res, &tc.expected);
+                                    let is_failure = verdict != Verdict::Accepted;
 
-                                        results.push(TestCaseResult { id: tc.id, verdict });
+                                    results.push(TestCaseResult { id: tc.id, verdict });
 
-                                        if is_failure {
-                                            failed = true;
-                                            break;
-                                        }
+                                    if is_failure {
+                                        failed = true;
+                                        break;
                                     }
                                 }
                             }
@@ -296,16 +295,14 @@ pub async fn run_all(
 
     // If we got fewer responses than test cases (e.g., driver crashed mid-run or TLE),
     // mark the next unprocessed test case appropriately.
-    if !failed {
-        if let Some(tc) = tc_iter.next() {
-            let verdict = if is_tle {
-                Verdict::TimeLimitExceeded
-            } else {
-                Verdict::NoOutput
-            };
+    if !failed && let Some(tc) = tc_iter.next() {
+        let verdict = if is_tle {
+            Verdict::TimeLimitExceeded
+        } else {
+            Verdict::NoOutput
+        };
 
-            results.push(TestCaseResult { id: tc.id, verdict });
-        }
+        results.push(TestCaseResult { id: tc.id, verdict });
     }
 
     // 9. Cleanup: Destroy the container immediately.

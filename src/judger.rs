@@ -18,10 +18,7 @@ pub fn judge(driver_res: &DriverResponse, expected: &Value) -> Verdict {
     } else {
         Verdict::WrongAnswer {
             expected: expected.clone(),
-            got: driver_res
-                .result
-                .clone()
-                .unwrap_or(Value::Null),
+            got: driver_res.result.clone().unwrap_or(Value::Null),
         }
     }
 }

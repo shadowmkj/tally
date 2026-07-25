@@ -1,6 +1,10 @@
 /target
 __pycache__
+.DS_Store
 .DS_store
 /*.pyc
 *.class
 ai
+node_modules/
+.next/
+.env

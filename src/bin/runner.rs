@@ -1,10 +1,8 @@
 use std::fs;
-use std::ops::Sub;
 
 use bollard::{API_DEFAULT_VERSION, Docker};
 use clap::Parser;
 use redis::AsyncCommands;
-use serde::{Deserialize, Serialize};
 use tally::models::{Job, Language, SubmissionResult, TestCase, Verdict};
 use tally::runner;
 
