@@ -261,7 +261,15 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
         setSession(newSession);
         setShowCodeGate(false);
 
-        const existing = participants.find(p => p.collegeId === newSession.collegeId);
+        const targetComp = competitions.find(
+            c => c.accessCode.toUpperCase() === newSession.accessCode.toUpperCase()
+        );
+        const compId = targetComp?.id || null;
+
+        const existing = participants.find(
+            p => (p.collegeId === newSession.collegeId || p.id === newSession.participantId) &&
+                 (p.accessCode.toUpperCase() === newSession.accessCode.toUpperCase() || (compId !== null && p.competitionId === compId))
+        );
         let participantToSync: Participant;
 
         if (!existing) {
@@ -274,16 +282,18 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
                 totalPenaltyTimeMinutes: 0,
                 solvedProblems: {},
                 lastActive: new Date().toISOString(),
-                competitionId: activeCompetition?.id || null,
+                competitionId: compId,
             } as any;
             setParticipants(prev => [...prev, participantToSync]);
         } else {
             participantToSync = {
                 ...existing,
+                name: newSession.name,
                 accessCode: newSession.accessCode,
+                competitionId: compId || existing.competitionId,
                 lastActive: new Date().toISOString(),
             } as any;
-            setParticipants(prev => prev.map(p => p.collegeId === newSession.collegeId ? participantToSync : p));
+            setParticipants(prev => prev.map(p => p.id === existing.id ? participantToSync : p));
         }
 
         // Persist participant to Prisma database
@@ -311,7 +321,10 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
             return;
         }
 
-        const existingPart = participants.find(p => p.collegeId === session.collegeId || p.id === session.participantId);
+        const existingPart = participants.find(
+            p => (p.collegeId === session.collegeId || p.id === session.participantId) &&
+                 (p.accessCode.toUpperCase() === activeCompetition.accessCode.toUpperCase() || (activeCompetition.id !== '' && p.competitionId === activeCompetition.id))
+        );
         let updatedParticipant: Participant | null = null;
 
         if (existingPart) {
@@ -368,7 +381,7 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
                 lastActive: new Date().toISOString(),
             } as any;
 
-            setParticipants(prev => prev.map(p => p.id === existingPart.id || p.collegeId === existingPart.collegeId ? updatedParticipant! : p));
+            setParticipants(prev => prev.map(p => p.id === existingPart.id ? updatedParticipant! : p));
         }
 
         // Persist submission and participant state to Prisma database

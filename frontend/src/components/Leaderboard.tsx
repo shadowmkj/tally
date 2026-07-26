@@ -39,7 +39,15 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
     return () => clearInterval(interval);
   }, [autoRefresh]);
 
-  const sortedParticipants = [...participants].sort((a, b) => {
+  const competitionParticipants = participants.filter((p) => {
+    const pAccess = (p.accessCode || '').toUpperCase();
+    const cAccess = (competition.accessCode || '').toUpperCase();
+    const pCompId = p.competitionId;
+    const cCompId = competition.id;
+    return pAccess === cAccess || (Boolean(cCompId) && pCompId === cCompId);
+  });
+
+  const sortedParticipants = [...competitionParticipants].sort((a, b) => {
     if (b.totalScore !== a.totalScore) {
       return b.totalScore - a.totalScore;
     }
