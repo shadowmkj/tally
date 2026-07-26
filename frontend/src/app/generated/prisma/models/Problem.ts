@@ -51,6 +51,7 @@ export type ProblemMinAggregateOutputType = {
   acceptanceRate: number | null
   tags: string | null
   description: string | null
+  methodName: string | null
   inputFormat: string | null
   outputFormat: string | null
   constraints: string | null
@@ -71,6 +72,7 @@ export type ProblemMaxAggregateOutputType = {
   acceptanceRate: number | null
   tags: string | null
   description: string | null
+  methodName: string | null
   inputFormat: string | null
   outputFormat: string | null
   constraints: string | null
@@ -91,6 +93,7 @@ export type ProblemCountAggregateOutputType = {
   acceptanceRate: number
   tags: number
   description: number
+  methodName: number
   inputFormat: number
   outputFormat: number
   constraints: number
@@ -127,6 +130,7 @@ export type ProblemMinAggregateInputType = {
   acceptanceRate?: true
   tags?: true
   description?: true
+  methodName?: true
   inputFormat?: true
   outputFormat?: true
   constraints?: true
@@ -147,6 +151,7 @@ export type ProblemMaxAggregateInputType = {
   acceptanceRate?: true
   tags?: true
   description?: true
+  methodName?: true
   inputFormat?: true
   outputFormat?: true
   constraints?: true
@@ -167,6 +172,7 @@ export type ProblemCountAggregateInputType = {
   acceptanceRate?: true
   tags?: true
   description?: true
+  methodName?: true
   inputFormat?: true
   outputFormat?: true
   constraints?: true
@@ -274,6 +280,7 @@ export type ProblemGroupByOutputType = {
   acceptanceRate: number | null
   tags: string
   description: string
+  methodName: string
   inputFormat: string
   outputFormat: string
   constraints: string
@@ -317,6 +324,7 @@ export type ProblemWhereInput = {
   acceptanceRate?: Prisma.FloatNullableFilter<"Problem"> | number | null
   tags?: Prisma.StringFilter<"Problem"> | string
   description?: Prisma.StringFilter<"Problem"> | string
+  methodName?: Prisma.StringFilter<"Problem"> | string
   inputFormat?: Prisma.StringFilter<"Problem"> | string
   outputFormat?: Prisma.StringFilter<"Problem"> | string
   constraints?: Prisma.StringFilter<"Problem"> | string
@@ -341,6 +349,7 @@ export type ProblemOrderByWithRelationInput = {
   acceptanceRate?: Prisma.SortOrderInput | Prisma.SortOrder
   tags?: Prisma.SortOrder
   description?: Prisma.SortOrder
+  methodName?: Prisma.SortOrder
   inputFormat?: Prisma.SortOrder
   outputFormat?: Prisma.SortOrder
   constraints?: Prisma.SortOrder
@@ -368,6 +377,7 @@ export type ProblemWhereUniqueInput = Prisma.AtLeast<{
   acceptanceRate?: Prisma.FloatNullableFilter<"Problem"> | number | null
   tags?: Prisma.StringFilter<"Problem"> | string
   description?: Prisma.StringFilter<"Problem"> | string
+  methodName?: Prisma.StringFilter<"Problem"> | string
   inputFormat?: Prisma.StringFilter<"Problem"> | string
   outputFormat?: Prisma.StringFilter<"Problem"> | string
   constraints?: Prisma.StringFilter<"Problem"> | string
@@ -392,6 +402,7 @@ export type ProblemOrderByWithAggregationInput = {
   acceptanceRate?: Prisma.SortOrderInput | Prisma.SortOrder
   tags?: Prisma.SortOrder
   description?: Prisma.SortOrder
+  methodName?: Prisma.SortOrder
   inputFormat?: Prisma.SortOrder
   outputFormat?: Prisma.SortOrder
   constraints?: Prisma.SortOrder
@@ -420,6 +431,7 @@ export type ProblemScalarWhereWithAggregatesInput = {
   acceptanceRate?: Prisma.FloatNullableWithAggregatesFilter<"Problem"> | number | null
   tags?: Prisma.StringWithAggregatesFilter<"Problem"> | string
   description?: Prisma.StringWithAggregatesFilter<"Problem"> | string
+  methodName?: Prisma.StringWithAggregatesFilter<"Problem"> | string
   inputFormat?: Prisma.StringWithAggregatesFilter<"Problem"> | string
   outputFormat?: Prisma.StringWithAggregatesFilter<"Problem"> | string
   constraints?: Prisma.StringWithAggregatesFilter<"Problem"> | string
@@ -440,6 +452,7 @@ export type ProblemCreateInput = {
   acceptanceRate?: number | null
   tags: string
   description: string
+  methodName: string
   inputFormat: string
   outputFormat: string
   constraints: string
@@ -463,6 +476,7 @@ export type ProblemUncheckedCreateInput = {
   acceptanceRate?: number | null
   tags: string
   description: string
+  methodName: string
   inputFormat: string
   outputFormat: string
   constraints: string
@@ -486,6 +500,7 @@ export type ProblemUpdateInput = {
   acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   tags?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
+  methodName?: Prisma.StringFieldUpdateOperationsInput | string
   inputFormat?: Prisma.StringFieldUpdateOperationsInput | string
   outputFormat?: Prisma.StringFieldUpdateOperationsInput | string
   constraints?: Prisma.StringFieldUpdateOperationsInput | string
@@ -509,6 +524,7 @@ export type ProblemUncheckedUpdateInput = {
   acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   tags?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
+  methodName?: Prisma.StringFieldUpdateOperationsInput | string
   inputFormat?: Prisma.StringFieldUpdateOperationsInput | string
   outputFormat?: Prisma.StringFieldUpdateOperationsInput | string
   constraints?: Prisma.StringFieldUpdateOperationsInput | string
@@ -532,6 +548,7 @@ export type ProblemCreateManyInput = {
   acceptanceRate?: number | null
   tags: string
   description: string
+  methodName: string
   inputFormat: string
   outputFormat: string
   constraints: string
@@ -552,6 +569,7 @@ export type ProblemUpdateManyMutationInput = {
   acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   tags?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
+  methodName?: Prisma.StringFieldUpdateOperationsInput | string
   inputFormat?: Prisma.StringFieldUpdateOperationsInput | string
   outputFormat?: Prisma.StringFieldUpdateOperationsInput | string
   constraints?: Prisma.StringFieldUpdateOperationsInput | string
@@ -571,6 +589,7 @@ export type ProblemUncheckedUpdateManyInput = {
   acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   tags?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
+  methodName?: Prisma.StringFieldUpdateOperationsInput | string
   inputFormat?: Prisma.StringFieldUpdateOperationsInput | string
   outputFormat?: Prisma.StringFieldUpdateOperationsInput | string
   constraints?: Prisma.StringFieldUpdateOperationsInput | string
@@ -601,6 +620,7 @@ export type ProblemCountOrderByAggregateInput = {
   acceptanceRate?: Prisma.SortOrder
   tags?: Prisma.SortOrder
   description?: Prisma.SortOrder
+  methodName?: Prisma.SortOrder
   inputFormat?: Prisma.SortOrder
   outputFormat?: Prisma.SortOrder
   constraints?: Prisma.SortOrder
@@ -628,6 +648,7 @@ export type ProblemMaxOrderByAggregateInput = {
   acceptanceRate?: Prisma.SortOrder
   tags?: Prisma.SortOrder
   description?: Prisma.SortOrder
+  methodName?: Prisma.SortOrder
   inputFormat?: Prisma.SortOrder
   outputFormat?: Prisma.SortOrder
   constraints?: Prisma.SortOrder
@@ -648,6 +669,7 @@ export type ProblemMinOrderByAggregateInput = {
   acceptanceRate?: Prisma.SortOrder
   tags?: Prisma.SortOrder
   description?: Prisma.SortOrder
+  methodName?: Prisma.SortOrder
   inputFormat?: Prisma.SortOrder
   outputFormat?: Prisma.SortOrder
   constraints?: Prisma.SortOrder
@@ -772,6 +794,7 @@ export type ProblemCreateWithoutCompetitionInput = {
   acceptanceRate?: number | null
   tags: string
   description: string
+  methodName: string
   inputFormat: string
   outputFormat: string
   constraints: string
@@ -794,6 +817,7 @@ export type ProblemUncheckedCreateWithoutCompetitionInput = {
   acceptanceRate?: number | null
   tags: string
   description: string
+  methodName: string
   inputFormat: string
   outputFormat: string
   constraints: string
@@ -844,6 +868,7 @@ export type ProblemScalarWhereInput = {
   acceptanceRate?: Prisma.FloatNullableFilter<"Problem"> | number | null
   tags?: Prisma.StringFilter<"Problem"> | string
   description?: Prisma.StringFilter<"Problem"> | string
+  methodName?: Prisma.StringFilter<"Problem"> | string
   inputFormat?: Prisma.StringFilter<"Problem"> | string
   outputFormat?: Prisma.StringFilter<"Problem"> | string
   constraints?: Prisma.StringFilter<"Problem"> | string
@@ -864,6 +889,7 @@ export type ProblemCreateWithoutSampleTestCasesInput = {
   acceptanceRate?: number | null
   tags: string
   description: string
+  methodName: string
   inputFormat: string
   outputFormat: string
   constraints: string
@@ -886,6 +912,7 @@ export type ProblemUncheckedCreateWithoutSampleTestCasesInput = {
   acceptanceRate?: number | null
   tags: string
   description: string
+  methodName: string
   inputFormat: string
   outputFormat: string
   constraints: string
@@ -924,6 +951,7 @@ export type ProblemUpdateWithoutSampleTestCasesInput = {
   acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   tags?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
+  methodName?: Prisma.StringFieldUpdateOperationsInput | string
   inputFormat?: Prisma.StringFieldUpdateOperationsInput | string
   outputFormat?: Prisma.StringFieldUpdateOperationsInput | string
   constraints?: Prisma.StringFieldUpdateOperationsInput | string
@@ -946,6 +974,7 @@ export type ProblemUncheckedUpdateWithoutSampleTestCasesInput = {
   acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   tags?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
+  methodName?: Prisma.StringFieldUpdateOperationsInput | string
   inputFormat?: Prisma.StringFieldUpdateOperationsInput | string
   outputFormat?: Prisma.StringFieldUpdateOperationsInput | string
   constraints?: Prisma.StringFieldUpdateOperationsInput | string
@@ -968,6 +997,7 @@ export type ProblemCreateWithoutTestCasesInput = {
   acceptanceRate?: number | null
   tags: string
   description: string
+  methodName: string
   inputFormat: string
   outputFormat: string
   constraints: string
@@ -990,6 +1020,7 @@ export type ProblemUncheckedCreateWithoutTestCasesInput = {
   acceptanceRate?: number | null
   tags: string
   description: string
+  methodName: string
   inputFormat: string
   outputFormat: string
   constraints: string
@@ -1028,6 +1059,7 @@ export type ProblemUpdateWithoutTestCasesInput = {
   acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   tags?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
+  methodName?: Prisma.StringFieldUpdateOperationsInput | string
   inputFormat?: Prisma.StringFieldUpdateOperationsInput | string
   outputFormat?: Prisma.StringFieldUpdateOperationsInput | string
   constraints?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1050,6 +1082,7 @@ export type ProblemUncheckedUpdateWithoutTestCasesInput = {
   acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   tags?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
+  methodName?: Prisma.StringFieldUpdateOperationsInput | string
   inputFormat?: Prisma.StringFieldUpdateOperationsInput | string
   outputFormat?: Prisma.StringFieldUpdateOperationsInput | string
   constraints?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1072,6 +1105,7 @@ export type ProblemCreateWithoutSubmissionsInput = {
   acceptanceRate?: number | null
   tags: string
   description: string
+  methodName: string
   inputFormat: string
   outputFormat: string
   constraints: string
@@ -1094,6 +1128,7 @@ export type ProblemUncheckedCreateWithoutSubmissionsInput = {
   acceptanceRate?: number | null
   tags: string
   description: string
+  methodName: string
   inputFormat: string
   outputFormat: string
   constraints: string
@@ -1132,6 +1167,7 @@ export type ProblemUpdateWithoutSubmissionsInput = {
   acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   tags?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
+  methodName?: Prisma.StringFieldUpdateOperationsInput | string
   inputFormat?: Prisma.StringFieldUpdateOperationsInput | string
   outputFormat?: Prisma.StringFieldUpdateOperationsInput | string
   constraints?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1154,6 +1190,7 @@ export type ProblemUncheckedUpdateWithoutSubmissionsInput = {
   acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   tags?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
+  methodName?: Prisma.StringFieldUpdateOperationsInput | string
   inputFormat?: Prisma.StringFieldUpdateOperationsInput | string
   outputFormat?: Prisma.StringFieldUpdateOperationsInput | string
   constraints?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1176,6 +1213,7 @@ export type ProblemCreateManyCompetitionInput = {
   acceptanceRate?: number | null
   tags: string
   description: string
+  methodName: string
   inputFormat: string
   outputFormat: string
   constraints: string
@@ -1195,6 +1233,7 @@ export type ProblemUpdateWithoutCompetitionInput = {
   acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   tags?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
+  methodName?: Prisma.StringFieldUpdateOperationsInput | string
   inputFormat?: Prisma.StringFieldUpdateOperationsInput | string
   outputFormat?: Prisma.StringFieldUpdateOperationsInput | string
   constraints?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1217,6 +1256,7 @@ export type ProblemUncheckedUpdateWithoutCompetitionInput = {
   acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   tags?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
+  methodName?: Prisma.StringFieldUpdateOperationsInput | string
   inputFormat?: Prisma.StringFieldUpdateOperationsInput | string
   outputFormat?: Prisma.StringFieldUpdateOperationsInput | string
   constraints?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1239,6 +1279,7 @@ export type ProblemUncheckedUpdateManyWithoutCompetitionInput = {
   acceptanceRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   tags?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
+  methodName?: Prisma.StringFieldUpdateOperationsInput | string
   inputFormat?: Prisma.StringFieldUpdateOperationsInput | string
   outputFormat?: Prisma.StringFieldUpdateOperationsInput | string
   constraints?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1307,6 +1348,7 @@ export type ProblemSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   acceptanceRate?: boolean
   tags?: boolean
   description?: boolean
+  methodName?: boolean
   inputFormat?: boolean
   outputFormat?: boolean
   constraints?: boolean
@@ -1332,6 +1374,7 @@ export type ProblemSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   acceptanceRate?: boolean
   tags?: boolean
   description?: boolean
+  methodName?: boolean
   inputFormat?: boolean
   outputFormat?: boolean
   constraints?: boolean
@@ -1353,6 +1396,7 @@ export type ProblemSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   acceptanceRate?: boolean
   tags?: boolean
   description?: boolean
+  methodName?: boolean
   inputFormat?: boolean
   outputFormat?: boolean
   constraints?: boolean
@@ -1374,6 +1418,7 @@ export type ProblemSelectScalar = {
   acceptanceRate?: boolean
   tags?: boolean
   description?: boolean
+  methodName?: boolean
   inputFormat?: boolean
   outputFormat?: boolean
   constraints?: boolean
@@ -1383,7 +1428,7 @@ export type ProblemSelectScalar = {
   updatedAt?: boolean
 }
 
-export type ProblemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "title" | "slug" | "difficulty" | "points" | "timeLimitMs" | "memoryLimitMb" | "acceptanceRate" | "tags" | "description" | "inputFormat" | "outputFormat" | "constraints" | "starterTemplates" | "competitionId" | "createdAt" | "updatedAt", ExtArgs["result"]["problem"]>
+export type ProblemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "title" | "slug" | "difficulty" | "points" | "timeLimitMs" | "memoryLimitMb" | "acceptanceRate" | "tags" | "description" | "methodName" | "inputFormat" | "outputFormat" | "constraints" | "starterTemplates" | "competitionId" | "createdAt" | "updatedAt", ExtArgs["result"]["problem"]>
 export type ProblemInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   competition?: boolean | Prisma.CompetitionDefaultArgs<ExtArgs>
   sampleTestCases?: boolean | Prisma.Problem$sampleTestCasesArgs<ExtArgs>
@@ -1417,6 +1462,7 @@ export type $ProblemPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     acceptanceRate: number | null
     tags: string
     description: string
+    methodName: string
     inputFormat: string
     outputFormat: string
     constraints: string
@@ -1861,6 +1907,7 @@ export interface ProblemFieldRefs {
   readonly acceptanceRate: Prisma.FieldRef<"Problem", 'Float'>
   readonly tags: Prisma.FieldRef<"Problem", 'String'>
   readonly description: Prisma.FieldRef<"Problem", 'String'>
+  readonly methodName: Prisma.FieldRef<"Problem", 'String'>
   readonly inputFormat: Prisma.FieldRef<"Problem", 'String'>
   readonly outputFormat: Prisma.FieldRef<"Problem", 'String'>
   readonly constraints: Prisma.FieldRef<"Problem", 'String'>

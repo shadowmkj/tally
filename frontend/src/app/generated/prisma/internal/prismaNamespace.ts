@@ -1380,6 +1380,7 @@ export const ProblemScalarFieldEnum = {
   acceptanceRate: 'acceptanceRate',
   tags: 'tags',
   description: 'description',
+  methodName: 'methodName',
   inputFormat: 'inputFormat',
   outputFormat: 'outputFormat',
   constraints: 'constraints',
