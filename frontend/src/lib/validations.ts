@@ -31,6 +31,10 @@ export const problemSchema = z.object({
         .trim()
         .min(3, 'Problem title must be at least 3 characters long')
         .max(120, 'Problem title cannot exceed 120 characters'),
+    methodName: z
+        .string({ error: 'Method name is required' })
+        .trim()
+        .min(1, 'Method name is required'),
     difficulty: z.enum(['Easy', 'Medium', 'Hard'], {
         error: 'Difficulty must be Easy, Medium, or Hard',
     }),

@@ -37,6 +37,7 @@ export async function POST(req: Request) {
                 id: problem.id || undefined,
                 title: problem.title,
                 slug: problem.slug || problem.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+                methodName: problem.methodName || 'solve',
                 difficulty: problem.difficulty || 'Easy',
                 points: Number(problem.points || 100),
                 timeLimitMs: Number(problem.timeLimitMs || 1000),
@@ -101,6 +102,7 @@ export async function PUT(req: Request) {
             data: {
                 title: problem.title,
                 slug: problem.slug || problem.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+                methodName: problem.methodName || 'solve',
                 difficulty: problem.difficulty,
                 points: Number(problem.points || 100),
                 timeLimitMs: Number(problem.timeLimitMs || 1000),

@@ -71,6 +71,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
   const [showAddProblemModal, setShowAddProblemModal] = useState(false);
   const [probTitle, setProbTitle] = useState('5. Subarray Sum Equals K');
+  const [probMethodName, setProbMethodName] = useState('subarraySum');
   const [probDiff, setProbDiff] = useState<Difficulty>('Medium');
   const [probPoints, setProbPoints] = useState(200);
   const [probTimeLimitMs, setProbTimeLimitMs] = useState(1000);
@@ -81,6 +82,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
   const [problemFormErrors, setProblemFormErrors] = useState<{
     title?: string;
+    methodName?: string;
     points?: string;
     timeLimitMs?: string;
     memoryLimitMb?: string;
@@ -102,6 +104,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const handleOpenAddProblemModal = () => {
     setEditingProblem(null);
     setProbTitle('');
+    setProbMethodName('');
     setProbDiff('Easy');
     setProbPoints(100);
     setProbTimeLimitMs(1000);
@@ -116,6 +119,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const handleOpenEditProblemModal = (p: Problem) => {
     setEditingProblem(p);
     setProbTitle(p.title);
+    setProbMethodName(p.methodName || '');
     setProbDiff(p.difficulty as Difficulty);
     setProbPoints(p.points);
     setProbTimeLimitMs(p.timeLimitMs || 1000);
@@ -183,6 +187,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           id: `p-${now}-${randSuffix}`,
           title: '1. Two Sum Target',
           slug: 'two-sum-target',
+          methodName: 'twoSum',
           difficulty: 'Easy',
           points: 100,
           timeLimitMs: 1000,
@@ -241,6 +246,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
     const payload = {
       title: probTitle.trim(),
+      methodName: probMethodName.trim(),
       difficulty: probDiff,
       points: Number(probPoints),
       timeLimitMs: Number(probTimeLimitMs),
@@ -271,6 +277,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         ...editingProblem,
         title: probTitle.trim(),
         slug: probTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        methodName: probMethodName.trim(),
         difficulty: probDiff,
         points: Number(probPoints),
         timeLimitMs: Number(probTimeLimitMs),
@@ -312,6 +319,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         id: `p-${now}-${randSuffix}`,
         title: probTitle.trim(),
         slug: probTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        methodName: probMethodName.trim(),
         difficulty: probDiff,
         points: Number(probPoints),
         timeLimitMs: Number(probTimeLimitMs),
@@ -519,7 +527,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                           {p.title}
                         </div>
                         <div className="text-[10px] text-zinc-500 mt-0.5">
-                          {p.points} Points • {p.difficulty} • Time: {p.timeLimitMs}ms
+                          {p.points} Points • {p.difficulty} • Time: {p.timeLimitMs}ms{p.methodName ? ` • Method: ${p.methodName}` : ''}
                         </div>
                       </div>
 
@@ -784,26 +792,50 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             </div>
 
             <form onSubmit={handleSaveProblem} className="space-y-3">
-              <div>
-                <label className="block text-xs font-mono text-zinc-400 mb-1">Problem Title</label>
-                <input
-                  type="text"
-                  value={probTitle}
-                  onChange={(e) => {
-                    setProbTitle(e.target.value);
-                    setProblemFormErrors(prev => ({ ...prev, title: undefined }));
-                  }}
-                  placeholder="e.g. 5. Subarray Sum Equals K"
-                  className={`w-full bg-zinc-950 border rounded-xl px-3 py-2 text-xs text-zinc-100 focus:outline-none ${
-                    problemFormErrors.title ? 'border-rose-500' : 'border-zinc-800 focus:border-amber-500'
-                  }`}
-                />
-                {problemFormErrors.title && (
-                  <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1 mt-1">
-                    <AlertTriangle className="w-3 h-3 text-rose-400 shrink-0" />
-                    <span>{problemFormErrors.title}</span>
-                  </p>
-                )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-mono text-zinc-400 mb-1">Problem Title</label>
+                  <input
+                    type="text"
+                    value={probTitle}
+                    onChange={(e) => {
+                      setProbTitle(e.target.value);
+                      setProblemFormErrors(prev => ({ ...prev, title: undefined }));
+                    }}
+                    placeholder="e.g. 5. Subarray Sum Equals K"
+                    className={`w-full bg-zinc-950 border rounded-xl px-3 py-2 text-xs text-zinc-100 focus:outline-none ${
+                      problemFormErrors.title ? 'border-rose-500' : 'border-zinc-800 focus:border-amber-500'
+                    }`}
+                  />
+                  {problemFormErrors.title && (
+                    <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1 mt-1">
+                      <AlertTriangle className="w-3 h-3 text-rose-400 shrink-0" />
+                      <span>{problemFormErrors.title}</span>
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono text-zinc-400 mb-1">Method Name</label>
+                  <input
+                    type="text"
+                    value={probMethodName}
+                    onChange={(e) => {
+                      setProbMethodName(e.target.value);
+                      setProblemFormErrors(prev => ({ ...prev, methodName: undefined }));
+                    }}
+                    placeholder="e.g. twoSum or solve"
+                    className={`w-full bg-zinc-950 border rounded-xl px-3 py-2 text-xs font-mono text-zinc-100 focus:outline-none ${
+                      problemFormErrors.methodName ? 'border-rose-500' : 'border-zinc-800 focus:border-amber-500'
+                    }`}
+                  />
+                  {problemFormErrors.methodName && (
+                    <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1 mt-1">
+                      <AlertTriangle className="w-3 h-3 text-rose-400 shrink-0" />
+                      <span>{problemFormErrors.methodName}</span>
+                    </p>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
