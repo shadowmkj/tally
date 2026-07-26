@@ -78,6 +78,31 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
         isSubmitMode?: boolean;
     } | null>(null);
 
+    const [shortcutLabel, setShortcutLabel] = useState('⌘↵');
+
+    useEffect(() => {
+        if (typeof window !== 'undefined' && navigator.userAgent) {
+            const isMacHost = /Mac|iPod|iPhone|iPad/.test(navigator.userAgent);
+            setShortcutLabel(isMacHost ? '⌘↵' : 'Ctrl+↵');
+        }
+    }, []);
+
+    const handleSubmitCodeRef = React.useRef<(() => void) | null>(null);
+    useEffect(() => {
+        handleSubmitCodeRef.current = handleSubmitCode;
+    });
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                e.preventDefault();
+                handleSubmitCodeRef.current?.();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
     useEffect(() => {
         setCode(problem.starterTemplates[language] || '');
     }, [language, problem]);
@@ -248,10 +273,14 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
                     <button
                         onClick={handleSubmitCode}
                         disabled={isRunning || isSubmitting}
+                        title={`Submit solution (${shortcutLabel === '⌘↵' ? '⌘+Enter' : 'Ctrl+Enter'})`}
                         className="px-3 sm:px-4 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 font-bold text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/20 transition-all disabled:opacity-50"
                     >
                         <Send className="w-3.5 h-3.5" />
                         <span>{isSubmitting ? '...' : 'Submit'}</span>
+                        <span className="hidden lg:inline-block text-[10px] opacity-75 font-mono font-normal">
+                            ({shortcutLabel})
+                        </span>
                     </button>
                 </div>
             </div>
@@ -477,6 +506,11 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
                             theme="vs-dark"
                             value={code}
                             onChange={(value) => setCode(value || '')}
+                            onMount={(editor, monaco) => {
+                                editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+                                    handleSubmitCodeRef.current?.();
+                                });
+                            }}
                             options={{
                                 fontSize: 13,
                                 minimap: { enabled: false },
