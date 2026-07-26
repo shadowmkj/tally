@@ -261,16 +261,6 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
                 {/* Right Action Bar */}
                 <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                     <button
-                        onClick={handleRunCode}
-                        disabled={isRunning || isSubmitting}
-                        className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-semibold text-xs flex items-center gap-1.5 transition-all disabled:opacity-50"
-                    >
-                        <Play className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                        <span className="hidden sm:inline">{isRunning ? 'Running...' : 'Run Code'}</span>
-                        <span className="sm:hidden">{isRunning ? '...' : 'Run'}</span>
-                    </button>
-
-                    <button
                         onClick={handleSubmitCode}
                         disabled={isRunning || isSubmitting}
                         title={`Submit solution (${shortcutLabel === '⌘↵' ? '⌘+Enter' : 'Ctrl+Enter'})`}
