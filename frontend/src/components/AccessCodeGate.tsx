@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { KeyRound, ShieldCheck, Sparkles, ArrowRight } from 'lucide-react';
+import { KeyRound, ShieldCheck, ArrowRight } from 'lucide-react';
 import type { Competition, UserSession } from '@/context/CompetitionContext';
-import { ModalPortal } from '@/components/ModalPortal';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 interface AccessCodeGateProps {
     competitions: Competition[];
@@ -68,14 +70,13 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
     };
 
     return (
-        <ModalPortal>
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-zinc-950/80 backdrop-blur-md animate-fadeIn overflow-y-auto">
-                <div className="relative w-full max-w-lg bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden my-auto max-h-[calc(100vh-2rem)] overflow-y-auto">
-                    {/* Top Glow Bar */}
-                    <div className="h-1.5 bg-gradient-to-r from-primary-500 via-primary-400 to-yellow-500"></div>
+        <Dialog open={true} onOpenChange={(open) => { if (!open && onCloseModal) onCloseModal(); }}>
+            <DialogContent className="p-0">
+                {/* Top Glow Bar */}
+                <div className="h-1.5 bg-gradient-to-r from-primary-500 via-primary-400 to-yellow-500"></div>
 
-                    <div className="p-4 sm:p-8 space-y-4 sm:space-y-6">
-                        <div className="text-center space-y-2">
+                <div className="p-4 sm:p-8 space-y-4 sm:space-y-6">
+                    <div className="text-center space-y-2">
                         <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary-500/10 border border-primary-500/20 text-primary-400 mb-1">
                             <KeyRound className="w-6 h-6 stroke-[2.5]" />
                         </div>
@@ -113,14 +114,14 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
                                 })}
                             </div>
 
-                            <input
+                            <Input
                                 id="access-code-input"
                                 type="text"
                                 value={accessCode}
                                 onChange={(e) => handleCharInput(e.target.value)}
                                 maxLength={6}
                                 placeholder="Type 6-digit code e.g. WEC2026"
-                                className="w-full mt-2 bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-center font-mono font-bold text-primary-300 text-sm tracking-widest uppercase focus:outline-none focus:border-primary-500/80 transition-colors"
+                                className="mt-2 text-center font-mono font-bold text-primary-300 text-sm tracking-widest uppercase py-2.5 h-11"
                                 autoFocus
                             />
                         </div>
@@ -131,13 +132,13 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
                                 <label className="block text-xs font-semibold text-zinc-400 mb-1">
                                     Participant Name
                                 </label>
-                                <input
+                                <Input
                                     type="text"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     placeholder="e.g. Rishal P"
                                     required
-                                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-xs font-medium text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-primary-500"
+                                    className="font-medium"
                                 />
                             </div>
 
@@ -145,13 +146,13 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
                                 <label className="block text-xs font-semibold text-zinc-400 mb-1">
                                     College Register No. / ID
                                 </label>
-                                <input
+                                <Input
                                     type="text"
                                     value={collegeId}
                                     onChange={(e) => setCollegeId(e.target.value)}
                                     placeholder="e.g. KNR22CS078"
                                     required
-                                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-xs font-mono text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-primary-500 uppercase"
+                                    className="font-mono uppercase"
                                 />
                             </div>
                         </div>
@@ -167,52 +168,12 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
                         <button
                             type="submit"
                             id="join-contest-btn"
-                            className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-400 hover:to-primary-500 text-zinc-950 font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg shadow-primary-500/20 transition-all hover:scale-[1.01] active:scale-[0.99]"
+                            className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-400 hover:to-primary-500 text-zinc-950 font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg shadow-primary-500/20 transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
                         >
                             <span>Verify & Join Competition</span>
                             <ArrowRight className="w-4 h-4" />
                         </button>
                     </form>
-
-                    {/* Quick Active Contests Presets */}
-                    {/* <div className="pt-3 border-t border-zinc-800/80"> */}
-                    {/*   <div className="text-[11px] font-mono text-zinc-500 uppercase tracking-wider mb-2 flex items-center gap-1.5"> */}
-                    {/*     <Sparkles className="w-3 h-3 text-primary-400" /> */}
-                    {/*     <span>Available Active Contests:</span> */}
-                    {/*   </div> */}
-                    {/**/}
-                    {/*   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2"> */}
-                    {/*     {competitions.map((comp) => ( */}
-                    {/*       <div */}
-                    {/*         key={comp.id} */}
-                    {/*         onClick={() => { */}
-                    {/*           setAccessCode(comp.accessCode); */}
-                    {/*           setErrorMessage(''); */}
-                    {/*         }} */}
-                    {/*         className={`p-2.5 rounded-xl border text-left cursor-pointer transition-all ${ */}
-                    {/*           accessCode === comp.accessCode */}
-                    {/*             ? 'bg-amber-500/10 border-amber-500/50 text-amber-300' */}
-                    {/*             : 'bg-zinc-950/60 border-zinc-800 hover:border-zinc-700 text-zinc-300' */}
-                    {/*         }`} */}
-                    {/*       > */}
-                    {/*         <div className="flex items-center justify-between"> */}
-                    {/*           <span className="font-mono font-bold text-xs text-amber-400"> */}
-                    {/*             {comp.accessCode} */}
-                    {/*           </span> */}
-                    {/*           <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold"> */}
-                    {/*             Live */}
-                    {/*           </span> */}
-                    {/*         </div> */}
-                    {/*         <div className="text-xs font-semibold text-zinc-200 truncate mt-1"> */}
-                    {/*           {comp.title} */}
-                    {/*         </div> */}
-                    {/*         <div className="text-[10px] text-zinc-500 mt-0.5"> */}
-                    {/*           {comp.problems.length} Problems • {comp.durationMinutes} mins */}
-                    {/*         </div> */}
-                    {/*       </div> */}
-                    {/*     ))} */}
-                    {/*   </div> */}
-                    {/* </div> */}
 
                     {/* Seamless Notice Footer & Admin Link */}
                     <div className="flex flex-col items-center justify-center gap-1.5 text-[11px] text-zinc-500 pt-1 border-t border-zinc-800/60">
@@ -230,8 +191,7 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
                     </div>
 
                 </div>
-            </div>
-        </div>
-        </ModalPortal>
+            </DialogContent>
+        </Dialog>
     );
 };

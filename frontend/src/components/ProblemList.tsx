@@ -13,6 +13,8 @@ import {
   Trophy
 } from 'lucide-react';
 import type { Problem, Competition, SolvedProblemStatus } from '@/context/CompetitionContext';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 
 interface ProblemListProps {
   competition: Competition;
@@ -63,13 +65,13 @@ export const ProblemList: React.FC<ProblemListProps> = ({
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-md bg-primary-500/10 border border-primary-500/20 font-mono text-xs font-bold text-primary-400">
+              <Badge variant="default">
                 ACCESS CODE: {competition.accessCode}
-              </span>
-              <span className="px-2.5 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-xs font-bold text-emerald-400 flex items-center gap-1">
+              </Badge>
+              <Badge variant="success" className="flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                 LIVE CONTEST
-              </span>
+              </Badge>
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-black text-zinc-100 tracking-tight">
@@ -113,12 +115,12 @@ export const ProblemList: React.FC<ProblemListProps> = ({
         {/* Search */}
         <div className="relative w-full sm:w-80">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-          <input
+          <Input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search problem title or tag..."
-            className="w-full pl-9 pr-4 py-2 rounded-lg bg-zinc-950 border border-zinc-800 text-xs font-medium text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-primary-500/80"
+            className="pl-9 h-9"
           />
         </div>
 
@@ -133,7 +135,7 @@ export const ProblemList: React.FC<ProblemListProps> = ({
             <button
               key={diff}
               onClick={() => setDifficultyFilter(diff)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shrink-0 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shrink-0 cursor-pointer ${
                 difficultyFilter === diff
                   ? 'bg-primary-500 text-zinc-950 font-bold'
                   : 'bg-zinc-950 text-zinc-400 hover:bg-zinc-800 border border-zinc-800'
@@ -165,7 +167,7 @@ export const ProblemList: React.FC<ProblemListProps> = ({
             <tbody className="divide-y divide-zinc-800/60 text-xs font-medium">
               {filteredProblems.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-zinc-500">
+                  <td colSpan={7} className="py-12 text-center text-zinc-500 font-mono">
                     No problems match your current filters.
                   </td>
                 </tr>
@@ -204,17 +206,17 @@ export const ProblemList: React.FC<ProblemListProps> = ({
 
                       {/* Difficulty Badge */}
                       <td className="py-4 px-4 text-center">
-                        <span
-                          className={`inline-block px-2.5 py-1 rounded-md text-[11px] font-bold ${
+                        <Badge
+                          variant={
                             p.difficulty === 'Easy'
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                              ? 'success'
                               : p.difficulty === 'Medium'
-                              ? 'bg-primary-500/10 text-primary-400 border border-primary-500/20'
-                              : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                          }`}
+                              ? 'default'
+                              : 'destructive'
+                          }
                         >
                           {p.difficulty}
-                        </span>
+                        </Badge>
                       </td>
 
                       {/* Points */}

@@ -12,6 +12,8 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import type { Competition, Participant } from '@/context/CompetitionContext';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 
 interface LeaderboardProps {
   competition: Competition;
@@ -118,7 +120,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
           
           <button
             onClick={() => setAutoRefresh(!autoRefresh)}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-mono transition-all ${
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-mono transition-all cursor-pointer ${
               autoRefresh
                 ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
                 : 'bg-zinc-800 border-zinc-700 text-zinc-400'
@@ -130,7 +132,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
 
           <button
             onClick={handleExportCSV}
-            className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-200 font-semibold text-xs transition-colors shadow-sm"
+            className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-200 font-semibold text-xs transition-colors shadow-sm cursor-pointer"
           >
             <Download className="w-3.5 h-3.5 text-primary-400" />
             <span>Export CSV</span>
@@ -153,12 +155,12 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-zinc-900/60 p-4 rounded-xl border border-zinc-800">
         <div className="relative w-full sm:w-80">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-          <input
+          <Input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search participant name or register ID..."
-            className="w-full pl-9 pr-4 py-2 rounded-lg bg-zinc-950 border border-zinc-800 text-xs font-medium text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-primary-500/80"
+            className="pl-9 h-9"
           />
         </div>
 

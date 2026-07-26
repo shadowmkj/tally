@@ -3,7 +3,9 @@
 import React from 'react';
 import { Megaphone, Pin, Clock } from 'lucide-react';
 import type { Announcement } from '@/context/CompetitionContext';
-import { ModalPortal } from '@/components/ModalPortal';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 interface AnnouncementsModalProps {
   announcements: Announcement[];
@@ -15,13 +17,8 @@ export const AnnouncementsModal: React.FC<AnnouncementsModalProps> = ({
   onClose,
 }) => {
   return (
-    <ModalPortal>
-      <div 
-        className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-zinc-950/80 backdrop-blur-md animate-fadeIn overflow-y-auto"
-        onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-      >
-        <div className="w-full max-w-lg bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh] my-auto">
-        
+    <Dialog open={true} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="p-0 max-h-[85vh] flex flex-col">
         {/* Modal Header */}
         <div className="p-4 bg-zinc-950 border-b border-zinc-800 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -36,7 +33,7 @@ export const AnnouncementsModal: React.FC<AnnouncementsModalProps> = ({
 
           <button
             onClick={onClose}
-            className="p-1 text-zinc-400 hover:text-zinc-100 text-sm font-mono"
+            className="p-1 text-zinc-400 hover:text-zinc-100 text-sm font-mono cursor-pointer"
           >
             ✕
           </button>
@@ -45,14 +42,14 @@ export const AnnouncementsModal: React.FC<AnnouncementsModalProps> = ({
         {/* Modal Content */}
         <div className="p-4 overflow-y-auto space-y-3 flex-1">
           {announcements.length === 0 ? (
-            <div className="py-12 text-center text-zinc-500 text-xs">
+            <div className="py-12 text-center text-zinc-500 text-xs font-mono">
               No broadcasts posted yet for this competition.
             </div>
           ) : (
             announcements.map((a) => (
-              <div
+              <Card
                 key={a.id}
-                className={`p-4 rounded-xl border space-y-2 text-xs ${
+                className={`p-4 rounded-xl space-y-2 text-xs border ${
                   a.pinned
                     ? 'bg-primary-500/10 border-primary-500/40 text-primary-200'
                     : 'bg-zinc-950 border-zinc-800 text-zinc-300'
@@ -72,23 +69,22 @@ export const AnnouncementsModal: React.FC<AnnouncementsModalProps> = ({
                 <div className="text-xs leading-relaxed whitespace-pre-line text-zinc-300">
                   {a.text}
                 </div>
-              </div>
+              </Card>
             ))
           )}
         </div>
 
         {/* Footer */}
         <div className="p-3 bg-zinc-950 border-t border-zinc-800 text-center">
-          <button
+          <Button
             onClick={onClose}
-            className="w-full py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-semibold text-xs transition-colors"
+            variant="secondary"
+            className="w-full py-2 h-auto text-xs rounded-xl cursor-pointer"
           >
             Close & Back to Contest
-          </button>
+          </Button>
         </div>
-
-      </div>
-    </div>
-    </ModalPortal>
+      </DialogContent>
+    </Dialog>
   );
 };

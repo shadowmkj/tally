@@ -4,6 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ShieldCheck, Lock, Mail, ArrowRight, AlertCircle } from 'lucide-react';
 import { authClient } from '@/lib/auth-client';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 export function AdminLoginForm() {
     const router = useRouter();
@@ -65,7 +68,7 @@ export function AdminLoginForm() {
 
     return (
         <div className="min-h-[85vh] flex items-center justify-center p-4">
-            <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden animate-fadeIn">
+            <Card className="w-full max-w-md animate-fadeIn">
                 {/* Glow accent */}
                 <div className="h-1.5 bg-gradient-to-r from-primary-500 via-primary-400 to-yellow-500"></div>
 
@@ -88,12 +91,12 @@ export function AdminLoginForm() {
                                 <label className="block text-xs font-mono font-bold text-zinc-400 mb-1 uppercase">
                                     Admin Name
                                 </label>
-                                <input
+                                <Input
                                     type="text"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     required
-                                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-primary-500"
+                                    className="py-2.5 h-10"
                                 />
                             </div>
                         )}
@@ -104,13 +107,13 @@ export function AdminLoginForm() {
                             </label>
                             <div className="relative">
                                 <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-                                <input
+                                <Input
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
                                     placeholder="admin@wecode.gcek.ac.in"
-                                    className="w-full pl-9 pr-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-primary-500"
+                                    className="pl-9 py-2.5 h-10"
                                 />
                             </div>
                         </div>
@@ -121,13 +124,13 @@ export function AdminLoginForm() {
                             </label>
                             <div className="relative">
                                 <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-                                <input
+                                <Input
                                     type="password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
                                     placeholder="••••••••••••"
-                                    className="w-full pl-9 pr-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-primary-500 font-mono"
+                                    className="pl-9 py-2.5 h-10 font-mono"
                                 />
                             </div>
                         </div>
@@ -142,7 +145,7 @@ export function AdminLoginForm() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-400 hover:to-primary-500 text-zinc-950 font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg shadow-primary-500/20 transition-all disabled:opacity-50"
+                            className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-400 hover:to-primary-500 text-zinc-950 font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg shadow-primary-500/20 transition-all disabled:opacity-50 cursor-pointer"
                         >
                             <span>{loading ? 'Authenticating...' : isSignUp ? 'Create Admin Account' : 'Sign In as Admin'}</span>
                             <ArrowRight className="w-4 h-4" />
@@ -153,7 +156,7 @@ export function AdminLoginForm() {
                         <button
                             type="button"
                             onClick={() => setIsSignUp(!isSignUp)}
-                            className="text-xs text-zinc-400 hover:text-primary-300 transition-colors block w-full"
+                            className="text-xs text-zinc-400 hover:text-primary-300 transition-colors block w-full cursor-pointer"
                         >
                             {isSignUp ? 'Already have an admin account? Sign In' : 'Need to register a new admin account? Sign Up'}
                         </button>
@@ -167,7 +170,7 @@ export function AdminLoginForm() {
                         </div>
                     </div>
                 </div>
-            </div>
+            </Card>
         </div>
     );
 }
