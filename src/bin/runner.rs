@@ -3,7 +3,7 @@ use std::fs;
 use bollard::{API_DEFAULT_VERSION, Docker};
 use clap::Parser;
 use redis::AsyncCommands;
-use tally::models::{Job, Language, SubmissionResult, TestCase, Verdict};
+use tally::models::{Job, Language, TestCase, Verdict};
 use tally::runner;
 
 #[derive(Parser, Debug)]
@@ -40,11 +40,21 @@ struct Cli {
     /// Redis queue to listen to for jobs.
     #[arg(long)]
     listen_queue: Option<String>,
+
+    /// Path to SQLite database file.
+    #[arg(long, env = "SQLITE_PATH", default_value = "frontend/dev.db")]
+    sqlite_path: String,
 }
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
     let cli = Cli::parse();
+
+    let sqlite_conn = tally::db::connect(&cli.sqlite_path)?;
+    println!(
+        "Successfully connected to SQLite database at '{}'.",
+        cli.sqlite_path
+    );
 
     let docker = Docker::connect_with_unix(&cli.docker_socket, 120, API_DEFAULT_VERSION)?;
     println!("Successfully connected to Docker daemon.");
@@ -116,22 +126,31 @@ async fn main() -> Result<(), anyhow::Error> {
                                         job.problem_id, passed, total
                                     );
 
-                                    let submission = SubmissionResult::new(
-                                        job.user,
-                                        job.user_id,
-                                        results,
-                                        job.problem_id,
-                                        job.problem_slug,
-                                        passed == total,
-                                        passed as u32,
-                                        (total - passed) as u32,
-                                    );
+                                    match tally::db::update_submission_status(
+                                        &sqlite_conn,
+                                        &job,
+                                        &results,
+                                    ) {
+                                        Ok(Some(sub_id)) => {
+                                            println!(
+                                                "Updated SQLite submission '{}' status.",
+                                                sub_id
+                                            );
+                                        }
+                                        Ok(None) => {
+                                            println!(
+                                                "No matching submission found in SQLite database to update."
+                                            );
+                                        }
+                                        Err(e) => {
+                                            eprintln!(
+                                                "Failed to update SQLite submission: {:?}",
+                                                e
+                                            );
+                                        }
+                                    }
 
-                                    let _: i64 = con
-                                        .lpush("results", serde_json::to_string(&submission)?)
-                                        .await?;
-
-                                    for result in &submission.tests {
+                                    for result in &results {
                                         println!("  Test Case {}: {}", result.id, result.verdict);
                                     }
                                 }

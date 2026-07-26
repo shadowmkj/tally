@@ -6,8 +6,8 @@ export async function POST(req: Request) {
         const body = await req.json();
         const { submission, participant } = body;
 
-        let compId = submission.competitionId;
-        const comp = await prisma.competition.findFirst({
+        // 1. Resolve Competition ID (by ID or Access Code)
+        let comp = await prisma.competition.findFirst({
             where: {
                 OR: [
                     { id: submission.competitionId },
@@ -15,8 +15,32 @@ export async function POST(req: Request) {
                 ],
             },
         });
-        if (comp) {
-            compId = comp.id;
+        if (!comp) {
+            comp = await prisma.competition.findFirst();
+        }
+
+        if (!comp) {
+            return NextResponse.json(
+                { error: 'No competition found in database' },
+                { status: 400 }
+            );
+        }
+
+        // 2. Resolve Problem ID (by ID or Slug)
+        let problem = await prisma.problem.findFirst({
+            where: {
+                OR: [
+                    { id: submission.problemId },
+                    { slug: submission.problemId },
+                ],
+            },
+        });
+
+        if (!problem) {
+            return NextResponse.json(
+                { error: `Problem '${submission.problemId}' not found in database` },
+                { status: 400 }
+            );
         }
 
         const existingPart = await prisma.participant.findFirst({
@@ -40,9 +64,9 @@ export async function POST(req: Request) {
             },
             create: {
                 id: submission.id,
-                competitionId: compId,
-                problemId: submission.problemId,
-                problemTitle: submission.problemTitle,
+                competitionId: comp.id,
+                problemId: problem.id,
+                problemTitle: submission.problemTitle || problem.title,
                 participantId: existingPart?.id || null,
                 participantName: submission.participantName,
                 collegeId: submission.collegeId,
@@ -82,7 +106,7 @@ export async function POST(req: Request) {
                     totalPenaltyTimeMinutes: Number(participant.totalPenaltyTimeMinutes || 0),
                     solvedProblems: solvedStr,
                     lastActive: new Date(participant.lastActive || Date.now()),
-                    competitionId: compId,
+                    competitionId: comp.id,
                 },
             });
         }

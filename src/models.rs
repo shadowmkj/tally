@@ -81,6 +81,8 @@ pub struct Job {
     pub code: String,
     pub user: String,
     pub user_id: String,
+    #[serde(default, alias = "submission_id", alias = "submissionId")]
+    pub submission_id: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -95,6 +97,7 @@ pub struct SubmissionResult {
     pub failed: u32,
 }
 
+#[allow(clippy::too_many_arguments)]
 impl SubmissionResult {
     pub fn new(
         user: String,

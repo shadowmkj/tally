@@ -105,12 +105,47 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
         }, 600);
     };
 
-    const handleSubmitCode = () => {
+    const handleSubmitCode = async () => {
         setIsSubmitting(true);
         setBottomDrawerOpen(true);
         setBottomTab('result');
 
+        const submissionId = `sub-${Date.now()}`;
+
+        const initialSubmission: Submission = {
+            id: submissionId,
+            competitionId: problem.competitionId || 'wecode-annual-2026',
+            problemId: problem.id,
+            problemTitle: problem.title,
+            participantId: session?.participantId || 'part-guest',
+            participantName: session?.name || 'Guest Participant',
+            collegeId: session?.collegeId || 'KNR22CS000',
+            language,
+            code,
+            status: 'Evaluating',
+            testCasesPassed: 0,
+            totalTestCases: (problem.sampleTestCases?.length || 0) + (problem.testCases?.length || 0),
+            runtimeMs: 0,
+            runtimePercentile: 0,
+            memoryMb: 0,
+            memoryPercentile: 0,
+            timestamp: new Date().toISOString(),
+        };
+
+        // 1. Save initial submission into DB with 'Evaluating' status
+        try {
+            await fetch('/api/submissions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ submission: initialSubmission }),
+            });
+        } catch (err) {
+            console.error('[DB Insert Error] Failed to create initial submission:', err);
+        }
+
+        // 2. Submit job to Redis queue
         const newSubmit = {
+            submission_id: submissionId,
             problem_id: problem.id,
             problem_slug: problem.slug,
             language,
@@ -120,55 +155,52 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
             user_id: session?.participantId || "part-guest",
         };
 
-        // Submit newSubmit variable to Redis queue named "jobs"
-        fetch('/api/submissions/queue', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ newSubmit }),
-        }).catch((err) => {
-            console.error('[Redis Queue Error] Failed to submit job:', err);
-        });
-
-        setTimeout(() => {
-            const result = runCodeOnTestCases(problem, code, language);
-            setLatestResult({
-                ...result,
-                isSubmitMode: true,
+        try {
+            await fetch('/api/submissions/queue', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ newSubmit }),
             });
-            setIsSubmitting(false);
+        } catch (err) {
+            console.error('[Redis Queue Error] Failed to submit job:', err);
+        }
 
-            if (result.status === 'Accepted') {
-                confetti({
-                    particleCount: 80,
-                    spread: 70,
-                    origin: { y: 0.6 }
-                });
+        // 3. Poll /api/submissions/[id] until status changes from 'Evaluating'
+        const pollInterval = setInterval(async () => {
+            try {
+                const res = await fetch(`/api/submissions/${submissionId}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.completed || (data.submission && data.submission.status.toLowerCase() !== 'evaluating')) {
+                        clearInterval(pollInterval);
+                        setIsSubmitting(false);
+                        const sub = data.submission;
+                        setLatestResult({
+                            status: sub.status,
+                            testCasesPassed: sub.testCasesPassed,
+                            totalTestCases: sub.totalTestCases,
+                            results: sub.results || [],
+                            runtimeMs: sub.runtimeMs,
+                            runtimePercentile: sub.runtimePercentile,
+                            memoryMb: sub.memoryMb,
+                            memoryPercentile: sub.memoryPercentile,
+                            errorLog: sub.errorLog,
+                            isSubmitMode: true,
+                        });
+                        if (sub.status === 'Accepted') {
+                            confetti({
+                                particleCount: 80,
+                                spread: 70,
+                                origin: { y: 0.6 }
+                            });
+                        }
+                        onSubmitFinished(sub);
+                    }
+                }
+            } catch (err) {
+                console.error('[Polling Error] Failed to poll submission status:', err);
             }
-
-            const newSubmission: Submission = {
-                id: `sub-${Date.now()}`,
-                competitionId: 'wecode-annual-2026',
-                problemId: problem.id,
-                problemTitle: problem.title,
-                participantId: session?.participantId || 'part-guest',
-                participantName: session?.name || 'Guest Participant',
-                collegeId: session?.collegeId || 'KNR22CS000',
-                language,
-                code,
-                status: result.status,
-                testCasesPassed: result.testCasesPassed,
-                totalTestCases: result.totalTestCases,
-                runtimeMs: result.runtimeMs,
-                runtimePercentile: result.runtimePercentile,
-                memoryMb: result.memoryMb,
-                memoryPercentile: result.memoryPercentile,
-                timestamp: new Date().toISOString(),
-                errorLog: result.errorLog,
-                results: result.results,
-            };
-
-            onSubmitFinished(newSubmission);
-        }, 1200);
+        }, 1000);
     };
 
     return (
