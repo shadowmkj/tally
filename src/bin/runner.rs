@@ -118,6 +118,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
                                     let submission = SubmissionResult::new(
                                         job.user,
+                                        job.user_id,
                                         results,
                                         job.problem_id,
                                         job.problem_slug,

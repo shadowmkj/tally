@@ -73,20 +73,22 @@ pub enum Language {
 /// Incoming job payload from Redis queue.
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Job {
-    pub problem_id: i32,
+    pub problem_id: String,
     pub problem_slug: String,
     pub language: Language,
     pub method_name: String,
     pub type_schema: Option<String>,
     pub code: String,
     pub user: String,
+    pub user_id: String,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct SubmissionResult {
     pub user: String,
+    pub user_id: String,
     pub tests: Vec<TestCaseResult>,
-    pub problem_id: i32,
+    pub problem_id: String,
     pub problem_slug: String,
     pub success: bool,
     pub passed: u32,
@@ -96,8 +98,9 @@ pub struct SubmissionResult {
 impl SubmissionResult {
     pub fn new(
         user: String,
+        user_id: String,
         tests: Vec<TestCaseResult>,
-        problem_id: i32,
+        problem_id: String,
         problem_slug: String,
         success: bool,
         passed: u32,
@@ -105,6 +108,7 @@ impl SubmissionResult {
     ) -> Self {
         Self {
             user,
+            user_id,
             tests,
             problem_id,
             problem_slug,

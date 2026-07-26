@@ -3,6 +3,7 @@
 import React from 'react';
 import { Megaphone, Pin, Clock } from 'lucide-react';
 import type { Announcement } from '@/context/CompetitionContext';
+import { ModalPortal } from '@/components/ModalPortal';
 
 interface AnnouncementsModalProps {
   announcements: Announcement[];
@@ -14,8 +15,12 @@ export const AnnouncementsModal: React.FC<AnnouncementsModalProps> = ({
   onClose,
 }) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-zinc-950/80 backdrop-blur-md animate-fadeIn">
-      <div className="w-full max-w-lg max-w-[calc(100vw-1.5rem)] bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[80vh]">
+    <ModalPortal>
+      <div 
+        className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-zinc-950/80 backdrop-blur-md animate-fadeIn overflow-y-auto"
+        onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      >
+        <div className="w-full max-w-lg bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh] my-auto">
         
         {/* Modal Header */}
         <div className="p-4 bg-zinc-950 border-b border-zinc-800 flex items-center justify-between">
@@ -84,5 +89,6 @@ export const AnnouncementsModal: React.FC<AnnouncementsModalProps> = ({
 
       </div>
     </div>
+    </ModalPortal>
   );
 };
