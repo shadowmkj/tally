@@ -611,33 +611,37 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
                                                     <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-mono whitespace-pre-wrap">
                                                         {latestResult.errorLog}
                                                     </div>
+                                                ) : (latestResult.results.length > 0 && latestResult.results.every((r) => r.passed)) || latestResult.status === 'Accepted' ? (
+                                                    <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium flex items-center gap-2">
+                                                        <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+                                                        <span>All {latestResult.totalTestCases || latestResult.results.length} test cases passed successfully!</span>
+                                                    </div>
                                                 ) : (
                                                     <div className="space-y-2">
-                                                        {latestResult.results.map((r, i) => (
-                                                            <div
-                                                                key={i}
-                                                                className="p-3 rounded-lg bg-zinc-950 border border-zinc-800 text-xs font-mono space-y-1"
-                                                            >
-                                                                <div className="flex items-center justify-between">
-                                                                    <span className="font-bold text-zinc-300">Testcase {i + 1}</span>
-                                                                    <span className={r.passed ? 'text-emerald-400' : 'text-rose-400'}>
-                                                                        {r.passed ? 'PASSED' : 'FAILED'}
-                                                                    </span>
-                                                                </div>
-                                                                {!r.passed && (
+                                                        {latestResult.results
+                                                            .map((r, i) => ({ result: r, index: i + 1 }))
+                                                            .filter(({ result }) => !result.passed)
+                                                            .map(({ result: r, index }) => (
+                                                                <div
+                                                                    key={index}
+                                                                    className="p-3 rounded-lg bg-zinc-950 border border-zinc-800 text-xs font-mono space-y-1"
+                                                                >
+                                                                    <div className="flex items-center justify-between">
+                                                                        <span className="font-bold text-zinc-300">Testcase {index}</span>
+                                                                        <span className="text-rose-400 font-bold">FAILED</span>
+                                                                    </div>
                                                                     <div className="grid grid-cols-2 gap-2 pt-1 text-[11px]">
                                                                         <div>
                                                                             <span className="text-zinc-500">Expected:</span>
-                                                                            <div className="bg-zinc-900 p-1.5 rounded text-emerald-300">{r.expectedOutput}</div>
+                                                                            <div className="bg-zinc-900 p-1.5 rounded text-emerald-300 overflow-x-auto font-mono">{r.expectedOutput}</div>
                                                                         </div>
                                                                         <div>
                                                                             <span className="text-zinc-500">Actual:</span>
-                                                                            <div className="bg-zinc-900 p-1.5 rounded text-rose-300">{r.actualOutput}</div>
+                                                                            <div className="bg-zinc-900 p-1.5 rounded text-rose-300 overflow-x-auto font-mono">{r.actualOutput}</div>
                                                                         </div>
                                                                     </div>
-                                                                )}
-                                                            </div>
-                                                        ))}
+                                                                </div>
+                                                            ))}
                                                     </div>
                                                 )}
 
