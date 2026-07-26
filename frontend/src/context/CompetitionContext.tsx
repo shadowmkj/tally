@@ -256,7 +256,7 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
 
         const existing = participants.find(
             p => (p.collegeId === newSession.collegeId || p.id === newSession.participantId) &&
-                 (p.accessCode.toUpperCase() === newSession.accessCode.toUpperCase() || (compId !== null && p.competitionId === compId))
+                (p.accessCode.toUpperCase() === newSession.accessCode.toUpperCase() || (compId !== null && p.competitionId === compId))
         );
         let participantToSync: Participant;
 
@@ -284,7 +284,6 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
             setParticipants(prev => prev.map(p => p.id === existing.id ? participantToSync : p));
         }
 
-        // Persist participant to Prisma database
         fetch('/api/participants', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -311,7 +310,7 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
 
         const existingPart = participants.find(
             p => (p.collegeId === session.collegeId || p.id === session.participantId) &&
-                 (p.accessCode.toUpperCase() === activeCompetition.accessCode.toUpperCase() || (activeCompetition.id !== '' && p.competitionId === activeCompetition.id))
+                (p.accessCode.toUpperCase() === activeCompetition.accessCode.toUpperCase() || (activeCompetition.id !== '' && p.competitionId === activeCompetition.id))
         );
         let updatedParticipant: Participant | null = null;
 

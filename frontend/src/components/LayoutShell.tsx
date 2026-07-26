@@ -40,7 +40,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
                     competitions={competitions}
                     onVerifySession={verifySession}
                     onCloseModal={() => setShowCodeGate(false)}
-                    initialCode={session?.accessCode || 'WEC2026'}
+                    initialCode={session?.accessCode}
                 />
             )}
 
