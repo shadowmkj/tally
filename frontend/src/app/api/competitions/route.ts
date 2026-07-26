@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import type { Announcement, Problem, SampleTestCase, TestCase } from '@/context/CompetitionContext';
 
 export async function GET() {
     try {
@@ -53,7 +54,7 @@ export async function POST(req: Request) {
                 isLive: Boolean(competition.isLive),
                 isLeaderboardFrozen: Boolean(competition.isLeaderboardFrozen),
                 announcements: {
-                    create: (competition.announcements || []).map((ann: any) => ({
+                    create: (competition.announcements || []).map((ann: Announcement) => ({
                         id: ann.id,
                         title: ann.title,
                         text: ann.text,
@@ -62,7 +63,7 @@ export async function POST(req: Request) {
                     })),
                 },
                 problems: {
-                    create: (competition.problems || []).map((prob: any) => ({
+                    create: (competition.problems || []).map((prob: Problem) => ({
                         id: prob.id,
                         title: prob.title,
                         slug: prob.slug,
@@ -78,7 +79,7 @@ export async function POST(req: Request) {
                         constraints: typeof prob.constraints === 'string' ? prob.constraints : JSON.stringify(prob.constraints || []),
                         starterTemplates: typeof prob.starterTemplates === 'string' ? prob.starterTemplates : JSON.stringify(prob.starterTemplates || {}),
                         sampleTestCases: {
-                            create: (prob.sampleTestCases || []).map((stc: any) => ({
+                            create: (prob.sampleTestCases || []).map((stc: SampleTestCase) => ({
                                 id: stc.id,
                                 input: stc.input,
                                 output: stc.output,
@@ -86,7 +87,7 @@ export async function POST(req: Request) {
                             })),
                         },
                         testCases: {
-                            create: (prob.testCases || []).map((tc: any) => ({
+                            create: (prob.testCases || []).map((tc: TestCase) => ({
                                 id: tc.id,
                                 input: tc.input,
                                 output: tc.output,

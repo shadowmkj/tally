@@ -23,46 +23,92 @@ export type TestCase = Omit<PrismaTestCase, 'problemId' | 'hidden'> & {
 };
 
 export type Announcement = Omit<PrismaAnnouncement, 'timestamp' | 'pinned' | 'competitionId'> & {
-    timestamp: any;
+    timestamp: Date | string;
     pinned?: boolean;
     competitionId?: string;
 };
 
 export type TestCaseResult = PrismaTestCaseResult;
 
-export type Problem = Omit<PrismaProblem, 'tags' | 'constraints' | 'starterTemplates' | 'competitionId' | 'createdAt' | 'updatedAt' | 'acceptanceRate'> & {
-    tags: any;
-    constraints: any;
-    starterTemplates: any;
+export type StarterTemplates = Record<string, string>;
+
+export type Problem = Omit<
+    PrismaProblem,
+    'tags' | 'constraints' | 'starterTemplates' | 'competitionId' | 'createdAt' | 'updatedAt' | 'acceptanceRate'
+> & {
+    tags: string[];
+    constraints: string[];
+    starterTemplates: StarterTemplates;
     sampleTestCases: SampleTestCase[];
     testCases: TestCase[];
     acceptanceRate?: number | null;
     competitionId?: string;
-    createdAt?: Date;
-    updatedAt?: Date;
+    createdAt?: Date | string;
+    updatedAt?: Date | string;
 };
 
-export type Participant = Omit<PrismaParticipant, 'solvedProblems' | 'competitionId' | 'createdAt' | 'updatedAt'> & {
-    solvedProblems: any;
+export type Participant = Omit<
+    PrismaParticipant,
+    'solvedProblems' | 'competitionId' | 'lastActive' | 'createdAt' | 'updatedAt'
+> & {
+    solvedProblems: Record<string, SolvedProblemStatus>;
     competitionId?: string | null;
-    createdAt?: Date;
-    updatedAt?: Date;
+    lastActive?: Date | string;
+    createdAt?: Date | string;
+    updatedAt?: Date | string;
 };
 
-export type Submission = Omit<PrismaSubmission, 'timestamp' | 'errorLog' | 'participantId' | 'createdAt'> & {
-    timestamp: any;
+export type Submission = Omit<
+    PrismaSubmission,
+    'timestamp' | 'errorLog' | 'participantId' | 'createdAt' | 'language' | 'status'
+> & {
+    timestamp: Date | string;
+    language: Language;
+    status: SubmissionStatus;
     errorLog?: string | null;
     participantId?: string | null;
-    createdAt?: Date;
-    results?: any;
+    createdAt?: Date | string;
+    results?: TestCaseResult[];
 };
 
 export type Competition = Omit<PrismaCompetition, 'startTime' | 'createdAt' | 'updatedAt'> & {
-    startTime: any;
+    startTime: Date | string;
     announcements: Announcement[];
     problems: Problem[];
-    createdAt?: Date;
-    updatedAt?: Date;
+    createdAt?: Date | string;
+    updatedAt?: Date | string;
+};
+
+export type RawProblem = Omit<PrismaProblem, 'tags' | 'constraints' | 'starterTemplates'> & {
+    tags?: string | string[];
+    constraints?: string | string[];
+    starterTemplates?: string | StarterTemplates;
+    sampleTestCases?: SampleTestCase[];
+    testCases?: TestCase[];
+};
+
+export type RawAnnouncement = Omit<PrismaAnnouncement, 'timestamp'> & {
+    timestamp?: Date | string;
+};
+
+export type RawCompetition = Omit<PrismaCompetition, 'startTime' | 'createdAt' | 'updatedAt'> & {
+    startTime?: Date | string;
+    announcements?: RawAnnouncement[];
+    problems?: RawProblem[];
+    createdAt?: Date | string;
+    updatedAt?: Date | string;
+};
+
+export type RawParticipant = Omit<PrismaParticipant, 'solvedProblems' | 'lastActive'> & {
+    solvedProblems?: string | Record<string, SolvedProblemStatus>;
+    lastActive?: Date | string;
+};
+
+export type RawSubmission = Omit<PrismaSubmission, 'timestamp' | 'language' | 'status'> & {
+    timestamp?: Date | string;
+    language?: string | Language;
+    status?: string | SubmissionStatus;
+    results?: TestCaseResult[];
 };
 
 export type Difficulty = 'Easy' | 'Medium' | 'Hard';
@@ -112,34 +158,66 @@ interface CompetitionContextType {
 
 const CompetitionContext = createContext<CompetitionContextType | undefined>(undefined);
 
-function formatCompetition(comp: any): Competition {
+function formatCompetition(comp: RawCompetition): Competition {
     return {
         ...comp,
+        id: comp.id,
+        accessCode: comp.accessCode,
+        title: comp.title,
+        subtitle: comp.subtitle || '',
+        description: comp.description || '',
+        durationMinutes: comp.durationMinutes,
+        isLive: comp.isLive,
+        isLeaderboardFrozen: comp.isLeaderboardFrozen,
         startTime: typeof comp.startTime === 'string' ? comp.startTime : new Date(comp.startTime || Date.now()).toISOString(),
-        announcements: (comp.announcements || []).map((ann: any): Announcement => ({
+        announcements: (comp.announcements || []).map((ann: RawAnnouncement): Announcement => ({
             ...ann,
+            id: ann.id,
+            title: ann.title,
+            text: ann.text,
+            pinned: Boolean(ann.pinned),
+            competitionId: ann.competitionId || '',
             timestamp: typeof ann.timestamp === 'string' ? ann.timestamp : new Date(ann.timestamp || Date.now()).toISOString(),
         })),
-        problems: (comp.problems || []).map((prob: any): Problem => {
-            let tags = prob.tags;
-            let constraints = prob.constraints;
-            let starterTemplates = prob.starterTemplates;
+        problems: (comp.problems || []).map((prob: RawProblem): Problem => {
+            let tags: string[] = [];
+            let constraints: string[] = [];
+            let starterTemplates: StarterTemplates = {};
 
-            if (typeof tags === 'string') {
-                try { tags = JSON.parse(tags); } catch (e) { tags = []; }
+            if (typeof prob.tags === 'string') {
+                try { tags = JSON.parse(prob.tags); } catch (e) { tags = []; }
+            } else if (Array.isArray(prob.tags)) {
+                tags = prob.tags;
             }
-            if (typeof constraints === 'string') {
-                try { constraints = JSON.parse(constraints); } catch (e) { constraints = []; }
+
+            if (typeof prob.constraints === 'string') {
+                try { constraints = JSON.parse(prob.constraints); } catch (e) { constraints = []; }
+            } else if (Array.isArray(prob.constraints)) {
+                constraints = prob.constraints;
             }
-            if (typeof starterTemplates === 'string') {
-                try { starterTemplates = JSON.parse(starterTemplates); } catch (e) { starterTemplates = {}; }
+
+            if (typeof prob.starterTemplates === 'string') {
+                try { starterTemplates = JSON.parse(prob.starterTemplates); } catch (e) { starterTemplates = {}; }
+            } else if (prob.starterTemplates && typeof prob.starterTemplates === 'object') {
+                starterTemplates = prob.starterTemplates as StarterTemplates;
             }
 
             return {
                 ...prob,
-                tags: Array.isArray(tags) ? tags : [],
-                constraints: Array.isArray(constraints) ? constraints : [],
-                starterTemplates: starterTemplates && typeof starterTemplates === 'object' ? starterTemplates : {},
+                id: prob.id,
+                title: prob.title,
+                slug: prob.slug,
+                difficulty: prob.difficulty,
+                points: prob.points,
+                timeLimitMs: prob.timeLimitMs,
+                memoryLimitMb: prob.memoryLimitMb,
+                description: prob.description,
+                inputFormat: prob.inputFormat,
+                outputFormat: prob.outputFormat,
+                competitionId: prob.competitionId,
+                tags,
+                constraints,
+                starterTemplates,
                 sampleTestCases: prob.sampleTestCases || [],
                 testCases: prob.testCases || [],
             };
@@ -147,23 +225,46 @@ function formatCompetition(comp: any): Competition {
     };
 }
 
-function formatParticipant(part: any): Participant {
-    let solvedProblems = part.solvedProblems;
-    if (typeof solvedProblems === 'string') {
-        try { solvedProblems = JSON.parse(solvedProblems); } catch (e) { solvedProblems = {}; }
+function formatParticipant(part: RawParticipant): Participant {
+    let solvedProblems: Record<string, SolvedProblemStatus> = {};
+    if (typeof part.solvedProblems === 'string') {
+        try { solvedProblems = JSON.parse(part.solvedProblems); } catch (e) { solvedProblems = {}; }
+    } else if (part.solvedProblems && typeof part.solvedProblems === 'object') {
+        solvedProblems = part.solvedProblems;
     }
     return {
         ...part,
-        solvedProblems: solvedProblems && typeof solvedProblems === 'object' ? solvedProblems : {},
+        id: part.id,
+        name: part.name,
+        collegeId: part.collegeId,
+        accessCode: part.accessCode,
+        totalScore: part.totalScore,
+        totalPenaltyTimeMinutes: part.totalPenaltyTimeMinutes,
+        solvedProblems,
         lastActive: typeof part.lastActive === 'string' ? part.lastActive : new Date(part.lastActive || Date.now()).toISOString(),
     };
 }
 
-function formatSubmission(sub: any): Submission {
+function formatSubmission(sub: RawSubmission): Submission {
     return {
         ...sub,
-        timestamp: typeof sub.timestamp === 'string' ? sub.timestamp : new Date(sub.timestamp || Date.now()).toISOString(),
+        id: sub.id,
+        competitionId: sub.competitionId,
+        problemId: sub.problemId,
+        problemTitle: sub.problemTitle,
         participantId: sub.participantId || '',
+        participantName: sub.participantName,
+        collegeId: sub.collegeId,
+        language: (sub.language || 'python') as Language,
+        code: sub.code,
+        status: (sub.status || 'Evaluating') as SubmissionStatus,
+        testCasesPassed: sub.testCasesPassed,
+        totalTestCases: sub.totalTestCases,
+        runtimeMs: sub.runtimeMs,
+        runtimePercentile: sub.runtimePercentile,
+        memoryMb: sub.memoryMb,
+        memoryPercentile: sub.memoryPercentile,
+        timestamp: typeof sub.timestamp === 'string' ? sub.timestamp : new Date(sub.timestamp || Date.now()).toISOString(),
     };
 }
 
@@ -181,7 +282,7 @@ const EMPTY_COMPETITION: Competition = {
     updatedAt: new Date(),
     announcements: [],
     problems: [],
-} as any;
+};
 
 export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [competitions, setCompetitions] = useState<Competition[]>([]);
@@ -271,7 +372,7 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
                 solvedProblems: {},
                 lastActive: new Date().toISOString(),
                 competitionId: compId,
-            } as any;
+            };
             setParticipants(prev => [...prev, participantToSync]);
         } else {
             participantToSync = {
@@ -280,7 +381,7 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
                 accessCode: newSession.accessCode,
                 competitionId: compId || existing.competitionId,
                 lastActive: new Date().toISOString(),
-            } as any;
+            };
             setParticipants(prev => prev.map(p => p.id === existing.id ? participantToSync : p));
         }
 
@@ -315,7 +416,7 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
         let updatedParticipant: Participant | null = null;
 
         if (existingPart) {
-            const problem = (activeCompetition?.problems || []).find((prob: any) => prob.id === newSub.problemId);
+            const problem = (activeCompetition?.problems || []).find((prob: Problem) => prob.id === newSub.problemId);
             const solvedDict = typeof existingPart.solvedProblems === 'object' && existingPart.solvedProblems ? existingPart.solvedProblems : {};
             const currentStatus: SolvedProblemStatus = solvedDict[newSub.problemId] || {
                 status: 'NONE',
@@ -366,7 +467,7 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
                     [newSub.problemId]: updatedStatus,
                 },
                 lastActive: new Date().toISOString(),
-            } as any;
+            };
 
             setParticipants(prev => prev.map(p => p.id === existingPart.id ? updatedParticipant! : p));
         }
@@ -410,13 +511,13 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
             timestamp: new Date().toISOString(),
             pinned: true,
             competitionId: activeCompetition?.id || '',
-        } as any;
+        };
 
         setCompetitions(prev => prev.map(c => {
             if (c.accessCode === compAccessCode) {
                 return {
                     ...c,
-                    announcements: [newAnn, ...((c as any).announcements || [])],
+                    announcements: [newAnn, ...(c.announcements || [])],
                 };
             }
             return c;
