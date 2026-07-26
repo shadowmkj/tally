@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import prisma from '@/lib/prisma';
 import { auth } from '@/lib/auth';
+import { problemSchema } from '@/lib/validations';
 import type { SampleTestCase, TestCase } from '@/context/CompetitionContext';
 
 async function checkAdminAuth() {
@@ -32,12 +33,17 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Missing competitionId or problem data' }, { status: 400 });
         }
 
+        const methodNameResult = problemSchema.shape.methodName.safeParse(problem?.methodName);
+        if (!methodNameResult.success) {
+            return NextResponse.json({ error: methodNameResult.error.issues[0]?.message || 'Method name is required' }, { status: 400 });
+        }
+
         const createdProblem = await prisma.problem.create({
             data: {
                 id: problem.id || undefined,
                 title: problem.title,
                 slug: problem.slug || problem.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-                methodName: problem.methodName || 'solve',
+                methodName: methodNameResult.data,
                 difficulty: problem.difficulty || 'Easy',
                 points: Number(problem.points || 100),
                 timeLimitMs: Number(problem.timeLimitMs || 1000),
@@ -93,6 +99,11 @@ export async function PUT(req: Request) {
             return NextResponse.json({ error: 'Missing problem id' }, { status: 400 });
         }
 
+        const methodNameResult = problemSchema.shape.methodName.safeParse(problem?.methodName);
+        if (!methodNameResult.success) {
+            return NextResponse.json({ error: methodNameResult.error.issues[0]?.message || 'Method name is required' }, { status: 400 });
+        }
+
         // Cleanly recreate sample test cases and test cases
         await prisma.sampleTestCase.deleteMany({ where: { problemId: problem.id } });
         await prisma.testCase.deleteMany({ where: { problemId: problem.id } });
@@ -102,7 +113,7 @@ export async function PUT(req: Request) {
             data: {
                 title: problem.title,
                 slug: problem.slug || problem.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-                methodName: problem.methodName || 'solve',
+                methodName: methodNameResult.data,
                 difficulty: problem.difficulty,
                 points: Number(problem.points || 100),
                 timeLimitMs: Number(problem.timeLimitMs || 1000),
