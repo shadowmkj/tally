@@ -67,18 +67,18 @@ export function AdminLoginForm() {
         <div className="min-h-[85vh] flex items-center justify-center p-4">
             <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden animate-fadeIn">
                 {/* Glow accent */}
-                <div className="h-1.5 bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500"></div>
+                <div className="h-1.5 bg-gradient-to-r from-primary-500 via-primary-400 to-yellow-500"></div>
 
                 <div className="p-6 sm:p-8 space-y-6">
                     <div className="text-center space-y-2">
-                        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 mb-1">
+                        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary-500/10 border border-primary-500/20 text-primary-400 mb-1">
                             <ShieldCheck className="w-6 h-6 stroke-[2.5]" />
                         </div>
                         <h1 className="text-2xl font-black text-zinc-100 tracking-tight">
                             Admin Portal Authentication
                         </h1>
                         <p className="text-xs text-zinc-400">
-                            Sign in with your admin credentials to access contest controls. <span className="text-amber-400 font-medium">No competition access code required.</span>
+                            Sign in with your admin credentials to access contest controls. <span className="text-primary-400 font-medium">No competition access code required.</span>
                         </p>
                     </div>
 
@@ -93,7 +93,7 @@ export function AdminLoginForm() {
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     required
-                                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-amber-500"
+                                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-primary-500"
                                 />
                             </div>
                         )}
@@ -110,7 +110,7 @@ export function AdminLoginForm() {
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
                                     placeholder="admin@wecode.gcek.ac.in"
-                                    className="w-full pl-9 pr-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-amber-500"
+                                    className="w-full pl-9 pr-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-primary-500"
                                 />
                             </div>
                         </div>
@@ -127,7 +127,7 @@ export function AdminLoginForm() {
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
                                     placeholder="••••••••••••"
-                                    className="w-full pl-9 pr-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-amber-500 font-mono"
+                                    className="w-full pl-9 pr-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-primary-500 font-mono"
                                 />
                             </div>
                         </div>
@@ -142,7 +142,7 @@ export function AdminLoginForm() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 transition-all disabled:opacity-50"
+                            className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-400 hover:to-primary-500 text-zinc-950 font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg shadow-primary-500/20 transition-all disabled:opacity-50"
                         >
                             <span>{loading ? 'Authenticating...' : isSignUp ? 'Create Admin Account' : 'Sign In as Admin'}</span>
                             <ArrowRight className="w-4 h-4" />
@@ -153,14 +153,14 @@ export function AdminLoginForm() {
                         <button
                             type="button"
                             onClick={() => setIsSignUp(!isSignUp)}
-                            className="text-xs text-zinc-400 hover:text-amber-300 transition-colors block w-full"
+                            className="text-xs text-zinc-400 hover:text-primary-300 transition-colors block w-full"
                         >
                             {isSignUp ? 'Already have an admin account? Sign In' : 'Need to register a new admin account? Sign Up'}
                         </button>
                         <div className="pt-1 border-t border-zinc-800/60">
                             <a
                                 href="/problems"
-                                className="text-xs text-amber-400/90 hover:text-amber-300 font-semibold underline underline-offset-2 transition-colors inline-flex items-center gap-1 cursor-pointer"
+                                className="text-xs text-primary-400/90 hover:text-primary-300 font-semibold underline underline-offset-2 transition-colors inline-flex items-center gap-1 cursor-pointer"
                             >
                                 Are you a contest participant? Enter Competition Access Code
                             </a>

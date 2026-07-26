@@ -25,7 +25,7 @@ export const AnnouncementsModal: React.FC<AnnouncementsModalProps> = ({
         {/* Modal Header */}
         <div className="p-4 bg-zinc-950 border-b border-zinc-800 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400">
+            <div className="p-2 rounded-xl bg-primary-500/10 border border-primary-500/20 text-primary-400">
               <Megaphone className="w-5 h-5" />
             </div>
             <div>
@@ -54,13 +54,13 @@ export const AnnouncementsModal: React.FC<AnnouncementsModalProps> = ({
                 key={a.id}
                 className={`p-4 rounded-xl border space-y-2 text-xs ${
                   a.pinned
-                    ? 'bg-amber-500/10 border-amber-500/40 text-amber-200'
+                    ? 'bg-primary-500/10 border-primary-500/40 text-primary-200'
                     : 'bg-zinc-950 border-zinc-800 text-zinc-300'
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <div className="font-bold text-sm text-zinc-100 flex items-center gap-1.5">
-                    {a.pinned && <Pin className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />}
+                    {a.pinned && <Pin className="w-3.5 h-3.5 text-primary-400 fill-primary-400" />}
                     <span>{a.title}</span>
                   </div>
                   <div className="text-[10px] text-zinc-500 font-mono flex items-center gap-1">

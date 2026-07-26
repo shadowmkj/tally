@@ -103,7 +103,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-zinc-900 border border-zinc-800 p-4 sm:p-6 rounded-2xl shadow-xl">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <Trophy className="w-6 h-6 text-amber-400 stroke-[2.5]" />
+            <Trophy className="w-6 h-6 text-primary-400 stroke-[2.5]" />
             <h1 className="text-2xl font-black text-zinc-100 tracking-tight">
               Real-Time Competition Leaderboard
             </h1>
@@ -132,7 +132,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
             onClick={handleExportCSV}
             className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-200 font-semibold text-xs transition-colors shadow-sm"
           >
-            <Download className="w-3.5 h-3.5 text-amber-400" />
+            <Download className="w-3.5 h-3.5 text-primary-400" />
             <span>Export CSV</span>
           </button>
 
@@ -141,8 +141,8 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
 
       {/* Freeze Warning Notice */}
       {competition.isLeaderboardFrozen && (
-        <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-mono flex items-center gap-3 animate-pulse">
-          <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0" />
+        <div className="p-4 rounded-xl bg-primary-500/10 border border-primary-500/30 text-primary-300 text-xs font-mono flex items-center gap-3 animate-pulse">
+          <ShieldAlert className="w-5 h-5 text-primary-400 shrink-0" />
           <div>
             <strong>Leaderboard Frozen:</strong> Standings have been frozen for the final phase of the competition. Official final results will be revealed during the closing ceremony!
           </div>
@@ -158,12 +158,12 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search participant name or register ID..."
-            className="w-full pl-9 pr-4 py-2 rounded-lg bg-zinc-950 border border-zinc-800 text-xs font-medium text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-amber-500/80"
+            className="w-full pl-9 pr-4 py-2 rounded-lg bg-zinc-950 border border-zinc-800 text-xs font-medium text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-primary-500/80"
           />
         </div>
 
         <div className="flex items-center gap-4 text-xs font-mono text-zinc-400">
-          <span>Participants: <strong className="text-amber-400">{sortedParticipants.length}</strong></span>
+          <span>Participants: <strong className="text-primary-400">{sortedParticipants.length}</strong></span>
           <span>•</span>
           <span>Last Sync: <strong className="text-zinc-200">{lastUpdated}</strong></span>
         </div>
@@ -182,7 +182,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
 
                 {competition.problems.map((p, idx) => (
                   <th key={p.id} className="py-3.5 px-3 text-center min-w-[90px]">
-                    <div className="font-bold text-amber-300">P{idx + 1}</div>
+                    <div className="font-bold text-primary-300">P{idx + 1}</div>
                     <div className="text-[9px] text-zinc-500 truncate max-w-[80px] mx-auto font-sans font-normal">
                       {p.points}pts
                     </div>
@@ -207,12 +207,12 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                     <tr
                       key={part.id}
                       className={`hover:bg-zinc-800/40 transition-colors ${
-                        rank === 1 ? 'bg-amber-500/5' : ''
+                        rank === 1 ? 'bg-primary-500/5' : ''
                       }`}
                     >
                       <td className="py-4 px-4 text-center font-mono font-bold">
                         {rank === 1 ? (
-                          <div className="w-7 h-7 rounded-lg bg-amber-500 text-zinc-950 flex items-center justify-center font-extrabold shadow-md mx-auto">
+                          <div className="w-7 h-7 rounded-lg bg-primary-500 text-zinc-950 flex items-center justify-center font-extrabold shadow-md mx-auto">
                             1
                           </div>
                         ) : rank === 2 ? (
@@ -220,7 +220,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                             2
                           </div>
                         ) : rank === 3 ? (
-                          <div className="w-7 h-7 rounded-lg bg-amber-700 text-zinc-100 flex items-center justify-center font-extrabold shadow-md mx-auto">
+                          <div className="w-7 h-7 rounded-lg bg-primary-700 text-zinc-100 flex items-center justify-center font-extrabold shadow-md mx-auto">
                             3
                           </div>
                         ) : (
@@ -231,14 +231,14 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                       <td className="py-4 px-4">
                         <div className="font-bold text-zinc-100 flex items-center gap-1.5">
                           <span>{part.name}</span>
-                          {isTop3 && <Flame className="w-3.5 h-3.5 text-amber-400" />}
+                          {isTop3 && <Flame className="w-3.5 h-3.5 text-primary-400" />}
                         </div>
                         <div className="text-[10px] font-mono text-zinc-500">
                           {part.collegeId}
                         </div>
                       </td>
 
-                      <td className="py-4 px-4 text-center font-mono font-extrabold text-sm text-amber-300">
+                      <td className="py-4 px-4 text-center font-mono font-extrabold text-sm text-primary-300">
                         {part.totalScore}
                       </td>
 

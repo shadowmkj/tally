@@ -20,7 +20,7 @@ export function ClientProblemDetailPage({ problemId }: { problemId: string }) {
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4">
         <h1 className="text-2xl font-bold text-zinc-200">Problem Not Found</h1>
         <p className="text-sm text-zinc-400">The problem you are looking for does not exist in this contest.</p>
-        <Link href="/problems" className="px-4 py-2 bg-amber-500 text-zinc-950 font-bold text-xs rounded-xl">
+        <Link href="/problems" className="px-4 py-2 bg-primary-500 text-zinc-950 font-bold text-xs rounded-xl">
           Back to Problems List
         </Link>
       </div>

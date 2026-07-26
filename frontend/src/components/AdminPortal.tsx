@@ -402,7 +402,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-zinc-900 border border-zinc-800 p-4 sm:p-6 rounded-2xl shadow-xl">
                 <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                        <ShieldCheck className="w-6 h-6 text-amber-400 stroke-[2.5]" />
+                        <ShieldCheck className="w-6 h-6 text-primary-400 stroke-[2.5]" />
                         <h1 className="text-2xl font-black text-zinc-100 tracking-tight">
                             Wecode Admin Control Center
                         </h1>
@@ -418,7 +418,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                             generateRandom6Char();
                             setShowCreateModal(true);
                         }}
-                        className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 font-extrabold text-xs flex items-center gap-2 shadow-lg shadow-amber-500/20 transition-all"
+                        className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-400 hover:to-primary-500 text-zinc-950 font-extrabold text-xs flex items-center gap-2 shadow-lg shadow-primary-500/20 transition-all"
                     >
                         <Plus className="w-4 h-4 stroke-[3]" />
                         <span>New Competition (6-Digit Code)</span>
@@ -445,7 +445,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     <select
                         value={selectedCompCode}
                         onChange={(e) => setSelectedCompCode(e.target.value)}
-                        className="bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-1.5 font-mono font-bold text-amber-300 text-xs focus:outline-none focus:border-amber-500 cursor-pointer"
+                        className="bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-1.5 font-mono font-bold text-primary-300 text-xs focus:outline-none focus:border-primary-500 cursor-pointer"
                     >
                         {competitions.map((c) => (
                             <option key={c.id} value={c.accessCode}>
@@ -471,7 +471,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                         <button
                             onClick={toggleFreeze}
                             className={`px-3 py-1.5 rounded-lg border text-xs font-mono font-bold flex items-center gap-1.5 transition-colors ${activeComp.isLeaderboardFrozen
-                                ? 'bg-amber-500/20 border-amber-500 text-amber-300'
+                                ? 'bg-primary-500/20 border-primary-500 text-primary-300'
                                 : 'bg-zinc-800 border-zinc-700 text-zinc-400'
                                 }`}
                         >
@@ -499,7 +499,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                         <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl space-y-4">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <span className="px-2.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 font-mono text-xs font-bold text-amber-400">
+                                    <span className="px-2.5 py-0.5 rounded bg-primary-500/10 border border-primary-500/20 font-mono text-xs font-bold text-primary-400">
                                         CODE: {activeComp.accessCode}
                                     </span>
                                     <h2 className="text-xl font-bold text-zinc-100 mt-2">{activeComp.title}</h2>
@@ -507,8 +507,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                 </div>
 
                                 <div className="text-right font-mono text-xs text-zinc-400">
-                                    <div>Duration: <strong className="text-amber-300">{activeComp.durationMinutes} mins</strong></div>
-                                    <div>Problems: <strong className="text-amber-300">{activeComp.problems.length}</strong></div>
+                                    <div>Duration: <strong className="text-primary-300">{activeComp.durationMinutes} mins</strong></div>
+                                    <div>Problems: <strong className="text-primary-300">{activeComp.problems.length}</strong></div>
                                 </div>
                             </div>
                         </div>
@@ -516,13 +516,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden p-6 space-y-4">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <FileCode className="w-5 h-5 text-amber-400" />
+                                    <FileCode className="w-5 h-5 text-primary-400" />
                                     <h3 className="text-base font-bold text-zinc-100">Contest Problem Set</h3>
                                 </div>
 
                                 <button
                                     onClick={handleOpenAddProblemModal}
-                                    className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-amber-300 font-bold text-xs flex items-center gap-1.5 transition-colors border border-zinc-700/60 cursor-pointer"
+                                    className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-primary-300 font-bold text-xs flex items-center gap-1.5 transition-colors border border-zinc-700/60 cursor-pointer"
                                 >
                                     <PlusCircle className="w-4 h-4" />
                                     <span>Add Problem</span>
@@ -555,7 +555,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                                 </span>
                                                 <button
                                                     onClick={() => handleOpenEditProblemModal(p)}
-                                                    className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-amber-300 transition-colors border border-zinc-700/60 cursor-pointer"
+                                                    className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-primary-300 transition-colors border border-zinc-700/60 cursor-pointer"
                                                     title="Edit Problem"
                                                 >
                                                     <Pencil className="w-3.5 h-3.5" />
@@ -580,11 +580,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
                         <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl space-y-4 shadow-xl">
                             <div className="flex items-center gap-2">
-                                <Megaphone className="w-5 h-5 text-amber-400" />
+                                <Megaphone className="w-5 h-5 text-primary-400" />
                                 <h3 className="text-base font-bold text-zinc-100">Broadcast Announcement</h3>
                             </div>
                             <p className="text-xs text-zinc-400">
-                                Post live updates, clarifications, or timer alerts to all active participants in contest <strong className="text-amber-400 font-mono">{activeComp.accessCode}</strong>.
+                                Post live updates, clarifications, or timer alerts to all active participants in contest <strong className="text-primary-400 font-mono">{activeComp.accessCode}</strong>.
                             </p>
 
                             <form onSubmit={handleBroadcast} className="space-y-3">
@@ -598,7 +598,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                         onChange={(e) => setAnnTitle(e.target.value)}
                                         placeholder="e.g. Problem B Constraint Clarification"
                                         required
-                                        className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-amber-500"
+                                        className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-primary-500"
                                     />
                                 </div>
 
@@ -612,7 +612,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                         rows={3}
                                         placeholder="Type broadcast message..."
                                         required
-                                        className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-amber-500"
+                                        className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-primary-500"
                                     />
                                 </div>
 
@@ -625,7 +625,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
                                 <button
                                     type="submit"
-                                    className="w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-colors"
+                                    className="w-full py-2.5 px-4 rounded-xl bg-primary-500 hover:bg-primary-400 text-zinc-950 font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-colors"
                                 >
                                     <Radio className="w-3.5 h-3.5" />
                                     <span>Send Live Broadcast</span>
@@ -644,7 +644,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                 ) : (
                                     activeComp.announcements.map((a) => (
                                         <div key={a.id} className="p-3 rounded-xl bg-zinc-950 border border-zinc-800 text-xs space-y-1">
-                                            <div className="font-bold text-amber-300">{a.title}</div>
+                                            <div className="font-bold text-primary-300">{a.title}</div>
                                             <div className="text-zinc-300 text-[11px]">{a.text}</div>
                                             <div className="text-[10px] text-zinc-500 font-mono">
                                                 {new Date(a.timestamp).toLocaleTimeString()}
@@ -670,7 +670,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                         <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-6 space-y-4 sm:space-y-5 shadow-2xl my-auto max-h-[calc(100vh-2rem)] overflow-y-auto">
                             <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
                                 <h3 className="text-lg font-bold text-zinc-100 flex items-center gap-2">
-                                    <KeyRound className="w-5 h-5 text-amber-400" />
+                                    <KeyRound className="w-5 h-5 text-primary-400" />
                                     <span>Create New Competition</span>
                                 </h3>
                                 <button
@@ -696,9 +696,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                                 setFormErrors(prev => ({ ...prev, accessCode: undefined }));
                                             }}
                                             placeholder="e.g. WEC2026"
-                                            className={`flex-1 bg-zinc-950 border rounded-xl px-3.5 py-2 font-mono font-extrabold text-amber-300 text-sm tracking-widest uppercase focus:outline-none ${formErrors.accessCode
+                                            className={`flex-1 bg-zinc-950 border rounded-xl px-3.5 py-2 font-mono font-extrabold text-primary-300 text-sm tracking-widest uppercase focus:outline-none ${formErrors.accessCode
                                                 ? 'border-rose-500 focus:border-rose-400'
-                                                : 'border-zinc-800 focus:border-amber-500'
+                                                : 'border-zinc-800 focus:border-primary-500'
                                                 }`}
                                         />
                                         <button
@@ -730,7 +730,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                         }}
                                         className={`w-full bg-zinc-950 border rounded-xl px-3.5 py-2 text-xs text-zinc-100 focus:outline-none ${formErrors.title
                                             ? 'border-rose-500 focus:border-rose-400'
-                                            : 'border-zinc-800 focus:border-amber-500'
+                                            : 'border-zinc-800 focus:border-primary-500'
                                             }`}
                                     />
                                     {formErrors.title && (
@@ -756,7 +756,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                         max={600}
                                         className={`w-full bg-zinc-950 border rounded-xl px-3.5 py-2 text-xs font-mono text-zinc-100 focus:outline-none ${formErrors.durationMinutes
                                             ? 'border-rose-500 focus:border-rose-400'
-                                            : 'border-zinc-800 focus:border-amber-500'
+                                            : 'border-zinc-800 focus:border-primary-500'
                                             }`}
                                     />
                                     {formErrors.durationMinutes && (
@@ -780,7 +780,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                     </button>
                                     <button
                                         type="submit"
-                                        className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs shadow-md transition-colors cursor-pointer"
+                                        className="flex-1 py-2.5 rounded-xl bg-primary-500 hover:bg-primary-400 text-zinc-950 font-bold text-xs shadow-md transition-colors cursor-pointer"
                                     >
                                         Generate Contest
                                     </button>
@@ -807,7 +807,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                         <div className="w-full max-w-xl bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-6 space-y-4 shadow-2xl my-auto max-h-[calc(100vh-2rem)] overflow-y-auto">
                             <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
                                 <h3 className="text-lg font-bold text-zinc-100 flex items-center gap-2">
-                                    <FileCode className="w-5 h-5 text-amber-400" />
+                                    <FileCode className="w-5 h-5 text-primary-400" />
                                     <span>{editingProblem ? 'Edit Problem' : `Add Problem to [${activeComp?.accessCode}]`}</span>
                                 </h3>
                                 <button
@@ -835,7 +835,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                                 setProblemFormErrors(prev => ({ ...prev, title: undefined }));
                                             }}
                                             placeholder="e.g. 5. Subarray Sum Equals K"
-                                            className={`w-full bg-zinc-950 border rounded-xl px-3 py-2 text-xs text-zinc-100 focus:outline-none ${problemFormErrors.title ? 'border-rose-500' : 'border-zinc-800 focus:border-amber-500'
+                                            className={`w-full bg-zinc-950 border rounded-xl px-3 py-2 text-xs text-zinc-100 focus:outline-none ${problemFormErrors.title ? 'border-rose-500' : 'border-zinc-800 focus:border-primary-500'
                                                 }`}
                                         />
                                         {problemFormErrors.title && (
@@ -856,7 +856,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                                 setProblemFormErrors(prev => ({ ...prev, methodName: undefined }));
                                             }}
                                             placeholder="e.g. twoSum or solve"
-                                            className={`w-full bg-zinc-950 border rounded-xl px-3 py-2 text-xs font-mono text-zinc-100 focus:outline-none ${problemFormErrors.methodName ? 'border-rose-500' : 'border-zinc-800 focus:border-amber-500'
+                                            className={`w-full bg-zinc-950 border rounded-xl px-3 py-2 text-xs font-mono text-zinc-100 focus:outline-none ${problemFormErrors.methodName ? 'border-rose-500' : 'border-zinc-800 focus:border-primary-500'
                                                 }`}
                                         />
                                         {problemFormErrors.methodName && (
@@ -874,7 +874,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                         <select
                                             value={probDiff}
                                             onChange={(e) => setProbDiff(e.target.value as Difficulty)}
-                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs font-mono text-amber-300 focus:outline-none"
+                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs font-mono text-primary-300 focus:outline-none"
                                         >
                                             <option value="Easy">Easy</option>
                                             <option value="Medium">Medium</option>
@@ -891,7 +891,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                                 setProbPoints(parseInt(e.target.value) || 0);
                                                 setProblemFormErrors(prev => ({ ...prev, points: undefined }));
                                             }}
-                                            className={`w-full bg-zinc-950 border rounded-xl px-3 py-2 text-xs font-mono text-zinc-100 focus:outline-none ${problemFormErrors.points ? 'border-rose-500' : 'border-zinc-800 focus:border-amber-500'
+                                            className={`w-full bg-zinc-950 border rounded-xl px-3 py-2 text-xs font-mono text-zinc-100 focus:outline-none ${problemFormErrors.points ? 'border-rose-500' : 'border-zinc-800 focus:border-primary-500'
                                                 }`}
                                         />
                                         {problemFormErrors.points && (
@@ -913,7 +913,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                                 setProbTimeLimitMs(parseInt(e.target.value) || 0);
                                                 setProblemFormErrors(prev => ({ ...prev, timeLimitMs: undefined }));
                                             }}
-                                            className={`w-full bg-zinc-950 border rounded-xl px-3 py-2 text-xs font-mono text-zinc-100 focus:outline-none ${problemFormErrors.timeLimitMs ? 'border-rose-500' : 'border-zinc-800 focus:border-amber-500'
+                                            className={`w-full bg-zinc-950 border rounded-xl px-3 py-2 text-xs font-mono text-zinc-100 focus:outline-none ${problemFormErrors.timeLimitMs ? 'border-rose-500' : 'border-zinc-800 focus:border-primary-500'
                                                 }`}
                                         />
                                         {problemFormErrors.timeLimitMs && (
@@ -933,7 +933,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                                 setProbMemoryLimitMb(parseInt(e.target.value) || 0);
                                                 setProblemFormErrors(prev => ({ ...prev, memoryLimitMb: undefined }));
                                             }}
-                                            className={`w-full bg-zinc-950 border rounded-xl px-3 py-2 text-xs font-mono text-zinc-100 focus:outline-none ${problemFormErrors.memoryLimitMb ? 'border-rose-500' : 'border-zinc-800 focus:border-amber-500'
+                                            className={`w-full bg-zinc-950 border rounded-xl px-3 py-2 text-xs font-mono text-zinc-100 focus:outline-none ${problemFormErrors.memoryLimitMb ? 'border-rose-500' : 'border-zinc-800 focus:border-primary-500'
                                                 }`}
                                         />
                                         {problemFormErrors.memoryLimitMb && (
@@ -955,7 +955,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                         }}
                                         rows={3}
                                         placeholder="Enter problem statement and constraints..."
-                                        className={`w-full bg-zinc-950 border rounded-xl p-3 text-xs text-zinc-100 focus:outline-none ${problemFormErrors.description ? 'border-rose-500' : 'border-zinc-800 focus:border-amber-500'
+                                        className={`w-full bg-zinc-950 border rounded-xl p-3 text-xs text-zinc-100 focus:outline-none ${problemFormErrors.description ? 'border-rose-500' : 'border-zinc-800 focus:border-primary-500'
                                             }`}
                                     />
                                     {problemFormErrors.description && (
@@ -976,7 +976,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                                 setProblemFormErrors(prev => ({ ...prev, sampleInput: undefined }));
                                             }}
                                             rows={2}
-                                            className={`w-full bg-zinc-950 border rounded-xl p-2 text-xs font-mono text-amber-300 focus:outline-none ${problemFormErrors.sampleInput ? 'border-rose-500' : 'border-zinc-800'
+                                            className={`w-full bg-zinc-950 border rounded-xl p-2 text-xs font-mono text-primary-300 focus:outline-none ${problemFormErrors.sampleInput ? 'border-rose-500' : 'border-zinc-800'
                                                 }`}
                                         />
                                         {problemFormErrors.sampleInput && (
@@ -1023,7 +1023,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                                 type="button"
                                                 onClick={() => setStarterTab(lang)}
                                                 className={`px-3 py-1.5 text-xs font-mono rounded-t-lg transition-colors cursor-pointer capitalize ${starterTab === lang
-                                                    ? 'bg-zinc-800 text-amber-400 font-bold border-t-2 border-amber-500'
+                                                    ? 'bg-zinc-800 text-primary-400 font-bold border-t-2 border-primary-500'
                                                     : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
                                                     }`}
                                             >
@@ -1038,7 +1038,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                             onChange={(e) => setProbStarterPython(e.target.value)}
                                             rows={5}
                                             placeholder="Python starter template..."
-                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-xs font-mono text-zinc-200 focus:outline-none focus:border-amber-500"
+                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-xs font-mono text-zinc-200 focus:outline-none focus:border-primary-500"
                                         />
                                     )}
                                     {starterTab === 'cpp' && (
@@ -1047,7 +1047,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                             onChange={(e) => setProbStarterCpp(e.target.value)}
                                             rows={5}
                                             placeholder="C++ starter template..."
-                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-xs font-mono text-zinc-200 focus:outline-none focus:border-amber-500"
+                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-xs font-mono text-zinc-200 focus:outline-none focus:border-primary-500"
                                         />
                                     )}
                                     {starterTab === 'java' && (
@@ -1056,7 +1056,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                             onChange={(e) => setProbStarterJava(e.target.value)}
                                             rows={5}
                                             placeholder="Java starter template..."
-                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-xs font-mono text-zinc-200 focus:outline-none focus:border-amber-500"
+                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-xs font-mono text-zinc-200 focus:outline-none focus:border-primary-500"
                                         />
                                     )}
                                     {starterTab === 'c' && (
@@ -1065,7 +1065,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                             onChange={(e) => setProbStarterC(e.target.value)}
                                             rows={5}
                                             placeholder="C starter template..."
-                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-xs font-mono text-zinc-200 focus:outline-none focus:border-amber-500"
+                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-xs font-mono text-zinc-200 focus:outline-none focus:border-primary-500"
                                         />
                                     )}
                                     {starterTab === 'javascript' && (
@@ -1074,7 +1074,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                             onChange={(e) => setProbStarterJs(e.target.value)}
                                             rows={5}
                                             placeholder="JavaScript starter template..."
-                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-xs font-mono text-zinc-200 focus:outline-none focus:border-amber-500"
+                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-xs font-mono text-zinc-200 focus:outline-none focus:border-primary-500"
                                         />
                                     )}
                                 </div>
@@ -1093,7 +1093,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                     </button>
                                     <button
                                         type="submit"
-                                        className="flex-1 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs shadow-md transition-colors cursor-pointer"
+                                        className="flex-1 py-2 rounded-xl bg-primary-500 hover:bg-primary-400 text-zinc-950 font-bold text-xs shadow-md transition-colors cursor-pointer"
                                     >
                                         {editingProblem ? 'Update Problem' : 'Save Problem'}
                                     </button>
@@ -1117,7 +1117,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                 <h3 className="text-lg font-bold text-zinc-100">Delete Competition</h3>
                             </div>
                             <p className="text-xs text-zinc-300 leading-relaxed">
-                                Are you sure you want to permanently delete <strong className="text-amber-300">{activeComp.title}</strong> (Access Code: <span className="font-mono text-amber-400 font-bold">{activeComp.accessCode}</span>)?
+                                Are you sure you want to permanently delete <strong className="text-primary-300">{activeComp.title}</strong> (Access Code: <span className="font-mono text-primary-400 font-bold">{activeComp.accessCode}</span>)?
                             </p>
                             <p className="text-[11px] text-zinc-500">
                                 This action will remove all problems, test cases, announcements, and submissions associated with this competition from the database. This action cannot be undone.
@@ -1163,7 +1163,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                 <h3 className="text-lg font-bold text-zinc-100">Delete Problem</h3>
                             </div>
                             <p className="text-xs text-zinc-300 leading-relaxed">
-                                Are you sure you want to delete problem <strong className="text-amber-300">{deletingProblem.title}</strong>?
+                                Are you sure you want to delete problem <strong className="text-primary-300">{deletingProblem.title}</strong>?
                             </p>
                             <p className="text-[11px] text-zinc-500">
                                 This action will remove all test cases and submissions associated with this problem. This action cannot be undone.

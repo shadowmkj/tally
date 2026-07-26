@@ -146,6 +146,8 @@ interface CompetitionContextType {
     setShowCodeGate: (show: boolean) => void;
     showAnnouncements: boolean;
     setShowAnnouncements: (show: boolean) => void;
+    unreadAnnouncementsCount: number;
+    markAnnouncementsAsRead: () => void;
     theme: 'dark' | 'light';
     setTheme: (theme: 'dark' | 'light') => void;
     verifySession: (session: UserSession) => void;
@@ -311,6 +313,22 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
     const [theme, setTheme] = useState<'dark' | 'light'>('dark');
     const [adminCompCode, setAdminCompCode] = useState<string | null>(null);
 
+    const [readAnnouncementIds, setReadAnnouncementIds] = useState<string[]>(() => {
+        if (typeof window === 'undefined') return [];
+        try {
+            const saved = localStorage.getItem('wecode_read_announcements');
+            return saved ? JSON.parse(saved) : [];
+        } catch {
+            return [];
+        }
+    });
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('wecode_read_announcements', JSON.stringify(readAnnouncementIds));
+        }
+    }, [readAnnouncementIds]);
+
     // Fetch data exclusively from Database via Prisma API endpoint on mount
     useEffect(() => {
         let isMounted = true;
@@ -353,6 +371,25 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
         || competitions.find(c => c.accessCode.toUpperCase() === (session?.accessCode || 'WEC2026').toUpperCase())
         || competitions[0]
         || EMPTY_COMPETITION;
+
+    const markAnnouncementsAsRead = () => {
+        if (!activeCompetition?.announcements) return;
+        const currentIds = activeCompetition.announcements.map(a => a.id);
+        setReadAnnouncementIds(prev => {
+            const set = new Set([...prev, ...currentIds]);
+            return Array.from(set);
+        });
+    };
+
+    useEffect(() => {
+        if (showAnnouncements && activeCompetition?.announcements?.length > 0) {
+            markAnnouncementsAsRead();
+        }
+    }, [showAnnouncements, activeCompetition]);
+
+    const unreadAnnouncementsCount = (activeCompetition?.announcements || []).filter(
+        a => !readAnnouncementIds.includes(a.id)
+    ).length;
 
     const switchCompetition = (accessCode: string) => {
         setAdminCompCode(accessCode);
@@ -667,6 +704,8 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
                 setShowCodeGate,
                 showAnnouncements,
                 setShowAnnouncements,
+                unreadAnnouncementsCount,
+                markAnnouncementsAsRead,
                 theme,
                 setTheme,
                 verifySession,

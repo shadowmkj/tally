@@ -250,7 +250,7 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
                         className={`hidden xs:inline-block px-2 py-0.5 rounded text-[10px] font-bold shrink-0 ${problem.difficulty === 'Easy'
                             ? 'bg-emerald-500/10 text-emerald-400'
                             : problem.difficulty === 'Medium'
-                                ? 'bg-amber-500/10 text-amber-400'
+                                ? 'bg-primary-500/10 text-primary-400'
                                 : 'bg-rose-500/10 text-rose-400'
                             }`}
                     >
@@ -264,7 +264,7 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
                         onClick={handleSubmitCode}
                         disabled={isRunning || isSubmitting}
                         title={`Submit solution (${shortcutLabel === '⌘↵' ? '⌘+Enter' : 'Ctrl+Enter'})`}
-                        className="px-3 sm:px-4 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 font-bold text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/20 transition-all disabled:opacity-50"
+                        className="px-3 sm:px-4 py-1.5 rounded-lg bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-400 hover:to-primary-500 text-zinc-950 font-bold text-xs flex items-center gap-1.5 shadow-md shadow-primary-500/20 transition-all disabled:opacity-50"
                     >
                         <Send className="w-3.5 h-3.5" />
                         <span>{isSubmitting ? '...' : 'Submit'}</span>
@@ -285,7 +285,7 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
                         <button
                             onClick={() => setLeftTab('description')}
                             className={`flex items-center gap-1.5 py-2.5 px-3 border-b-2 transition-colors ${leftTab === 'description'
-                                ? 'border-amber-400 text-amber-400 font-semibold'
+                                ? 'border-primary-400 text-primary-400 font-semibold'
                                 : 'border-transparent text-zinc-400 hover:text-zinc-200'
                                 }`}
                         >
@@ -296,18 +296,18 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
                         <button
                             onClick={() => setLeftTab('submissions')}
                             className={`flex items-center gap-1.5 py-2.5 px-3 border-b-2 transition-colors ${leftTab === 'submissions'
-                                ? 'border-amber-400 text-amber-400 font-semibold'
+                                ? 'border-primary-400 text-primary-400 font-semibold'
                                 : 'border-transparent text-zinc-400 hover:text-zinc-200'
                                 }`}
                         >
                             <History className="w-3.5 h-3.5" />
-                            <span>Submissions ({previousSubmissions.length})</span>
+                            <span>Submissions</span>
                         </button>
 
                         <button
                             onClick={() => setLeftTab('hints')}
                             className={`flex items-center gap-1.5 py-2.5 px-3 border-b-2 transition-colors ${leftTab === 'hints'
-                                ? 'border-amber-400 text-amber-400 font-semibold'
+                                ? 'border-primary-400 text-primary-400 font-semibold'
                                 : 'border-transparent text-zinc-400 hover:text-zinc-200'
                                 }`}
                         >
@@ -324,48 +324,47 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
                                 <div>
                                     <h1 className="text-xl font-bold text-zinc-100">{problem.title}</h1>
                                     <div className="flex items-center gap-3 text-xs font-mono text-zinc-400 mt-2">
-                                        <span>Points: <strong className="text-amber-400">+{problem.points}</strong></span>
-                                        <span>•</span>
-                                        <span>Time Limit: {problem.timeLimitMs}ms</span>
-                                        <span>•</span>
-                                        <span>Memory: {problem.memoryLimitMb}MB</span>
+                                        <span>Points: <strong className="text-primary-400">+{problem.points}</strong></span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <span>Time: <strong className="text-zinc-200">{problem.timeLimitMs}ms</strong></span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <span>Memory: <strong className="text-zinc-200">{problem.memoryLimitMb}MB</strong></span>
                                     </div>
                                 </div>
 
-                                <div className="prose prose-invert max-w-none text-xs sm:text-sm leading-relaxed whitespace-pre-line text-zinc-300">
+                                <div className="text-xs leading-relaxed text-zinc-300 space-y-3 whitespace-pre-line">
                                     {problem.description}
                                 </div>
 
-                                <div className="space-y-3 bg-zinc-950/60 p-4 rounded-xl border border-zinc-800">
+                                <div className="space-y-4 pt-2">
                                     <div>
-                                        <h3 className="text-xs font-mono font-bold text-amber-400 uppercase tracking-wider mb-1">Input Format</h3>
-                                        <p className="text-xs text-zinc-300 font-mono whitespace-pre-line">{problem.inputFormat}</p>
+                                        <h3 className="text-xs font-mono font-bold text-primary-400 uppercase tracking-wider mb-1">Input Format</h3>
+                                        <p className="text-xs text-zinc-300 font-mono bg-zinc-950 p-2.5 rounded-xl border border-zinc-800/80">{problem.inputFormat}</p>
                                     </div>
-                                    <div className="pt-2 border-t border-zinc-800/80">
-                                        <h3 className="text-xs font-mono font-bold text-amber-400 uppercase tracking-wider mb-1">Output Format</h3>
-                                        <p className="text-xs text-zinc-300 font-mono whitespace-pre-line">{problem.outputFormat}</p>
+
+                                    <div>
+                                        <h3 className="text-xs font-mono font-bold text-primary-400 uppercase tracking-wider mb-1">Output Format</h3>
+                                        <p className="text-xs text-zinc-300 font-mono bg-zinc-950 p-2.5 rounded-xl border border-zinc-800/80">{problem.outputFormat}</p>
                                     </div>
                                 </div>
 
-                                <div className="space-y-4">
-                                    <h3 className="text-xs font-mono font-bold text-zinc-200 uppercase tracking-wider">
-                                        Sample Test Cases
-                                    </h3>
-
-                                    {problem.sampleTestCases.map((stc, idx) => (
-                                        <div key={stc.id} className="bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden text-xs">
-                                            <div className="bg-zinc-900/80 px-3 py-1.5 border-b border-zinc-800 font-mono font-bold text-zinc-400 flex items-center justify-between">
-                                                <span>Example {idx + 1}</span>
-                                                <button
-                                                    onClick={() => handleCopySample(stc.input, idx)}
-                                                    className="flex items-center gap-1 text-[10px] text-zinc-400 hover:text-amber-300 transition-colors"
-                                                >
-                                                    {copiedIndex === idx ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                                                    <span>{copiedIndex === idx ? 'Copied' : 'Copy Input'}</span>
-                                                </button>
-                                            </div>
-
-                                            <div className="p-3 space-y-2 font-mono">
+                                {problem.sampleTestCases?.length > 0 && (
+                                    <div className="space-y-3 pt-2">
+                                        <h3 className="text-xs font-mono font-bold text-zinc-300 uppercase tracking-wider">Sample Test Cases</h3>
+                                        {problem.sampleTestCases.map((stc, idx) => (
+                                            <div key={stc.id || idx} className="p-3 rounded-xl bg-zinc-950 border border-zinc-800 space-y-2 text-xs font-mono">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="font-bold text-zinc-400">Sample {idx + 1}</span>
+                                                    <button
+                                                        onClick={() => handleCopySample(stc.input, idx)}
+                                                        className="flex items-center gap-1 text-[10px] text-zinc-400 hover:text-primary-300 transition-colors"
+                                                    >
+                                                        {copiedIndex === idx ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                                                        <span>{copiedIndex === idx ? 'Copied' : 'Copy Input'}</span>
+                                                    </button>
+                                                </div>
                                                 <div>
                                                     <span className="text-zinc-500 text-[10px] block mb-0.5">Input:</span>
                                                     <pre className="bg-zinc-900 p-2 rounded text-zinc-200 overflow-x-auto">{stc.input}</pre>
@@ -374,25 +373,10 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
                                                     <span className="text-zinc-500 text-[10px] block mb-0.5">Output:</span>
                                                     <pre className="bg-zinc-900 p-2 rounded text-emerald-300 overflow-x-auto">{stc.output}</pre>
                                                 </div>
-                                                {stc.explanation && (
-                                                    <div className="text-[11px] text-zinc-400 font-sans italic pt-1">
-                                                        Explanation: {stc.explanation}
-                                                    </div>
-                                                )}
                                             </div>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <div className="space-y-2 bg-zinc-950/40 p-4 rounded-xl border border-zinc-800">
-                                    <h3 className="text-xs font-mono font-bold text-zinc-300 uppercase tracking-wider">Constraints</h3>
-                                    <ul className="list-disc list-inside text-xs font-mono text-zinc-400 space-y-1">
-                                        {((Array.isArray(problem.constraints) ? problem.constraints : []) as string[]).map((c: string, i: number) => (
-                                            <li key={i}>{c}</li>
                                         ))}
-                                    </ul>
-                                </div>
-
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -445,9 +429,9 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
 
                         {leftTab === 'hints' && (
                             <div className="space-y-4">
-                                <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs space-y-2">
+                                <div className="p-4 rounded-xl bg-primary-500/10 border border-primary-500/20 text-primary-300 text-xs space-y-2">
                                     <div className="flex items-center gap-2 font-bold">
-                                        <Lightbulb className="w-4 h-4 text-amber-400" />
+                                        <Lightbulb className="w-4 h-4 text-primary-400" />
                                         <span>Algorithmic Hint</span>
                                     </div>
                                     <p>
@@ -469,7 +453,7 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
                             <select
                                 value={language}
                                 onChange={(e) => setLanguage(e.target.value as Language)}
-                                className="bg-zinc-950 border border-zinc-800 rounded-lg px-2.5 py-1 text-xs font-mono font-semibold text-amber-300 focus:outline-none focus:border-amber-500 cursor-pointer"
+                                className="bg-zinc-950 border border-zinc-800 rounded-lg px-2.5 py-1 text-xs font-mono font-semibold text-primary-300 focus:outline-none focus:border-primary-500 cursor-pointer"
                             >
                                 <option value="python">Python 3</option>
                                 <option value="cpp">C++ 20</option>
@@ -523,7 +507,7 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
                                         setBottomDrawerOpen(true);
                                     }}
                                     className={`px-3 py-1 rounded text-xs font-mono font-semibold transition-colors ${bottomTab === 'testcase' && bottomDrawerOpen
-                                        ? 'bg-zinc-800 text-amber-300'
+                                        ? 'bg-zinc-800 text-primary-300'
                                         : 'text-zinc-400 hover:text-zinc-200'
                                         }`}
                                 >
@@ -536,7 +520,7 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
                                         setBottomDrawerOpen(true);
                                     }}
                                     className={`px-3 py-1 rounded text-xs font-mono font-semibold flex items-center gap-1.5 transition-colors ${bottomTab === 'result' && bottomDrawerOpen
-                                        ? 'bg-zinc-800 text-amber-300'
+                                        ? 'bg-zinc-800 text-primary-300'
                                         : 'text-zinc-400 hover:text-zinc-200'
                                         }`}
                                 >
@@ -562,14 +546,14 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
                                 {bottomTab === 'testcase' && (
                                     <div className="space-y-3">
                                         <div className="flex items-center justify-between text-zinc-400">
-                                            <span>Input parameters:</span>
-                                            <span className="text-[10px]">Standard stdin format</span>
+                                            <span>Input Data:</span>
                                         </div>
                                         <textarea
                                             value={customInput}
                                             onChange={(e) => setCustomInput(e.target.value)}
                                             rows={5}
-                                            className="w-full p-3 rounded-xl bg-zinc-950 border border-zinc-800 text-xs font-mono text-amber-300 focus:outline-none focus:border-amber-500"
+                                            className="w-full p-3 rounded-xl bg-zinc-950 border border-zinc-800 text-xs font-mono text-primary-300 focus:outline-none focus:border-primary-500"
+                                            placeholder="Provide raw stdin testcase inputs..."
                                         />
                                     </div>
                                 )}
@@ -584,7 +568,7 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
 
                                         {(isRunning || isSubmitting) && (
                                             <div className="py-8 flex flex-col items-center justify-center gap-2 text-zinc-400">
-                                                <div className="w-6 h-6 border-2 border-amber-400 border-t-transparent rounded-full animate-spin"></div>
+                                                <div className="w-6 h-6 border-2 border-primary-400 border-t-transparent rounded-full animate-spin"></div>
                                                 <span className="text-xs font-mono">
                                                     {isSubmitting ? 'Evaluating hidden test cases...' : 'Compiling & running code...'}
                                                 </span>
@@ -619,13 +603,13 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
                                                     <div className="flex items-center gap-4 text-xs font-mono">
                                                         <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-center">
                                                             <div className="text-zinc-400 text-[10px]">Runtime</div>
-                                                            <div className="font-bold text-amber-300">{latestResult.runtimeMs} ms</div>
+                                                            <div className="font-bold text-primary-300">{latestResult.runtimeMs} ms</div>
                                                             <div className="text-[10px] text-emerald-400">Beats {latestResult.runtimePercentile}%</div>
                                                         </div>
 
                                                         <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-center">
                                                             <div className="text-zinc-400 text-[10px]">Memory</div>
-                                                            <div className="font-bold text-amber-300">{latestResult.memoryMb} MB</div>
+                                                            <div className="font-bold text-primary-300">{latestResult.memoryMb} MB</div>
                                                             <div className="text-[10px] text-emerald-400">Beats {latestResult.memoryPercentile}%</div>
                                                         </div>
                                                     </div>

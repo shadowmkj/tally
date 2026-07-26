@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import "./app/globals.css";
 
 html, body, #root {
   max-width: 100vw;

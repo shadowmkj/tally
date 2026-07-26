@@ -28,6 +28,8 @@ export const Header: React.FC = () => {
         logoutSession,
         setShowAnnouncements,
         switchCompetition,
+        unreadAnnouncementsCount,
+        markAnnouncementsAsRead,
     } = useCompetition();
 
     const [timeLeftStr, setTimeLeftStr] = useState<string>('');
@@ -71,15 +73,15 @@ export const Header: React.FC = () => {
                         href="/problems"
                         className="flex items-center gap-2 cursor-pointer group"
                     >
-                        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-zinc-950 font-bold shadow-lg shadow-amber-500/20 group-hover:scale-105 transition-transform shrink-0">
+                        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-zinc-950 font-bold shadow-lg shadow-primary-500/20 group-hover:scale-105 transition-transform shrink-0">
                             <Code2 className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" />
                         </div>
                         <div>
                             <div className="flex items-center gap-1">
-                                <span className="font-extrabold text-base sm:text-lg tracking-tight bg-gradient-to-r from-zinc-100 via-amber-200 to-amber-400 bg-clip-text text-transparent">
+                                <span className="font-extrabold text-base sm:text-lg tracking-tight bg-gradient-to-r from-zinc-100 via-primary-200 to-primary-400 bg-clip-text text-transparent">
                                     WECODE
                                 </span>
-                                <span className="text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-mono font-semibold">
+                                <span className="text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 rounded bg-primary-500/10 text-primary-400 border border-primary-500/20 font-mono font-semibold">
                                     GCEK
                                 </span>
                             </div>
@@ -93,13 +95,13 @@ export const Header: React.FC = () => {
                     {activeCompetition && (
                         <div className="hidden md:flex items-center gap-2 ml-4 pl-4 border-l border-zinc-800">
                             {adminSession?.user ? (
-                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-800/90 border border-amber-500/30 text-xs font-mono">
-                                    <KeyRound className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-800/90 border border-primary-500/30 text-xs font-mono">
+                                    <KeyRound className="w-3.5 h-3.5 text-primary-400 shrink-0" />
                                     <span className="text-zinc-400 font-bold text-[10px] hidden lg:inline">CONTEST:</span>
                                     <select
                                         value={activeCompetition.accessCode}
                                         onChange={(e) => switchCompetition(e.target.value)}
-                                        className="bg-zinc-950 border border-zinc-800 rounded-md px-2.5 py-1 font-mono font-bold text-amber-300 text-xs focus:outline-none focus:border-amber-500 cursor-pointer"
+                                        className="bg-zinc-950 border border-zinc-800 rounded-md px-2.5 py-1 font-mono font-bold text-primary-300 text-xs focus:outline-none focus:border-primary-500 cursor-pointer"
                                         title="Admin Competition Switcher"
                                     >
                                         {competitions.map((c) => (
@@ -115,9 +117,9 @@ export const Header: React.FC = () => {
                                     className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-800/80 hover:bg-zinc-800 border border-zinc-700/60 text-xs font-mono cursor-pointer transition-colors group"
                                     title="Click to switch or enter new 6-digit access code"
                                 >
-                                    <KeyRound className="w-3.5 h-3.5 text-amber-400" />
+                                    <KeyRound className="w-3.5 h-3.5 text-primary-400" />
                                     <span className="text-zinc-400">CODE:</span>
-                                    <span className="font-bold text-amber-300 tracking-wider group-hover:text-amber-200">
+                                    <span className="font-bold text-primary-300 tracking-wider group-hover:text-primary-200">
                                         {activeCompetition.accessCode}
                                     </span>
                                     <ChevronRight className="w-3 h-3 text-zinc-500" />
@@ -125,8 +127,8 @@ export const Header: React.FC = () => {
                             )}
 
                             {/* Contest Live Timer */}
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-mono font-medium">
-                                <Timer className="w-3.5 h-3.5 animate-pulse text-amber-400" />
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-500/10 border border-primary-500/20 text-primary-300 text-xs font-mono font-medium">
+                                <Timer className="w-3.5 h-3.5 animate-pulse text-primary-400" />
                                 <span>{timeLeftStr}</span>
                             </div>
                         </div>
@@ -139,7 +141,7 @@ export const Header: React.FC = () => {
                         id="nav-problems-btn"
                         href="/problems"
                         className={`flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${isProblems
-                            ? 'bg-zinc-800 text-amber-400 font-semibold shadow-sm'
+                            ? 'bg-zinc-800 text-primary-400 font-semibold shadow-sm'
                             : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
                             }`}
                     >
@@ -151,58 +153,48 @@ export const Header: React.FC = () => {
                         id="nav-leaderboard-btn"
                         href="/leaderboard"
                         className={`flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all relative ${isLeaderboard
-                            ? 'bg-zinc-800 text-amber-400 font-semibold shadow-sm'
+                            ? 'bg-zinc-800 text-primary-400 font-semibold shadow-sm'
                             : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
                             }`}
                     >
                         <Trophy className="w-4 h-4" />
                         <span className="hidden sm:inline">Leaderboard</span>
                         <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-500"></span>
                         </span>
                     </Link>
-
-                    {/* <Link */}
-                    {/*   id="nav-admin-btn" */}
-                    {/*   href="/admin" */}
-                    {/*   className={`flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${ */}
-                    {/*     isAdmin */}
-                    {/*       ? 'bg-amber-500 text-zinc-950 font-bold shadow-md shadow-amber-500/20' */}
-                    {/*       : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50' */}
-                    {/*   }`} */}
-                    {/* > */}
-                    {/*   <ShieldCheck className="w-4 h-4" /> */}
-                    {/*   <span className="hidden sm:inline">Admin Portal</span> */}
-                    {/* </Link> */}
                 </nav>
 
                 {/* Right: User Profile & Announcements */}
                 <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                     {/* Announcement Bell Button */}
                     <button
-                        onClick={() => setShowAnnouncements(true)}
-                        className="relative p-2 rounded-lg text-zinc-400 hover:text-amber-400 hover:bg-zinc-800 transition-colors"
+                        onClick={() => {
+                            setShowAnnouncements(true);
+                            markAnnouncementsAsRead();
+                        }}
+                        className="relative p-2 rounded-lg text-zinc-400 hover:text-primary-400 hover:bg-zinc-800 transition-colors"
                         title="Announcements"
                     >
                         <Bell className="w-4 h-4" />
-                        {activeCompetition.announcements.length > 0 && (
-                            <span className="absolute top-1 right-1 px-1 py-0.2 min-w-[16px] h-4 text-[10px] font-bold text-zinc-950 bg-amber-400 rounded-full flex items-center justify-center animate-bounce">
-                                {activeCompetition.announcements.length}
+                        {unreadAnnouncementsCount > 0 && (
+                            <span className="absolute top-1 right-1 px-1 py-0.2 min-w-[16px] h-4 text-[10px] font-bold text-zinc-950 bg-primary-400 rounded-full flex items-center justify-center animate-bounce">
+                                {unreadAnnouncementsCount}
                             </span>
                         )}
                     </button>
 
                     {/* Admin Logged-In Badge or Participant Session */}
                     {adminSession?.user ? (
-                        <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 rounded-xl px-2.5 py-1 text-xs font-mono text-amber-300">
-                            <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0" />
+                        <div className="flex items-center gap-2 bg-primary-500/10 border border-primary-500/30 rounded-xl px-2.5 py-1 text-xs font-mono text-primary-300">
+                            <ShieldCheck className="w-4 h-4 text-primary-400 shrink-0" />
                             <span className="font-bold hidden lg:inline">{adminSession.user.name || adminSession.user.email}</span>
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold uppercase">Admin Mode</span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary-500/20 text-primary-300 font-bold uppercase">Admin Mode</span>
                         </div>
                     ) : session ? (
                         <div className="flex items-center gap-2 bg-zinc-800/80 border border-zinc-700/60 rounded-xl px-2 sm:px-2.5 py-1">
-                            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-xs">
+                            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-primary-500/20 text-primary-400 flex items-center justify-center font-bold text-xs">
                                 {session.name.charAt(0).toUpperCase()}
                             </div>
                             <div className="hidden lg:block text-left pr-1">
@@ -224,7 +216,7 @@ export const Header: React.FC = () => {
                     ) : isAdmin ? (
                         <Link
                             href="/admin/login"
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs shadow-md transition-all"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary-500 hover:bg-primary-400 text-zinc-950 font-bold text-xs shadow-md transition-all"
                         >
                             <ShieldCheck className="w-3.5 h-3.5" />
                             <span>Admin Login</span>
@@ -232,7 +224,7 @@ export const Header: React.FC = () => {
                     ) : (
                         <button
                             onClick={() => setShowCodeGate(true)}
-                            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 font-bold text-xs shadow-md shadow-amber-500/20 transition-all"
+                            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-400 hover:to-primary-500 text-zinc-950 font-bold text-xs shadow-md shadow-primary-500/20 transition-all"
                         >
                             <KeyRound className="w-3.5 h-3.5" />
                             <span className="hidden sm:inline">Enter 6-Digit Code</span>
