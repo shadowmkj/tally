@@ -71,8 +71,10 @@ pub fn update_submission_status(
         }
     };
 
-    // 3. Update Submission row
-    conn.execute(
+    // 3. Update Submission row & 4. Upsert TestCaseResult records in a transaction
+    let tx = conn.unchecked_transaction()?;
+
+    tx.execute(
         "UPDATE Submission
          SET status = ?1,
              testCasesPassed = ?2,
@@ -104,7 +106,7 @@ pub fn update_submission_status(
             ),
         };
 
-        let _ = conn.execute(
+        tx.execute(
             "INSERT OR REPLACE INTO TestCaseResult
              (id, submissionId, testCaseId, passed, input, expectedOutput, actualOutput, executionTimeMs, memoryUsedMb, error)
              VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
@@ -120,8 +122,10 @@ pub fn update_submission_status(
                 0.0,
                 error,
             ],
-        );
+        )?;
     }
+
+    tx.commit()?;
 
     Ok(Some(sub_id))
 }
