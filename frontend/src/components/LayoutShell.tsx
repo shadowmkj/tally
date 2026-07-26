@@ -28,7 +28,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
     } = useCompetition();
 
     return (
-        <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-primary-500 selection:text-zinc-950 flex flex-col w-full max-w-full overflow-x-hidden">
+        <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary selection:text-primary-foreground flex flex-col w-full max-w-full overflow-x-hidden">
             <Header />
 
             <main className="flex-1 flex flex-col w-full max-w-full overflow-x-hidden">

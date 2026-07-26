@@ -64,7 +64,7 @@ export const Header: React.FC = () => {
     const isAdmin = pathname.startsWith('/admin');
 
     return (
-        <header className="sticky top-0 z-40 bg-zinc-900/95 border-b border-zinc-800 backdrop-blur-md text-zinc-100 w-full max-w-full">
+        <header className="sticky top-0 z-40 bg-card/95 border-b border-border backdrop-blur-md text-foreground w-full max-w-full">
             <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4">
 
                 {/* Left: Branding & Contest Info */}
