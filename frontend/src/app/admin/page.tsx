@@ -1,22 +1,10 @@
-'use client';
+import { ClientAdminPage } from '@/components/ClientAdminPage';
 
-import { useCompetition } from '@/context/CompetitionContext';
-import { AdminPortal } from '@/components/AdminPortal';
+export const metadata = {
+  title: 'Admin Control Center | WECODE GCEK',
+  description: 'Wecode admin portal for competition management, problem creation, and announcements.',
+};
 
 export default function AdminPage() {
-    const {
-        competitions,
-        addCompetition,
-        updateCompetition,
-        broadcastAnnouncement
-    } = useCompetition();
-
-    return (
-        <AdminPortal
-            competitions={competitions}
-            onAddCompetition={addCompetition}
-            onUpdateCompetition={updateCompetition}
-            onBroadcastAnnouncement={broadcastAnnouncement}
-        />
-    );
+  return <ClientAdminPage />;
 }

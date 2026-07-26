@@ -190,25 +190,13 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
 
     const [session, setSession] = useState<UserSession | null>(() => {
         if (typeof window === 'undefined') {
-            return {
-                accessCode: 'WEC2026',
-                participantId: 'part-1',
-                name: 'Adithyan Nair',
-                collegeId: 'KNR22CS014',
-                enteredAt: new Date().toISOString(),
-            };
+            return null;
         }
         const saved = localStorage.getItem('wecode_session');
         if (saved) {
             try { return JSON.parse(saved); } catch (e) { /* fallback */ }
         }
-        return {
-            accessCode: 'WEC2026',
-            participantId: 'part-1',
-            name: 'Adithyan Nair',
-            collegeId: 'KNR22CS014',
-            enteredAt: new Date().toISOString(),
-        };
+        return null;
     });
 
     const [showCodeGate, setShowCodeGate] = useState<boolean>(false);

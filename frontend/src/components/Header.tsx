@@ -14,9 +14,12 @@ import {
   Bell
 } from 'lucide-react';
 import { useCompetition } from '@/context/CompetitionContext';
+import { authClient } from '@/lib/auth-client';
 
 export const Header: React.FC = () => {
   const pathname = usePathname();
+  const { data: adminSession } = authClient.useSession();
+
   const { 
     activeCompetition, 
     session, 
@@ -90,16 +93,16 @@ export const Header: React.FC = () => {
           {activeCompetition && (
             <div className="hidden md:flex items-center gap-2 ml-4 pl-4 border-l border-zinc-800">
               <div 
-                onClick={() => setShowCodeGate(true)}
+                onClick={() => { if (!isAdmin && !adminSession?.user) setShowCodeGate(true); }}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-800/80 hover:bg-zinc-800 border border-zinc-700/60 text-xs font-mono cursor-pointer transition-colors group"
-                title="Click to switch or enter new 6-digit access code"
+                title={adminSession?.user ? "Active Competition Access Code" : "Click to switch or enter new 6-digit access code"}
               >
                 <KeyRound className="w-3.5 h-3.5 text-amber-400" />
                 <span className="text-zinc-400">CODE:</span>
                 <span className="font-bold text-amber-300 tracking-wider group-hover:text-amber-200">
                   {activeCompetition.accessCode}
                 </span>
-                <ChevronRight className="w-3 h-3 text-zinc-500" />
+                {!isAdmin && !adminSession?.user && <ChevronRight className="w-3 h-3 text-zinc-500" />}
               </div>
 
               {/* Contest Live Timer */}
@@ -173,8 +176,14 @@ export const Header: React.FC = () => {
             )}
           </button>
 
-          {/* Participant Info or Enter Code CTA */}
-          {session ? (
+          {/* Admin Logged-In Badge or Participant Session */}
+          {adminSession?.user ? (
+            <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 rounded-xl px-2.5 py-1 text-xs font-mono text-amber-300">
+              <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0" />
+              <span className="font-bold hidden lg:inline">{adminSession.user.name || adminSession.user.email}</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold uppercase">Admin Mode</span>
+            </div>
+          ) : session ? (
             <div className="flex items-center gap-2 bg-zinc-800/80 border border-zinc-700/60 rounded-xl px-2 sm:px-2.5 py-1">
               <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-xs">
                 {session.name.charAt(0).toUpperCase()}
@@ -190,11 +199,19 @@ export const Header: React.FC = () => {
               <button
                 onClick={logoutSession}
                 className="p-1 text-zinc-400 hover:text-red-400 hover:bg-zinc-700/50 rounded transition-colors"
-                title="Change Participant Identity / Exit Code"
+                title="Exit Participant Session"
               >
                 <LogOut className="w-3.5 h-3.5" />
               </button>
             </div>
+          ) : isAdmin ? (
+            <Link
+              href="/admin/login"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs shadow-md transition-all"
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Admin Login</span>
+            </Link>
           ) : (
             <button
               onClick={() => setShowCodeGate(true)}

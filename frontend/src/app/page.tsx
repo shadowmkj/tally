@@ -1,21 +1,10 @@
-'use client';
+import { ClientProblemPage } from '@/components/ClientProblemPage';
 
-import { useCompetition } from '@/context/CompetitionContext';
-import { ProblemList } from '@/components/ProblemList';
+export const metadata = {
+  title: 'Problems | WECODE GCEK',
+  description: 'LeetCode-style coding competition platform with live IDE dashboard and real-time leaderboard.',
+};
 
 export default function HomePage() {
-    const { activeCompetition, participants, session } = useCompetition();
-
-    const currentParticipant = participants.find(
-        p => p.collegeId === session?.collegeId &&
-             (p.accessCode?.toUpperCase() === session?.accessCode?.toUpperCase() || (p.competitionId && p.competitionId === activeCompetition.id))
-    );
-    const solvedStatus = currentParticipant?.solvedProblems || {};
-
-    return (
-        <ProblemList
-            competition={activeCompetition}
-            solvedStatus={solvedStatus}
-        />
-    );
+  return <ClientProblemPage />;
 }

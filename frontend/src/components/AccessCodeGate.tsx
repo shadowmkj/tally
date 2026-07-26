@@ -215,10 +215,19 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
             </div>
           </div>
 
-          {/* Seamless Notice Footer */}
-          <div className="flex items-center justify-center gap-2 text-[11px] text-zinc-500 pt-1">
-            <ShieldCheck className="w-3.5 h-3.5 text-amber-500" />
-            <span>No passwords required. Participant verification by Access Code.</span>
+          {/* Seamless Notice Footer & Admin Link */}
+          <div className="flex flex-col items-center justify-center gap-1.5 text-[11px] text-zinc-500 pt-1 border-t border-zinc-800/60">
+            <div className="flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-500" />
+              <span>Participant login uses 6-Digit Access Code. No passwords needed.</span>
+            </div>
+            <a
+              href="/admin/login"
+              onClick={() => { if (onCloseModal) onCloseModal(); }}
+              className="text-amber-400/90 hover:text-amber-300 font-semibold underline underline-offset-2 transition-colors cursor-pointer"
+            >
+              Are you an Admin? Sign in to Admin Portal (No competition code required)
+            </a>
           </div>
 
         </div>

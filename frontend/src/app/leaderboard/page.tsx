@@ -1,16 +1,10 @@
-'use client';
+import { ClientLeaderboardPage } from '@/components/ClientLeaderboardPage';
 
-import { useCompetition } from '@/context/CompetitionContext';
-import { Leaderboard } from '@/components/Leaderboard';
+export const metadata = {
+  title: 'Leaderboard | WECODE GCEK',
+  description: 'Real-time competition leaderboard with live score and penalty rankings.',
+};
 
 export default function LeaderboardPage() {
-  const { activeCompetition, participants, setShowCodeGate } = useCompetition();
-
-  return (
-    <Leaderboard
-      competition={activeCompetition}
-      participants={participants}
-      onOpenCodeGate={() => setShowCodeGate(true)}
-    />
-  );
+  return <ClientLeaderboardPage />;
 }
