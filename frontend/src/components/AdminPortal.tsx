@@ -22,6 +22,7 @@ import {
 import type { Competition, Problem, Difficulty } from '@/context/CompetitionContext';
 import { authClient } from '@/lib/auth-client';
 import { createCompetitionSchema, problemSchema } from '@/lib/validations';
+import { ModalPortal } from '@/components/ModalPortal';
 
 interface AdminPortalProps {
   competitions: Competition[];
@@ -644,346 +645,157 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
       {/* CREATE COMPETITION MODAL */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-zinc-950/80 backdrop-blur-md">
-          <div className="w-full max-w-md max-w-[calc(100vw-1.5rem)] bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-6 space-y-4 sm:space-y-5 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
-              <h3 className="text-lg font-bold text-zinc-100 flex items-center gap-2">
-                <KeyRound className="w-5 h-5 text-amber-400" />
-                <span>Create New Competition</span>
-              </h3>
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="text-zinc-400 hover:text-zinc-100 text-sm font-mono"
-              >
-                ✕
-              </button>
-            </div>
+        <ModalPortal>
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-zinc-950/80 backdrop-blur-md overflow-y-auto animate-fadeIn"
+            onClick={(e) => { if (e.target === e.currentTarget) setShowCreateModal(false); }}
+          >
+            <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-6 space-y-4 sm:space-y-5 shadow-2xl my-auto max-h-[calc(100vh-2rem)] overflow-y-auto">
+              <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+                <h3 className="text-lg font-bold text-zinc-100 flex items-center gap-2">
+                  <KeyRound className="w-5 h-5 text-amber-400" />
+                  <span>Create New Competition</span>
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="text-zinc-400 hover:text-zinc-100 text-sm font-mono cursor-pointer p-1"
+                >
+                  ✕
+                </button>
+              </div>
 
-            <form onSubmit={handleCreateCompetition} className="space-y-4">
-              <div>
-                <label className="block text-xs font-mono text-zinc-400 mb-1">
-                  6-Digit Access Code
-                </label>
-                <div className="flex gap-2">
+              <form onSubmit={handleCreateCompetition} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-mono text-zinc-400 mb-1">
+                    6-Digit Access Code
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newCode}
+                      onChange={(e) => {
+                        setNewCode(e.target.value.toUpperCase().slice(0, 6));
+                        setFormErrors(prev => ({ ...prev, accessCode: undefined }));
+                      }}
+                      placeholder="e.g. WEC2026"
+                      className={`flex-1 bg-zinc-950 border rounded-xl px-3.5 py-2 font-mono font-extrabold text-amber-300 text-sm tracking-widest uppercase focus:outline-none ${
+                        formErrors.accessCode
+                          ? 'border-rose-500 focus:border-rose-400'
+                          : 'border-zinc-800 focus:border-amber-500'
+                      }`}
+                    />
+                    <button
+                      type="button"
+                      onClick={generateRandom6Char}
+                      className="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl text-xs font-mono transition-colors cursor-pointer"
+                    >
+                      Auto
+                    </button>
+                  </div>
+                  {formErrors.accessCode && (
+                    <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1.5 mt-1.5">
+                      <AlertTriangle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                      <span>{formErrors.accessCode}</span>
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono text-zinc-400 mb-1">
+                    Competition Title
+                  </label>
                   <input
                     type="text"
-                    value={newCode}
+                    value={newTitle}
                     onChange={(e) => {
-                      setNewCode(e.target.value.toUpperCase().slice(0, 6));
-                      setFormErrors(prev => ({ ...prev, accessCode: undefined }));
+                      setNewTitle(e.target.value);
+                      setFormErrors(prev => ({ ...prev, title: undefined }));
                     }}
-                    placeholder="e.g. WEC2026"
-                    className={`flex-1 bg-zinc-950 border rounded-xl px-3.5 py-2 font-mono font-extrabold text-amber-300 text-sm tracking-widest uppercase focus:outline-none ${
-                      formErrors.accessCode
+                    className={`w-full bg-zinc-950 border rounded-xl px-3.5 py-2 text-xs text-zinc-100 focus:outline-none ${
+                      formErrors.title
                         ? 'border-rose-500 focus:border-rose-400'
                         : 'border-zinc-800 focus:border-amber-500'
                     }`}
                   />
+                  {formErrors.title && (
+                    <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1.5 mt-1.5">
+                      <AlertTriangle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                      <span>{formErrors.title}</span>
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono text-zinc-400 mb-1">
+                    Duration (Minutes)
+                  </label>
+                  <input
+                    type="number"
+                    value={newDuration}
+                    onChange={(e) => {
+                      setNewDuration(parseInt(e.target.value) || 0);
+                      setFormErrors(prev => ({ ...prev, durationMinutes: undefined }));
+                    }}
+                    min={10}
+                    max={600}
+                    className={`w-full bg-zinc-950 border rounded-xl px-3.5 py-2 text-xs font-mono text-zinc-100 focus:outline-none ${
+                      formErrors.durationMinutes
+                        ? 'border-rose-500 focus:border-rose-400'
+                        : 'border-zinc-800 focus:border-amber-500'
+                    }`}
+                  />
+                  {formErrors.durationMinutes && (
+                    <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1.5 mt-1.5">
+                      <AlertTriangle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                      <span>{formErrors.durationMinutes}</span>
+                    </p>
+                  )}
+                </div>
+
+                <div className="pt-2 flex gap-2">
                   <button
                     type="button"
-                    onClick={generateRandom6Char}
-                    className="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl text-xs font-mono transition-colors cursor-pointer"
+                    onClick={() => {
+                      setFormErrors({});
+                      setShowCreateModal(false);
+                    }}
+                    className="flex-1 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-semibold text-xs transition-colors cursor-pointer"
                   >
-                    Auto
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs shadow-md transition-colors cursor-pointer"
+                  >
+                    Generate Contest
                   </button>
                 </div>
-                {formErrors.accessCode && (
-                  <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1.5 mt-1.5">
-                    <AlertTriangle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
-                    <span>{formErrors.accessCode}</span>
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-xs font-mono text-zinc-400 mb-1">
-                  Competition Title
-                </label>
-                <input
-                  type="text"
-                  value={newTitle}
-                  onChange={(e) => {
-                    setNewTitle(e.target.value);
-                    setFormErrors(prev => ({ ...prev, title: undefined }));
-                  }}
-                  className={`w-full bg-zinc-950 border rounded-xl px-3.5 py-2 text-xs text-zinc-100 focus:outline-none ${
-                    formErrors.title
-                      ? 'border-rose-500 focus:border-rose-400'
-                      : 'border-zinc-800 focus:border-amber-500'
-                  }`}
-                />
-                {formErrors.title && (
-                  <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1.5 mt-1.5">
-                    <AlertTriangle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
-                    <span>{formErrors.title}</span>
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-xs font-mono text-zinc-400 mb-1">
-                  Duration (Minutes)
-                </label>
-                <input
-                  type="number"
-                  value={newDuration}
-                  onChange={(e) => {
-                    setNewDuration(parseInt(e.target.value) || 0);
-                    setFormErrors(prev => ({ ...prev, durationMinutes: undefined }));
-                  }}
-                  min={10}
-                  max={600}
-                  className={`w-full bg-zinc-950 border rounded-xl px-3.5 py-2 text-xs font-mono text-zinc-100 focus:outline-none ${
-                    formErrors.durationMinutes
-                      ? 'border-rose-500 focus:border-rose-400'
-                      : 'border-zinc-800 focus:border-amber-500'
-                  }`}
-                />
-                {formErrors.durationMinutes && (
-                  <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1.5 mt-1.5">
-                    <AlertTriangle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
-                    <span>{formErrors.durationMinutes}</span>
-                  </p>
-                )}
-              </div>
-
-              <div className="pt-2 flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFormErrors({});
-                    setShowCreateModal(false);
-                  }}
-                  className="flex-1 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-semibold text-xs transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs shadow-md transition-colors cursor-pointer"
-                >
-                  Generate Contest
-                </button>
-              </div>
-            </form>
+              </form>
+            </div>
           </div>
-        </div>
+        </ModalPortal>
       )}
 
       {/* ADD / EDIT PROBLEM MODAL */}
       {showAddProblemModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-zinc-950/80 backdrop-blur-md">
-          <div className="w-full max-w-lg max-w-[calc(100vw-1.5rem)] bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
-              <h3 className="text-lg font-bold text-zinc-100 flex items-center gap-2">
-                <FileCode className="w-5 h-5 text-amber-400" />
-                <span>{editingProblem ? 'Edit Problem' : `Add Problem to [${activeComp?.accessCode}]`}</span>
-              </h3>
-              <button
-                onClick={() => {
-                  setShowAddProblemModal(false);
-                  setEditingProblem(null);
-                  setProblemFormErrors({});
-                }}
-                className="text-zinc-400 hover:text-zinc-100 text-sm font-mono cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveProblem} className="space-y-3">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-mono text-zinc-400 mb-1">Problem Title</label>
-                  <input
-                    type="text"
-                    value={probTitle}
-                    onChange={(e) => {
-                      setProbTitle(e.target.value);
-                      setProblemFormErrors(prev => ({ ...prev, title: undefined }));
-                    }}
-                    placeholder="e.g. 5. Subarray Sum Equals K"
-                    className={`w-full bg-zinc-950 border rounded-xl px-3 py-2 text-xs text-zinc-100 focus:outline-none ${
-                      problemFormErrors.title ? 'border-rose-500' : 'border-zinc-800 focus:border-amber-500'
-                    }`}
-                  />
-                  {problemFormErrors.title && (
-                    <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1 mt-1">
-                      <AlertTriangle className="w-3 h-3 text-rose-400 shrink-0" />
-                      <span>{problemFormErrors.title}</span>
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-xs font-mono text-zinc-400 mb-1">Method Name</label>
-                  <input
-                    type="text"
-                    value={probMethodName}
-                    onChange={(e) => {
-                      setProbMethodName(e.target.value);
-                      setProblemFormErrors(prev => ({ ...prev, methodName: undefined }));
-                    }}
-                    placeholder="e.g. twoSum or solve"
-                    className={`w-full bg-zinc-950 border rounded-xl px-3 py-2 text-xs font-mono text-zinc-100 focus:outline-none ${
-                      problemFormErrors.methodName ? 'border-rose-500' : 'border-zinc-800 focus:border-amber-500'
-                    }`}
-                  />
-                  {problemFormErrors.methodName && (
-                    <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1 mt-1">
-                      <AlertTriangle className="w-3 h-3 text-rose-400 shrink-0" />
-                      <span>{problemFormErrors.methodName}</span>
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-mono text-zinc-400 mb-1">Difficulty</label>
-                  <select
-                    value={probDiff}
-                    onChange={(e) => setProbDiff(e.target.value as Difficulty)}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs font-mono text-amber-300 focus:outline-none"
-                  >
-                    <option value="Easy">Easy</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Hard">Hard</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-mono text-zinc-400 mb-1">Points</label>
-                  <input
-                    type="number"
-                    value={probPoints}
-                    onChange={(e) => {
-                      setProbPoints(parseInt(e.target.value) || 0);
-                      setProblemFormErrors(prev => ({ ...prev, points: undefined }));
-                    }}
-                    className={`w-full bg-zinc-950 border rounded-xl px-3 py-2 text-xs font-mono text-zinc-100 focus:outline-none ${
-                      problemFormErrors.points ? 'border-rose-500' : 'border-zinc-800 focus:border-amber-500'
-                    }`}
-                  />
-                  {problemFormErrors.points && (
-                    <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1 mt-1">
-                      <AlertTriangle className="w-3 h-3 text-rose-400 shrink-0" />
-                      <span>{problemFormErrors.points}</span>
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-mono text-zinc-400 mb-1">Time Limit (ms)</label>
-                  <input
-                    type="number"
-                    value={probTimeLimitMs}
-                    onChange={(e) => {
-                      setProbTimeLimitMs(parseInt(e.target.value) || 0);
-                      setProblemFormErrors(prev => ({ ...prev, timeLimitMs: undefined }));
-                    }}
-                    className={`w-full bg-zinc-950 border rounded-xl px-3 py-2 text-xs font-mono text-zinc-100 focus:outline-none ${
-                      problemFormErrors.timeLimitMs ? 'border-rose-500' : 'border-zinc-800 focus:border-amber-500'
-                    }`}
-                  />
-                  {problemFormErrors.timeLimitMs && (
-                    <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1 mt-1">
-                      <AlertTriangle className="w-3 h-3 text-rose-400 shrink-0" />
-                      <span>{problemFormErrors.timeLimitMs}</span>
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-xs font-mono text-zinc-400 mb-1">Memory Limit (MB)</label>
-                  <input
-                    type="number"
-                    value={probMemoryLimitMb}
-                    onChange={(e) => {
-                      setProbMemoryLimitMb(parseInt(e.target.value) || 0);
-                      setProblemFormErrors(prev => ({ ...prev, memoryLimitMb: undefined }));
-                    }}
-                    className={`w-full bg-zinc-950 border rounded-xl px-3 py-2 text-xs font-mono text-zinc-100 focus:outline-none ${
-                      problemFormErrors.memoryLimitMb ? 'border-rose-500' : 'border-zinc-800 focus:border-amber-500'
-                    }`}
-                  />
-                  {problemFormErrors.memoryLimitMb && (
-                    <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1 mt-1">
-                      <AlertTriangle className="w-3 h-3 text-rose-400 shrink-0" />
-                      <span>{problemFormErrors.memoryLimitMb}</span>
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-mono text-zinc-400 mb-1">Description</label>
-                <textarea
-                  value={probDesc}
-                  onChange={(e) => {
-                    setProbDesc(e.target.value);
-                    setProblemFormErrors(prev => ({ ...prev, description: undefined }));
-                  }}
-                  rows={3}
-                  placeholder="Enter problem statement and constraints..."
-                  className={`w-full bg-zinc-950 border rounded-xl p-3 text-xs text-zinc-100 focus:outline-none ${
-                    problemFormErrors.description ? 'border-rose-500' : 'border-zinc-800 focus:border-amber-500'
-                  }`}
-                />
-                {problemFormErrors.description && (
-                  <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1 mt-1">
-                    <AlertTriangle className="w-3 h-3 text-rose-400 shrink-0" />
-                    <span>{problemFormErrors.description}</span>
-                  </p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-mono text-zinc-400 mb-1">Sample Input</label>
-                  <textarea
-                    value={probSampleIn}
-                    onChange={(e) => {
-                      setProbSampleIn(e.target.value);
-                      setProblemFormErrors(prev => ({ ...prev, sampleInput: undefined }));
-                    }}
-                    rows={2}
-                    className={`w-full bg-zinc-950 border rounded-xl p-2 text-xs font-mono text-amber-300 focus:outline-none ${
-                      problemFormErrors.sampleInput ? 'border-rose-500' : 'border-zinc-800'
-                    }`}
-                  />
-                  {problemFormErrors.sampleInput && (
-                    <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1 mt-1">
-                      <AlertTriangle className="w-3 h-3 text-rose-400 shrink-0" />
-                      <span>{problemFormErrors.sampleInput}</span>
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-xs font-mono text-zinc-400 mb-1">Sample Output</label>
-                  <textarea
-                    value={probSampleOut}
-                    onChange={(e) => {
-                      setProbSampleOut(e.target.value);
-                      setProblemFormErrors(prev => ({ ...prev, sampleOutput: undefined }));
-                    }}
-                    rows={2}
-                    className={`w-full bg-zinc-950 border rounded-xl p-2 text-xs font-mono text-emerald-300 focus:outline-none ${
-                      problemFormErrors.sampleOutput ? 'border-rose-500' : 'border-zinc-800'
-                    }`}
-                  />
-                  {problemFormErrors.sampleOutput && (
-                    <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1 mt-1">
-                      <AlertTriangle className="w-3 h-3 text-rose-400 shrink-0" />
-                      <span>{problemFormErrors.sampleOutput}</span>
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="pt-2 flex gap-2">
+        <ModalPortal>
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-zinc-950/80 backdrop-blur-md overflow-y-auto animate-fadeIn"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowAddProblemModal(false);
+                setEditingProblem(null);
+                setProblemFormErrors({});
+              }
+            }}
+          >
+            <div className="w-full max-w-xl bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-6 space-y-4 shadow-2xl my-auto max-h-[calc(100vh-2rem)] overflow-y-auto">
+              <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+                <h3 className="text-lg font-bold text-zinc-100 flex items-center gap-2">
+                  <FileCode className="w-5 h-5 text-amber-400" />
+                  <span>{editingProblem ? 'Edit Problem' : `Add Problem to [${activeComp?.accessCode}]`}</span>
+                </h3>
                 <button
                   type="button"
                   onClick={() => {
@@ -991,107 +803,324 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     setEditingProblem(null);
                     setProblemFormErrors({});
                   }}
-                  className="flex-1 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-semibold text-xs transition-colors cursor-pointer"
+                  className="text-zinc-400 hover:text-zinc-100 text-sm font-mono cursor-pointer p-1"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs shadow-md transition-colors cursor-pointer"
-                >
-                  {editingProblem ? 'Update Problem' : 'Save Problem'}
+                  ✕
                 </button>
               </div>
-            </form>
+
+              <form onSubmit={handleSaveProblem} className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-mono text-zinc-400 mb-1">Problem Title</label>
+                    <input
+                      type="text"
+                      value={probTitle}
+                      onChange={(e) => {
+                        setProbTitle(e.target.value);
+                        setProblemFormErrors(prev => ({ ...prev, title: undefined }));
+                      }}
+                      placeholder="e.g. 5. Subarray Sum Equals K"
+                      className={`w-full bg-zinc-950 border rounded-xl px-3 py-2 text-xs text-zinc-100 focus:outline-none ${
+                        problemFormErrors.title ? 'border-rose-500' : 'border-zinc-800 focus:border-amber-500'
+                      }`}
+                    />
+                    {problemFormErrors.title && (
+                      <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1 mt-1">
+                        <AlertTriangle className="w-3 h-3 text-rose-400 shrink-0" />
+                        <span>{problemFormErrors.title}</span>
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-mono text-zinc-400 mb-1">Method Name</label>
+                    <input
+                      type="text"
+                      value={probMethodName}
+                      onChange={(e) => {
+                        setProbMethodName(e.target.value);
+                        setProblemFormErrors(prev => ({ ...prev, methodName: undefined }));
+                      }}
+                      placeholder="e.g. twoSum or solve"
+                      className={`w-full bg-zinc-950 border rounded-xl px-3 py-2 text-xs font-mono text-zinc-100 focus:outline-none ${
+                        problemFormErrors.methodName ? 'border-rose-500' : 'border-zinc-800 focus:border-amber-500'
+                      }`}
+                    />
+                    {problemFormErrors.methodName && (
+                      <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1 mt-1">
+                        <AlertTriangle className="w-3 h-3 text-rose-400 shrink-0" />
+                        <span>{problemFormErrors.methodName}</span>
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-mono text-zinc-400 mb-1">Difficulty</label>
+                    <select
+                      value={probDiff}
+                      onChange={(e) => setProbDiff(e.target.value as Difficulty)}
+                      className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs font-mono text-amber-300 focus:outline-none"
+                    >
+                      <option value="Easy">Easy</option>
+                      <option value="Medium">Medium</option>
+                      <option value="Hard">Hard</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-mono text-zinc-400 mb-1">Points</label>
+                    <input
+                      type="number"
+                      value={probPoints}
+                      onChange={(e) => {
+                        setProbPoints(parseInt(e.target.value) || 0);
+                        setProblemFormErrors(prev => ({ ...prev, points: undefined }));
+                      }}
+                      className={`w-full bg-zinc-950 border rounded-xl px-3 py-2 text-xs font-mono text-zinc-100 focus:outline-none ${
+                        problemFormErrors.points ? 'border-rose-500' : 'border-zinc-800 focus:border-amber-500'
+                      }`}
+                    />
+                    {problemFormErrors.points && (
+                      <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1 mt-1">
+                        <AlertTriangle className="w-3 h-3 text-rose-400 shrink-0" />
+                        <span>{problemFormErrors.points}</span>
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-mono text-zinc-400 mb-1">Time Limit (ms)</label>
+                    <input
+                      type="number"
+                      value={probTimeLimitMs}
+                      onChange={(e) => {
+                        setProbTimeLimitMs(parseInt(e.target.value) || 0);
+                        setProblemFormErrors(prev => ({ ...prev, timeLimitMs: undefined }));
+                      }}
+                      className={`w-full bg-zinc-950 border rounded-xl px-3 py-2 text-xs font-mono text-zinc-100 focus:outline-none ${
+                        problemFormErrors.timeLimitMs ? 'border-rose-500' : 'border-zinc-800 focus:border-amber-500'
+                      }`}
+                    />
+                    {problemFormErrors.timeLimitMs && (
+                      <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1 mt-1">
+                        <AlertTriangle className="w-3 h-3 text-rose-400 shrink-0" />
+                        <span>{problemFormErrors.timeLimitMs}</span>
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-mono text-zinc-400 mb-1">Memory Limit (MB)</label>
+                    <input
+                      type="number"
+                      value={probMemoryLimitMb}
+                      onChange={(e) => {
+                        setProbMemoryLimitMb(parseInt(e.target.value) || 0);
+                        setProblemFormErrors(prev => ({ ...prev, memoryLimitMb: undefined }));
+                      }}
+                      className={`w-full bg-zinc-950 border rounded-xl px-3 py-2 text-xs font-mono text-zinc-100 focus:outline-none ${
+                        problemFormErrors.memoryLimitMb ? 'border-rose-500' : 'border-zinc-800 focus:border-amber-500'
+                      }`}
+                    />
+                    {problemFormErrors.memoryLimitMb && (
+                      <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1 mt-1">
+                        <AlertTriangle className="w-3 h-3 text-rose-400 shrink-0" />
+                        <span>{problemFormErrors.memoryLimitMb}</span>
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono text-zinc-400 mb-1">Description</label>
+                  <textarea
+                    value={probDesc}
+                    onChange={(e) => {
+                      setProbDesc(e.target.value);
+                      setProblemFormErrors(prev => ({ ...prev, description: undefined }));
+                    }}
+                    rows={3}
+                    placeholder="Enter problem statement and constraints..."
+                    className={`w-full bg-zinc-950 border rounded-xl p-3 text-xs text-zinc-100 focus:outline-none ${
+                      problemFormErrors.description ? 'border-rose-500' : 'border-zinc-800 focus:border-amber-500'
+                    }`}
+                  />
+                  {problemFormErrors.description && (
+                    <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1 mt-1">
+                      <AlertTriangle className="w-3 h-3 text-rose-400 shrink-0" />
+                      <span>{problemFormErrors.description}</span>
+                    </p>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-mono text-zinc-400 mb-1">Sample Input</label>
+                    <textarea
+                      value={probSampleIn}
+                      onChange={(e) => {
+                        setProbSampleIn(e.target.value);
+                        setProblemFormErrors(prev => ({ ...prev, sampleInput: undefined }));
+                      }}
+                      rows={2}
+                      className={`w-full bg-zinc-950 border rounded-xl p-2 text-xs font-mono text-amber-300 focus:outline-none ${
+                        problemFormErrors.sampleInput ? 'border-rose-500' : 'border-zinc-800'
+                      }`}
+                    />
+                    {problemFormErrors.sampleInput && (
+                      <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1 mt-1">
+                        <AlertTriangle className="w-3 h-3 text-rose-400 shrink-0" />
+                        <span>{problemFormErrors.sampleInput}</span>
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-xs font-mono text-zinc-400 mb-1">Sample Output</label>
+                    <textarea
+                      value={probSampleOut}
+                      onChange={(e) => {
+                        setProbSampleOut(e.target.value);
+                        setProblemFormErrors(prev => ({ ...prev, sampleOutput: undefined }));
+                      }}
+                      rows={2}
+                      className={`w-full bg-zinc-950 border rounded-xl p-2 text-xs font-mono text-emerald-300 focus:outline-none ${
+                        problemFormErrors.sampleOutput ? 'border-rose-500' : 'border-zinc-800'
+                      }`}
+                    />
+                    {problemFormErrors.sampleOutput && (
+                      <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1 mt-1">
+                        <AlertTriangle className="w-3 h-3 text-rose-400 shrink-0" />
+                        <span>{problemFormErrors.sampleOutput}</span>
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="pt-2 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAddProblemModal(false);
+                      setEditingProblem(null);
+                      setProblemFormErrors({});
+                    }}
+                    className="flex-1 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-semibold text-xs transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs shadow-md transition-colors cursor-pointer"
+                  >
+                    {editingProblem ? 'Update Problem' : 'Save Problem'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
-        </div>
+        </ModalPortal>
       )}
 
       {/* DELETE COMPETITION MODAL */}
       {showDeleteModal && activeComp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-zinc-950/80 backdrop-blur-md">
-          <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center gap-3 text-rose-400 border-b border-zinc-800 pb-3">
-              <AlertTriangle className="w-6 h-6 stroke-[2.5]" />
-              <h3 className="text-lg font-bold text-zinc-100">Delete Competition</h3>
-            </div>
-            <p className="text-xs text-zinc-300 leading-relaxed">
-              Are you sure you want to permanently delete <strong className="text-amber-300">{activeComp.title}</strong> (Access Code: <span className="font-mono text-amber-400 font-bold">{activeComp.accessCode}</span>)?
-            </p>
-            <p className="text-[11px] text-zinc-500">
-              This action will remove all problems, test cases, announcements, and submissions associated with this competition from the database. This action cannot be undone.
-            </p>
-            <div className="pt-2 flex gap-3">
-              <button
-                type="button"
-                onClick={() => setShowDeleteModal(false)}
-                className="flex-1 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-semibold text-xs transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const codeToDelete = activeComp.accessCode;
-                  const remainingComps = competitions.filter(c => c.accessCode !== codeToDelete);
-                  onDeleteCompetition(codeToDelete);
-                  setSelectedCompCode(remainingComps[0]?.accessCode || '');
-                  setShowDeleteModal(false);
-                }}
-                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <Trash2 className="w-4 h-4" />
-                <span>Confirm Delete</span>
-              </button>
+        <ModalPortal>
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-zinc-950/80 backdrop-blur-md overflow-y-auto animate-fadeIn"
+            onClick={(e) => { if (e.target === e.currentTarget) setShowDeleteModal(false); }}
+          >
+            <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4 shadow-2xl my-auto max-h-[calc(100vh-2rem)] overflow-y-auto">
+              <div className="flex items-center gap-3 text-rose-400 border-b border-zinc-800 pb-3">
+                <AlertTriangle className="w-6 h-6 stroke-[2.5]" />
+                <h3 className="text-lg font-bold text-zinc-100">Delete Competition</h3>
+              </div>
+              <p className="text-xs text-zinc-300 leading-relaxed">
+                Are you sure you want to permanently delete <strong className="text-amber-300">{activeComp.title}</strong> (Access Code: <span className="font-mono text-amber-400 font-bold">{activeComp.accessCode}</span>)?
+              </p>
+              <p className="text-[11px] text-zinc-500">
+                This action will remove all problems, test cases, announcements, and submissions associated with this competition from the database. This action cannot be undone.
+              </p>
+              <div className="pt-2 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteModal(false)}
+                  className="flex-1 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-semibold text-xs transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const codeToDelete = activeComp.accessCode;
+                    const remainingComps = competitions.filter(c => c.accessCode !== codeToDelete);
+                    onDeleteCompetition(codeToDelete);
+                    setSelectedCompCode(remainingComps[0]?.accessCode || '');
+                    setShowDeleteModal(false);
+                  }}
+                  className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>Confirm Delete</span>
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        </ModalPortal>
       )}
 
       {/* DELETE PROBLEM MODAL */}
       {deletingProblem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-zinc-950/80 backdrop-blur-md">
-          <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center gap-3 text-rose-400 border-b border-zinc-800 pb-3">
-              <AlertTriangle className="w-6 h-6 stroke-[2.5]" />
-              <h3 className="text-lg font-bold text-zinc-100">Delete Problem</h3>
-            </div>
-            <p className="text-xs text-zinc-300 leading-relaxed">
-              Are you sure you want to delete problem <strong className="text-amber-300">{deletingProblem.title}</strong>?
-            </p>
-            <p className="text-[11px] text-zinc-500">
-              This action will remove all test cases and submissions associated with this problem. This action cannot be undone.
-            </p>
-            <div className="pt-2 flex gap-3">
-              <button
-                type="button"
-                onClick={() => setDeletingProblem(null)}
-                className="flex-1 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-semibold text-xs transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={async () => {
-                  const probId = deletingProblem.id;
-                  setDeletingProblem(null);
-                  if (onDeleteProblem) {
-                    await onDeleteProblem(probId);
-                  } else if (activeComp) {
-                    onUpdateCompetition({
-                      ...activeComp,
-                      problems: activeComp.problems.filter(p => p.id !== probId),
-                    });
-                  }
-                }}
-                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <Trash2 className="w-4 h-4" />
-                <span>Confirm Delete</span>
-              </button>
+        <ModalPortal>
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-zinc-950/80 backdrop-blur-md overflow-y-auto animate-fadeIn"
+            onClick={(e) => { if (e.target === e.currentTarget) setDeletingProblem(null); }}
+          >
+            <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4 shadow-2xl my-auto max-h-[calc(100vh-2rem)] overflow-y-auto">
+              <div className="flex items-center gap-3 text-rose-400 border-b border-zinc-800 pb-3">
+                <AlertTriangle className="w-6 h-6 stroke-[2.5]" />
+                <h3 className="text-lg font-bold text-zinc-100">Delete Problem</h3>
+              </div>
+              <p className="text-xs text-zinc-300 leading-relaxed">
+                Are you sure you want to delete problem <strong className="text-amber-300">{deletingProblem.title}</strong>?
+              </p>
+              <p className="text-[11px] text-zinc-500">
+                This action will remove all test cases and submissions associated with this problem. This action cannot be undone.
+              </p>
+              <div className="pt-2 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setDeletingProblem(null)}
+                  className="flex-1 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-semibold text-xs transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const probId = deletingProblem.id;
+                    setDeletingProblem(null);
+                    if (onDeleteProblem) {
+                      await onDeleteProblem(probId);
+                    } else if (activeComp) {
+                      onUpdateCompetition({
+                        ...activeComp,
+                        problems: activeComp.problems.filter(p => p.id !== probId),
+                      });
+                    }
+                  }}
+                  className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>Confirm Delete</span>
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        </ModalPortal>
       )}
 
     </div>

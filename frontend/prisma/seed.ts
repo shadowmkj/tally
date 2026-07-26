@@ -76,11 +76,13 @@ async function main() {
           outputFormat: prob.outputFormat,
           constraints: JSON.stringify(prob.constraints),
           starterTemplates: JSON.stringify(prob.starterTemplates),
+          methodName: (prob as any).methodName || 'solve',
         },
         create: {
           id: prob.id,
           title: prob.title,
           slug: prob.slug,
+          methodName: (prob as any).methodName || 'solve',
           difficulty: prob.difficulty,
           points: prob.points,
           timeLimitMs: prob.timeLimitMs,

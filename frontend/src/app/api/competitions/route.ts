@@ -1,9 +1,26 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getCache, setCache, delCache } from '@/lib/redis';
 import type { Announcement, Problem, SampleTestCase, TestCase } from '@/context/CompetitionContext';
+
+const COMPETITIONS_CACHE_KEY = 'cache:competitions_data';
+const CACHE_TTL_SECONDS = 15;
 
 export async function GET() {
     try {
+        // Try reading from Redis cache first
+        const cachedData = await getCache<{
+            competitions: unknown[];
+            participants: unknown[];
+            submissions: unknown[];
+        }>(COMPETITIONS_CACHE_KEY);
+
+        if (cachedData) {
+            return NextResponse.json(cachedData, {
+                headers: { 'X-Cache': 'HIT' },
+            });
+        }
+
         const competitions = await prisma.competition.findMany({
             include: {
                 announcements: {
@@ -27,7 +44,14 @@ export async function GET() {
             orderBy: { timestamp: 'desc' },
         });
 
-        return NextResponse.json({ competitions, participants, submissions });
+        const responsePayload = { competitions, participants, submissions };
+
+        // Save to Redis cache asynchronously
+        await setCache(COMPETITIONS_CACHE_KEY, responsePayload, CACHE_TTL_SECONDS);
+
+        return NextResponse.json(responsePayload, {
+            headers: { 'X-Cache': 'MISS' },
+        });
     } catch (error) {
         console.error('Failed to fetch data via Prisma:', error);
         return NextResponse.json(
@@ -116,6 +140,7 @@ export async function POST(req: Request) {
             },
         });
 
+        await delCache(COMPETITIONS_CACHE_KEY);
         return NextResponse.json({ competition: newComp });
     } catch (error: any) {
         console.error('Failed to create competition via Prisma:', error);
@@ -222,6 +247,7 @@ export async function PUT(req: Request) {
             },
         });
 
+        await delCache(COMPETITIONS_CACHE_KEY);
         return NextResponse.json({ competition: finalComp });
     } catch (error: any) {
         console.error('Failed to update competition via Prisma:', error);
@@ -245,6 +271,7 @@ export async function DELETE(req: Request) {
             where: targetWhere,
         });
 
+        await delCache(COMPETITIONS_CACHE_KEY);
         return NextResponse.json({ success: true, message: 'Competition deleted successfully' });
     } catch (error: any) {
         console.error('Failed to delete competition via Prisma:', error);

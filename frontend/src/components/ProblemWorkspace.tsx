@@ -110,14 +110,24 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
         setBottomDrawerOpen(true);
         setBottomTab('result');
 
-
         const newSubmit = {
             problem_id: problem.id,
             problem_slug: problem.slug,
             language,
             method_name: problem.methodName,
-            code
-        }
+            code,
+            user: session?.name || "milan",
+            user_id: session?.participantId || "part-guest",
+        };
+
+        // Submit newSubmit variable to Redis queue named "jobs"
+        fetch('/api/submissions/queue', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ newSubmit }),
+        }).catch((err) => {
+            console.error('[Redis Queue Error] Failed to submit job:', err);
+        });
 
         setTimeout(() => {
             const result = runCodeOnTestCases(problem, code, language);

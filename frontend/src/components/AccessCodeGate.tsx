@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { KeyRound, ShieldCheck, Sparkles, ArrowRight } from 'lucide-react';
 import type { Competition, UserSession } from '@/context/CompetitionContext';
+import { ModalPortal } from '@/components/ModalPortal';
 
 interface AccessCodeGateProps {
     competitions: Competition[];
@@ -67,15 +68,14 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-zinc-950/80 backdrop-blur-md animate-fadeIn">
-            <div className="relative w-full max-w-lg max-w-[calc(100vw-1.5rem)] bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden">
+        <ModalPortal>
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-zinc-950/80 backdrop-blur-md animate-fadeIn overflow-y-auto">
+                <div className="relative w-full max-w-lg bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden my-auto max-h-[calc(100vh-2rem)] overflow-y-auto">
+                    {/* Top Glow Bar */}
+                    <div className="h-1.5 bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500"></div>
 
-                {/* Top Glow Bar */}
-                <div className="h-1.5 bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500"></div>
-
-                <div className="p-4 sm:p-8 space-y-4 sm:space-y-6">
-                    {/* Header */}
-                    <div className="text-center space-y-2">
+                    <div className="p-4 sm:p-8 space-y-4 sm:space-y-6">
+                        <div className="text-center space-y-2">
                         <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 mb-1">
                             <KeyRound className="w-6 h-6 stroke-[2.5]" />
                         </div>
@@ -232,5 +232,6 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
                 </div>
             </div>
         </div>
+        </ModalPortal>
     );
 };
