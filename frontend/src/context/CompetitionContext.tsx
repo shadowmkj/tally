@@ -153,6 +153,8 @@ interface CompetitionContextType {
     addSubmission: (submission: Submission) => void;
     addCompetition: (competition: Competition) => void;
     updateCompetition: (competition: Competition) => void;
+    deleteCompetition: (accessCode: string) => void;
+    switchCompetition: (accessCode: string) => void;
     broadcastAnnouncement: (compAccessCode: string, title: string, text: string) => void;
 }
 
@@ -303,6 +305,7 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
     const [showCodeGate, setShowCodeGate] = useState<boolean>(false);
     const [showAnnouncements, setShowAnnouncements] = useState<boolean>(false);
     const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+    const [adminCompCode, setAdminCompCode] = useState<string | null>(null);
 
     // Fetch data exclusively from Database via Prisma API endpoint on mount
     useEffect(() => {
@@ -342,9 +345,14 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
         }
     }, [session]);
 
-    const activeCompetition = competitions.find(
-        c => c.accessCode.toUpperCase() === (session?.accessCode || 'WEC2026').toUpperCase()
-    ) || competitions[0] || EMPTY_COMPETITION;
+    const activeCompetition = (adminCompCode ? competitions.find(c => c.accessCode.toUpperCase() === adminCompCode.toUpperCase()) : null)
+        || competitions.find(c => c.accessCode.toUpperCase() === (session?.accessCode || 'WEC2026').toUpperCase())
+        || competitions[0]
+        || EMPTY_COMPETITION;
+
+    const switchCompetition = (accessCode: string) => {
+        setAdminCompCode(accessCode);
+    };
 
     const verifySession = (newSession: UserSession) => {
         setSession(newSession);
@@ -483,24 +491,74 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
         }).catch(err => console.error('Failed to save submission to Prisma DB:', err));
     };
 
-    const addCompetition = (newComp: Competition) => {
+    const addCompetition = async (newComp: Competition) => {
         setCompetitions(prev => [newComp, ...prev]);
 
-        fetch('/api/competitions', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ competition: newComp }),
-        }).catch(err => console.error('Failed to add competition to Prisma DB:', err));
+        try {
+            const res = await fetch('/api/competitions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ competition: newComp }),
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.competition) {
+                    const formatted = formatCompetition(data.competition);
+                    setCompetitions(prev => [
+                        formatted,
+                        ...prev.filter(c => c.id !== newComp.id && c.accessCode !== newComp.accessCode)
+                    ]);
+                }
+            } else {
+                const errData = await res.json();
+                console.error('Failed to add competition to Prisma DB:', errData);
+            }
+        } catch (err) {
+            console.error('Failed to add competition to Prisma DB:', err);
+        }
     };
 
-    const updateCompetition = (updatedComp: Competition) => {
-        setCompetitions(prev => prev.map(c => c.accessCode === updatedComp.accessCode ? updatedComp : c));
+    const updateCompetition = async (updatedComp: Competition) => {
+        setCompetitions(prev => prev.map(c => c.accessCode === updatedComp.accessCode || c.id === updatedComp.id ? updatedComp : c));
 
-        fetch('/api/competitions', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ competition: updatedComp }),
-        }).catch(err => console.error('Failed to update competition in Prisma DB:', err));
+        try {
+            const res = await fetch('/api/competitions', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ competition: updatedComp }),
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.competition) {
+                    const formatted = formatCompetition(data.competition);
+                    setCompetitions(prev => prev.map(c => c.id === formatted.id || c.accessCode === formatted.accessCode ? formatted : c));
+                }
+            } else {
+                const errData = await res.json();
+                console.error('Failed to update competition in Prisma DB:', errData);
+            }
+        } catch (err) {
+            console.error('Failed to update competition in Prisma DB:', err);
+        }
+    };
+
+    const deleteCompetition = async (accessCodeOrId: string) => {
+        setCompetitions(prev => prev.filter(c => c.accessCode !== accessCodeOrId && c.id !== accessCodeOrId));
+
+        try {
+            const param = accessCodeOrId.length > 15 && accessCodeOrId.includes('-')
+                ? `id=${encodeURIComponent(accessCodeOrId)}`
+                : `accessCode=${encodeURIComponent(accessCodeOrId)}`;
+            const res = await fetch(`/api/competitions?${param}`, {
+                method: 'DELETE',
+            });
+            if (!res.ok) {
+                const errData = await res.json();
+                console.error('Failed to delete competition from Prisma DB:', errData);
+            }
+        } catch (err) {
+            console.error('Failed to delete competition from Prisma DB:', err);
+        }
     };
 
     const broadcastAnnouncement = (compAccessCode: string, title: string, text: string) => {
@@ -549,6 +607,8 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
                 addSubmission,
                 addCompetition,
                 updateCompetition,
+                deleteCompetition,
+                switchCompetition,
                 broadcastAnnouncement,
             }}
         >

@@ -14,15 +14,19 @@ import {
   Pause, 
   Check, 
   PlusCircle,
-  LogOut
+  LogOut,
+  Trash2,
+  AlertTriangle
 } from 'lucide-react';
 import type { Competition, Problem, Difficulty } from '@/context/CompetitionContext';
 import { authClient } from '@/lib/auth-client';
+import { createCompetitionSchema } from '@/lib/validations';
 
 interface AdminPortalProps {
   competitions: Competition[];
   onAddCompetition: (comp: Competition) => void;
   onUpdateCompetition: (comp: Competition) => void;
+  onDeleteCompetition: (accessCode: string) => void;
   onBroadcastAnnouncement: (compAccessCode: string, title: string, text: string) => void;
 }
 
@@ -30,16 +34,26 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   competitions,
   onAddCompetition,
   onUpdateCompetition,
+  onDeleteCompetition,
   onBroadcastAnnouncement,
 }) => {
   const [selectedCompCode, setSelectedCompCode] = useState<string>(competitions[0]?.accessCode || '');
   const activeComp = competitions.find(c => c.accessCode === selectedCompCode) || competitions[0];
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newTitle, setNewTitle] = useState('Wecode Weekly CodeRush #4');
   const [newSubtitle, setNewSubtitle] = useState('Wecode Club - GCE Kannur');
   const [newCode, setNewCode] = useState('');
   const [newDuration, setNewDuration] = useState(90);
+
+  const [formErrors, setFormErrors] = useState<{
+    accessCode?: string;
+    title?: string;
+    subtitle?: string;
+    durationMinutes?: string;
+  }>({});
 
   const [annTitle, setAnnTitle] = useState('');
   const [annText, setAnnText] = useState('');
@@ -60,17 +74,55 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       res += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     setNewCode(res);
+    setFormErrors(prev => ({ ...prev, accessCode: undefined }));
   };
 
   const handleCreateCompetition = (e: React.FormEvent) => {
     e.preventDefault();
-    const finalCode = (newCode || 'WEC999').toUpperCase().slice(0, 6);
+    setFormErrors({});
+
+    const finalCode = newCode.toUpperCase().trim();
+    const payload = {
+      accessCode: finalCode,
+      title: newTitle.trim(),
+      subtitle: newSubtitle.trim(),
+      durationMinutes: Number(newDuration),
+    };
+
+    // 1. Zod Validation
+    const validationResult = createCompetitionSchema.safeParse(payload);
+    if (!validationResult.success) {
+      const fieldErrors: Record<string, string> = {};
+      for (const issue of validationResult.error.issues) {
+        const fieldName = issue.path[0] as string;
+        if (!fieldErrors[fieldName]) {
+          fieldErrors[fieldName] = issue.message;
+        }
+      }
+      setFormErrors(fieldErrors);
+      return;
+    }
+
+    // 2. Check for already existing access codes
+    const codeExists = competitions.some(
+      c => c.accessCode.toUpperCase() === finalCode.toUpperCase()
+    );
+    if (codeExists) {
+      setFormErrors(prev => ({
+        ...prev,
+        accessCode: `Access code '${finalCode}' already exists. Please choose a different code.`,
+      }));
+      return;
+    }
+
+    const now = Date.now();
+    const randSuffix = Math.random().toString(36).substring(2, 7);
 
     const newComp: Competition = {
-      id: `comp-${Date.now()}`,
+      id: `comp-${now}-${randSuffix}`,
       accessCode: finalCode,
-      title: newTitle,
-      subtitle: newSubtitle,
+      title: newTitle.trim(),
+      subtitle: newSubtitle.trim(),
       description: 'Custom competition created via Wecode Admin Portal.',
       startTime: new Date().toISOString(),
       durationMinutes: newDuration,
@@ -78,7 +130,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       isLeaderboardFrozen: false,
       problems: [
         {
-          id: `p-${Date.now()}-1`,
+          id: `p-${now}-${randSuffix}`,
           title: '1. Two Sum Target',
           slug: 'two-sum-target',
           difficulty: 'Easy',
@@ -91,10 +143,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           outputFormat: 'Print 0-indexed indices of the two numbers.',
           constraints: ['2 <= N <= 10^4'],
           sampleTestCases: [
-            { id: 'st1', input: '4 9\n2 7 11 15', output: '0 1' }
+            { id: `st-${now}-${randSuffix}`, input: '4 9\n2 7 11 15', output: '0 1' }
           ],
           testCases: [
-            { id: 't1', input: '4 9\n2 7 11 15', output: '0 1' }
+            { id: `t-${now}-${randSuffix}`, input: '4 9\n2 7 11 15', output: '0 1' }
           ],
           starterTemplates: {
             python: `def solve():\n    print("0 1")\nif __name__ == "__main__":\n    solve()`,
@@ -107,9 +159,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       ],
       announcements: [
         {
-          id: `ann-${Date.now()}`,
+          id: `ann-${now}-${randSuffix}`,
           title: 'Contest Initialized',
-          text: `Welcome to ${newTitle}! Access Code is ${finalCode}.`,
+          text: `Welcome to ${newTitle.trim()}! Access Code is ${finalCode}.`,
           timestamp: new Date().toISOString(),
         }
       ]
@@ -117,6 +169,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
     onAddCompetition(newComp);
     setSelectedCompCode(finalCode);
+    setFormErrors({});
     setShowCreateModal(false);
   };
 
@@ -272,6 +325,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             >
               {activeComp.isLeaderboardFrozen ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
               <span>{activeComp.isLeaderboardFrozen ? 'FROZEN' : 'FREEZE LEADERBOARD'}</span>
+            </button>
+
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              className="px-3 py-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-mono font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="Delete Competition"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>DELETE</span>
             </button>
           </div>
         )}
@@ -452,19 +514,31 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   <input
                     type="text"
                     value={newCode}
-                    onChange={(e) => setNewCode(e.target.value.toUpperCase().slice(0, 6))}
+                    onChange={(e) => {
+                      setNewCode(e.target.value.toUpperCase().slice(0, 6));
+                      setFormErrors(prev => ({ ...prev, accessCode: undefined }));
+                    }}
                     placeholder="e.g. WEC2026"
-                    required
-                    className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 font-mono font-extrabold text-amber-300 text-sm tracking-widest uppercase focus:outline-none focus:border-amber-500"
+                    className={`flex-1 bg-zinc-950 border rounded-xl px-3.5 py-2 font-mono font-extrabold text-amber-300 text-sm tracking-widest uppercase focus:outline-none ${
+                      formErrors.accessCode
+                        ? 'border-rose-500 focus:border-rose-400'
+                        : 'border-zinc-800 focus:border-amber-500'
+                    }`}
                   />
                   <button
                     type="button"
                     onClick={generateRandom6Char}
-                    className="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl text-xs font-mono transition-colors"
+                    className="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl text-xs font-mono transition-colors cursor-pointer"
                   >
                     Auto
                   </button>
                 </div>
+                {formErrors.accessCode && (
+                  <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1.5 mt-1.5">
+                    <AlertTriangle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                    <span>{formErrors.accessCode}</span>
+                  </p>
+                )}
               </div>
 
               <div>
@@ -474,10 +548,22 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 <input
                   type="text"
                   value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  required
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-xs text-zinc-100 focus:outline-none focus:border-amber-500"
+                  onChange={(e) => {
+                    setNewTitle(e.target.value);
+                    setFormErrors(prev => ({ ...prev, title: undefined }));
+                  }}
+                  className={`w-full bg-zinc-950 border rounded-xl px-3.5 py-2 text-xs text-zinc-100 focus:outline-none ${
+                    formErrors.title
+                      ? 'border-rose-500 focus:border-rose-400'
+                      : 'border-zinc-800 focus:border-amber-500'
+                  }`}
                 />
+                {formErrors.title && (
+                  <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1.5 mt-1.5">
+                    <AlertTriangle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                    <span>{formErrors.title}</span>
+                  </p>
+                )}
               </div>
 
               <div>
@@ -487,25 +573,40 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 <input
                   type="number"
                   value={newDuration}
-                  onChange={(e) => setNewDuration(parseInt(e.target.value) || 90)}
-                  required
+                  onChange={(e) => {
+                    setNewDuration(parseInt(e.target.value) || 0);
+                    setFormErrors(prev => ({ ...prev, durationMinutes: undefined }));
+                  }}
                   min={10}
                   max={600}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-xs font-mono text-zinc-100 focus:outline-none focus:border-amber-500"
+                  className={`w-full bg-zinc-950 border rounded-xl px-3.5 py-2 text-xs font-mono text-zinc-100 focus:outline-none ${
+                    formErrors.durationMinutes
+                      ? 'border-rose-500 focus:border-rose-400'
+                      : 'border-zinc-800 focus:border-amber-500'
+                  }`}
                 />
+                {formErrors.durationMinutes && (
+                  <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1.5 mt-1.5">
+                    <AlertTriangle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                    <span>{formErrors.durationMinutes}</span>
+                  </p>
+                )}
               </div>
 
               <div className="pt-2 flex gap-2">
                 <button
                   type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  className="flex-1 py-2.5 rounded-xl bg-zinc-800 text-zinc-300 font-semibold text-xs"
+                  onClick={() => {
+                    setFormErrors({});
+                    setShowCreateModal(false);
+                  }}
+                  className="flex-1 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-semibold text-xs transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs shadow-md"
+                  className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs shadow-md transition-colors cursor-pointer"
                 >
                   Generate Contest
                 </button>
@@ -618,6 +719,47 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE COMPETITION MODAL */}
+      {showDeleteModal && activeComp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-zinc-950/80 backdrop-blur-md">
+          <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center gap-3 text-rose-400 border-b border-zinc-800 pb-3">
+              <AlertTriangle className="w-6 h-6 stroke-[2.5]" />
+              <h3 className="text-lg font-bold text-zinc-100">Delete Competition</h3>
+            </div>
+            <p className="text-xs text-zinc-300 leading-relaxed">
+              Are you sure you want to permanently delete <strong className="text-amber-300">{activeComp.title}</strong> (Access Code: <span className="font-mono text-amber-400 font-bold">{activeComp.accessCode}</span>)?
+            </p>
+            <p className="text-[11px] text-zinc-500">
+              This action will remove all problems, test cases, announcements, and submissions associated with this competition from the database. This action cannot be undone.
+            </p>
+            <div className="pt-2 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(false)}
+                className="flex-1 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-semibold text-xs transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const codeToDelete = activeComp.accessCode;
+                  const remainingComps = competitions.filter(c => c.accessCode !== codeToDelete);
+                  onDeleteCompetition(codeToDelete);
+                  setSelectedCompCode(remainingComps[0]?.accessCode || '');
+                  setShowDeleteModal(false);
+                }}
+                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Confirm Delete</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

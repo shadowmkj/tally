@@ -8,6 +8,7 @@ export function ClientAdminPage() {
     competitions,
     addCompetition,
     updateCompetition,
+    deleteCompetition,
     broadcastAnnouncement,
   } = useCompetition();
 
@@ -16,6 +17,7 @@ export function ClientAdminPage() {
       competitions={competitions}
       onAddCompetition={addCompetition}
       onUpdateCompetition={updateCompetition}
+      onDeleteCompetition={deleteCompetition}
       onBroadcastAnnouncement={broadcastAnnouncement}
     />
   );

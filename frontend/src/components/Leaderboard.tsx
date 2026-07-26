@@ -8,7 +8,8 @@ import {
   Radio, 
   ShieldAlert, 
   Minus,
-  Flame
+  Flame,
+  ShieldCheck
 } from 'lucide-react';
 import type { Competition, Participant } from '@/context/CompetitionContext';
 
