@@ -38,7 +38,7 @@ model Problem {
     acceptanceRate   Float?
     tags             String // JSON string array e.g. '["Array","Matrix"]'
     description      String
-    methodName       String
+    methodName       String           @default("solve")
     inputFormat      String
     outputFormat     String
     constraints      String // JSON string array

@@ -452,7 +452,7 @@ export type ProblemCreateInput = {
   acceptanceRate?: number | null
   tags: string
   description: string
-  methodName: string
+  methodName?: string
   inputFormat: string
   outputFormat: string
   constraints: string
@@ -476,7 +476,7 @@ export type ProblemUncheckedCreateInput = {
   acceptanceRate?: number | null
   tags: string
   description: string
-  methodName: string
+  methodName?: string
   inputFormat: string
   outputFormat: string
   constraints: string
@@ -548,7 +548,7 @@ export type ProblemCreateManyInput = {
   acceptanceRate?: number | null
   tags: string
   description: string
-  methodName: string
+  methodName?: string
   inputFormat: string
   outputFormat: string
   constraints: string
@@ -794,7 +794,7 @@ export type ProblemCreateWithoutCompetitionInput = {
   acceptanceRate?: number | null
   tags: string
   description: string
-  methodName: string
+  methodName?: string
   inputFormat: string
   outputFormat: string
   constraints: string
@@ -817,7 +817,7 @@ export type ProblemUncheckedCreateWithoutCompetitionInput = {
   acceptanceRate?: number | null
   tags: string
   description: string
-  methodName: string
+  methodName?: string
   inputFormat: string
   outputFormat: string
   constraints: string
@@ -889,7 +889,7 @@ export type ProblemCreateWithoutSampleTestCasesInput = {
   acceptanceRate?: number | null
   tags: string
   description: string
-  methodName: string
+  methodName?: string
   inputFormat: string
   outputFormat: string
   constraints: string
@@ -912,7 +912,7 @@ export type ProblemUncheckedCreateWithoutSampleTestCasesInput = {
   acceptanceRate?: number | null
   tags: string
   description: string
-  methodName: string
+  methodName?: string
   inputFormat: string
   outputFormat: string
   constraints: string
@@ -997,7 +997,7 @@ export type ProblemCreateWithoutTestCasesInput = {
   acceptanceRate?: number | null
   tags: string
   description: string
-  methodName: string
+  methodName?: string
   inputFormat: string
   outputFormat: string
   constraints: string
@@ -1020,7 +1020,7 @@ export type ProblemUncheckedCreateWithoutTestCasesInput = {
   acceptanceRate?: number | null
   tags: string
   description: string
-  methodName: string
+  methodName?: string
   inputFormat: string
   outputFormat: string
   constraints: string
@@ -1105,7 +1105,7 @@ export type ProblemCreateWithoutSubmissionsInput = {
   acceptanceRate?: number | null
   tags: string
   description: string
-  methodName: string
+  methodName?: string
   inputFormat: string
   outputFormat: string
   constraints: string
@@ -1128,7 +1128,7 @@ export type ProblemUncheckedCreateWithoutSubmissionsInput = {
   acceptanceRate?: number | null
   tags: string
   description: string
-  methodName: string
+  methodName?: string
   inputFormat: string
   outputFormat: string
   constraints: string
@@ -1213,7 +1213,7 @@ export type ProblemCreateManyCompetitionInput = {
   acceptanceRate?: number | null
   tags: string
   description: string
-  methodName: string
+  methodName?: string
   inputFormat: string
   outputFormat: string
   constraints: string
