@@ -155,6 +155,9 @@ interface CompetitionContextType {
     updateCompetition: (competition: Competition) => void;
     deleteCompetition: (accessCode: string) => void;
     switchCompetition: (accessCode: string) => void;
+    addProblem: (competitionId: string, problem: Problem) => Promise<void>;
+    updateProblem: (problem: Problem) => Promise<void>;
+    deleteProblem: (problemId: string) => Promise<void>;
     broadcastAnnouncement: (compAccessCode: string, title: string, text: string) => void;
 }
 
@@ -561,6 +564,69 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
         }
     };
 
+    const addProblem = async (competitionId: string, problem: Problem) => {
+        setCompetitions(prev => prev.map(c => {
+            if (c.id === competitionId || c.accessCode === competitionId) {
+                return { ...c, problems: [...c.problems, problem] };
+            }
+            return c;
+        }));
+
+        try {
+            const res = await fetch('/api/problems', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ competitionId, problem }),
+            });
+            if (!res.ok) {
+                const errData = await res.json();
+                console.error('Failed to create problem in Prisma DB:', errData);
+            }
+        } catch (err) {
+            console.error('Failed to create problem in Prisma DB:', err);
+        }
+    };
+
+    const updateProblem = async (problem: Problem) => {
+        setCompetitions(prev => prev.map(c => ({
+            ...c,
+            problems: c.problems.map(p => p.id === problem.id ? problem : p),
+        })));
+
+        try {
+            const res = await fetch('/api/problems', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ problem }),
+            });
+            if (!res.ok) {
+                const errData = await res.json();
+                console.error('Failed to update problem in Prisma DB:', errData);
+            }
+        } catch (err) {
+            console.error('Failed to update problem in Prisma DB:', err);
+        }
+    };
+
+    const deleteProblem = async (problemId: string) => {
+        setCompetitions(prev => prev.map(c => ({
+            ...c,
+            problems: c.problems.filter(p => p.id !== problemId),
+        })));
+
+        try {
+            const res = await fetch(`/api/problems?id=${encodeURIComponent(problemId)}`, {
+                method: 'DELETE',
+            });
+            if (!res.ok) {
+                const errData = await res.json();
+                console.error('Failed to delete problem from Prisma DB:', errData);
+            }
+        } catch (err) {
+            console.error('Failed to delete problem from Prisma DB:', err);
+        }
+    };
+
     const broadcastAnnouncement = (compAccessCode: string, title: string, text: string) => {
         const newAnn: Announcement = {
             id: `ann-${Date.now()}`,
@@ -609,6 +675,9 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
                 updateCompetition,
                 deleteCompetition,
                 switchCompetition,
+                addProblem,
+                updateProblem,
+                deleteProblem,
                 broadcastAnnouncement,
             }}
         >

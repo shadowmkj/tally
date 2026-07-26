@@ -16,17 +16,21 @@ import {
   PlusCircle,
   LogOut,
   Trash2,
-  AlertTriangle
+  AlertTriangle,
+  Pencil
 } from 'lucide-react';
 import type { Competition, Problem, Difficulty } from '@/context/CompetitionContext';
 import { authClient } from '@/lib/auth-client';
-import { createCompetitionSchema } from '@/lib/validations';
+import { createCompetitionSchema, problemSchema } from '@/lib/validations';
 
 interface AdminPortalProps {
   competitions: Competition[];
   onAddCompetition: (comp: Competition) => void;
   onUpdateCompetition: (comp: Competition) => void;
   onDeleteCompetition: (accessCode: string) => void;
+  onAddProblem?: (competitionId: string, problem: Problem) => Promise<void>;
+  onUpdateProblem?: (problem: Problem) => Promise<void>;
+  onDeleteProblem?: (problemId: string) => Promise<void>;
   onBroadcastAnnouncement: (compAccessCode: string, title: string, text: string) => void;
 }
 
@@ -35,6 +39,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   onAddCompetition,
   onUpdateCompetition,
   onDeleteCompetition,
+  onAddProblem,
+  onUpdateProblem,
+  onDeleteProblem,
   onBroadcastAnnouncement,
 }) => {
   const [selectedCompCode, setSelectedCompCode] = useState<string>(competitions[0]?.accessCode || '');
@@ -59,13 +66,28 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [annText, setAnnText] = useState('');
   const [annSuccess, setAnnSuccess] = useState(false);
 
+  const [editingProblem, setEditingProblem] = useState<Problem | null>(null);
+  const [deletingProblem, setDeletingProblem] = useState<Problem | null>(null);
+
   const [showAddProblemModal, setShowAddProblemModal] = useState(false);
   const [probTitle, setProbTitle] = useState('5. Subarray Sum Equals K');
   const [probDiff, setProbDiff] = useState<Difficulty>('Medium');
   const [probPoints, setProbPoints] = useState(200);
+  const [probTimeLimitMs, setProbTimeLimitMs] = useState(1000);
+  const [probMemoryLimitMb, setProbMemoryLimitMb] = useState(256);
   const [probDesc, setProbDesc] = useState('Given an array of integers nums and an integer k, return the total number of subarrays whose sum equals to k.');
   const [probSampleIn, setProbSampleIn] = useState('3\n1 1 1\n2');
   const [probSampleOut, setProbSampleOut] = useState('2');
+
+  const [problemFormErrors, setProblemFormErrors] = useState<{
+    title?: string;
+    points?: string;
+    timeLimitMs?: string;
+    memoryLimitMb?: string;
+    description?: string;
+    sampleInput?: string;
+    sampleOutput?: string;
+  }>({});
 
   const generateRandom6Char = () => {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -75,6 +97,34 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     }
     setNewCode(res);
     setFormErrors(prev => ({ ...prev, accessCode: undefined }));
+  };
+
+  const handleOpenAddProblemModal = () => {
+    setEditingProblem(null);
+    setProbTitle('');
+    setProbDiff('Easy');
+    setProbPoints(100);
+    setProbTimeLimitMs(1000);
+    setProbMemoryLimitMb(256);
+    setProbDesc('');
+    setProbSampleIn('');
+    setProbSampleOut('');
+    setProblemFormErrors({});
+    setShowAddProblemModal(true);
+  };
+
+  const handleOpenEditProblemModal = (p: Problem) => {
+    setEditingProblem(p);
+    setProbTitle(p.title);
+    setProbDiff(p.difficulty as Difficulty);
+    setProbPoints(p.points);
+    setProbTimeLimitMs(p.timeLimitMs || 1000);
+    setProbMemoryLimitMb(p.memoryLimitMb || 256);
+    setProbDesc(p.description);
+    setProbSampleIn(p.sampleTestCases[0]?.input || '');
+    setProbSampleOut(p.sampleTestCases[0]?.output || '');
+    setProblemFormErrors({});
+    setShowAddProblemModal(true);
   };
 
   const handleCreateCompetition = (e: React.FormEvent) => {
@@ -184,45 +234,121 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     setTimeout(() => setAnnSuccess(false), 2500);
   };
 
-  const handleAddProblem = (e: React.FormEvent) => {
+  const handleSaveProblem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeComp) return;
+    setProblemFormErrors({});
 
-    const newProb: Problem = {
-      id: `p-${Date.now()}`,
-      title: probTitle,
-      slug: probTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+    const payload = {
+      title: probTitle.trim(),
       difficulty: probDiff,
-      points: probPoints,
-      timeLimitMs: 1000,
-      memoryLimitMb: 256,
-      tags: ['Algorithm', 'Data Structure'],
-      description: probDesc,
-      inputFormat: 'Standard stdin format.',
-      outputFormat: 'Standard stdout format.',
-      constraints: ['Time Limit: 1.0 second'],
-      sampleTestCases: [
-        { id: `s-${Date.now()}`, input: probSampleIn, output: probSampleOut }
-      ],
-      testCases: [
-        { id: `t-${Date.now()}`, input: probSampleIn, output: probSampleOut }
-      ],
-      starterTemplates: {
-        python: `import sys\ndef main():\n    print("${probSampleOut.replace(/\n/g, '\\n')}")\nif __name__ == "__main__":\n    main()`,
-        cpp: `#include <iostream>\nusing namespace std;\nint main() {\n    cout << "${probSampleOut.replace(/\n/g, '\\n')}" << endl;\n    return 0;\n}`,
-        java: `public class Solution {\n    public static void main(String[] args) {\n        System.out.println("${probSampleOut.replace(/\n/g, '\\n')}");\n    }\n}`,
-        c: `#include <stdio.h>\nint main() {\n    printf("${probSampleOut.replace(/\n/g, '\\n')}\\n");\n    return 0;\n}`,
-        javascript: `console.log("${probSampleOut.replace(/\n/g, '\\n')}");`
+      points: Number(probPoints),
+      timeLimitMs: Number(probTimeLimitMs),
+      memoryLimitMb: Number(probMemoryLimitMb),
+      description: probDesc.trim(),
+      sampleInput: probSampleIn.trim(),
+      sampleOutput: probSampleOut.trim(),
+    };
+
+    const validationResult = problemSchema.safeParse(payload);
+    if (!validationResult.success) {
+      const fieldErrors: Record<string, string> = {};
+      for (const issue of validationResult.error.issues) {
+        const fieldName = issue.path[0] as string;
+        if (!fieldErrors[fieldName]) {
+          fieldErrors[fieldName] = issue.message;
+        }
       }
-    };
+      setProblemFormErrors(fieldErrors);
+      return;
+    }
 
-    const updatedComp: Competition = {
-      ...activeComp,
-      problems: [...activeComp.problems, newProb]
-    };
+    const now = Date.now();
+    const randSuffix = Math.random().toString(36).substring(2, 7);
 
-    onUpdateCompetition(updatedComp);
+    if (editingProblem) {
+      const updatedProb: Problem = {
+        ...editingProblem,
+        title: probTitle.trim(),
+        slug: probTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        difficulty: probDiff,
+        points: Number(probPoints),
+        timeLimitMs: Number(probTimeLimitMs),
+        memoryLimitMb: Number(probMemoryLimitMb),
+        description: probDesc.trim(),
+        sampleTestCases: [
+          {
+            id: editingProblem.sampleTestCases[0]?.id || `st-${now}-${randSuffix}`,
+            input: probSampleIn,
+            output: probSampleOut,
+          }
+        ],
+        testCases: [
+          {
+            id: editingProblem.testCases[0]?.id || `t-${now}-${randSuffix}`,
+            input: probSampleIn,
+            output: probSampleOut,
+          }
+        ],
+        starterTemplates: {
+          python: `import sys\ndef main():\n    print("${probSampleOut.replace(/\n/g, '\\n')}")\nif __name__ == "__main__":\n    main()`,
+          cpp: `#include <iostream>\nusing namespace std;\nint main() {\n    cout << "${probSampleOut.replace(/\n/g, '\\n')}" << endl;\n    return 0;\n}`,
+          java: `public class Solution {\n    public static void main(String[] args) {\n        System.out.println("${probSampleOut.replace(/\n/g, '\\n')}");\n    }\n}`,
+          c: `#include <stdio.h>\nint main() {\n    printf("${probSampleOut.replace(/\n/g, '\\n')}\\n");\n    return 0;\n}`,
+          javascript: `console.log("${probSampleOut.replace(/\n/g, '\\n')}");`
+        }
+      };
+
+      if (onUpdateProblem) {
+        await onUpdateProblem(updatedProb);
+      } else {
+        onUpdateCompetition({
+          ...activeComp,
+          problems: activeComp.problems.map(p => p.id === updatedProb.id ? updatedProb : p)
+        });
+      }
+    } else {
+      const newProb: Problem = {
+        id: `p-${now}-${randSuffix}`,
+        title: probTitle.trim(),
+        slug: probTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        difficulty: probDiff,
+        points: Number(probPoints),
+        timeLimitMs: Number(probTimeLimitMs),
+        memoryLimitMb: Number(probMemoryLimitMb),
+        tags: ['Algorithm', 'Data Structure'],
+        description: probDesc.trim(),
+        inputFormat: 'Standard stdin format.',
+        outputFormat: 'Standard stdout format.',
+        constraints: [`Time Limit: ${Number(probTimeLimitMs) / 1000} second`],
+        sampleTestCases: [
+          { id: `st-${now}-${randSuffix}`, input: probSampleIn, output: probSampleOut }
+        ],
+        testCases: [
+          { id: `t-${now}-${randSuffix}`, input: probSampleIn, output: probSampleOut }
+        ],
+        starterTemplates: {
+          python: `import sys\ndef main():\n    print("${probSampleOut.replace(/\n/g, '\\n')}")\nif __name__ == "__main__":\n    main()`,
+          cpp: `#include <iostream>\nusing namespace std;\nint main() {\n    cout << "${probSampleOut.replace(/\n/g, '\\n')}" << endl;\n    return 0;\n}`,
+          java: `public class Solution {\n    public static void main(String[] args) {\n        System.out.println("${probSampleOut.replace(/\n/g, '\\n')}");\n    }\n}`,
+          c: `#include <stdio.h>\nint main() {\n    printf("${probSampleOut.replace(/\n/g, '\\n')}\\n");\n    return 0;\n}`,
+          javascript: `console.log("${probSampleOut.replace(/\n/g, '\\n')}");`
+        }
+      };
+
+      if (onAddProblem) {
+        await onAddProblem(activeComp.id, newProb);
+      } else {
+        onUpdateCompetition({
+          ...activeComp,
+          problems: [...activeComp.problems, newProb]
+        });
+      }
+    }
+
+    setProblemFormErrors({});
     setShowAddProblemModal(false);
+    setEditingProblem(null);
   };
 
   const toggleFreeze = () => {
@@ -369,8 +495,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 </div>
 
                 <button
-                  onClick={() => setShowAddProblemModal(true)}
-                  className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-amber-300 font-bold text-xs flex items-center gap-1.5 transition-colors border border-zinc-700/60"
+                  onClick={handleOpenAddProblemModal}
+                  className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-amber-300 font-bold text-xs flex items-center gap-1.5 transition-colors border border-zinc-700/60 cursor-pointer"
                 >
                   <PlusCircle className="w-4 h-4" />
                   <span>Add Problem</span>
@@ -378,27 +504,47 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               </div>
 
               <div className="space-y-3">
-                {activeComp.problems.map((p) => (
-                  <div
-                    key={p.id}
-                    className="p-4 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-between gap-4 text-xs font-mono"
-                  >
-                    <div>
-                      <div className="font-bold text-zinc-200 text-sm">
-                        {p.title}
-                      </div>
-                      <div className="text-[10px] text-zinc-500 mt-0.5">
-                        {p.points} Points • {p.difficulty} • Time: {p.timeLimitMs}ms
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <span className="px-2 py-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 text-[10px]">
-                        {p.sampleTestCases.length} Samples
-                      </span>
-                    </div>
+                {activeComp.problems.length === 0 ? (
+                  <div className="p-4 text-center text-xs text-zinc-500 font-mono">
+                    No problems added to this competition yet.
                   </div>
-                ))}
+                ) : (
+                  activeComp.problems.map((p) => (
+                    <div
+                      key={p.id}
+                      className="p-4 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-between gap-4 text-xs font-mono"
+                    >
+                      <div>
+                        <div className="font-bold text-zinc-200 text-sm">
+                          {p.title}
+                        </div>
+                        <div className="text-[10px] text-zinc-500 mt-0.5">
+                          {p.points} Points • {p.difficulty} • Time: {p.timeLimitMs}ms
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 text-[10px]">
+                          {p.sampleTestCases.length} Samples
+                        </span>
+                        <button
+                          onClick={() => handleOpenEditProblemModal(p)}
+                          className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-amber-300 transition-colors border border-zinc-700/60 cursor-pointer"
+                          title="Edit Problem"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setDeletingProblem(p)}
+                          className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition-colors border border-rose-500/30 cursor-pointer"
+                          title="Delete Problem"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 
@@ -616,33 +762,48 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         </div>
       )}
 
-      {/* ADD PROBLEM MODAL */}
+      {/* ADD / EDIT PROBLEM MODAL */}
       {showAddProblemModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-zinc-950/80 backdrop-blur-md">
           <div className="w-full max-w-lg max-w-[calc(100vw-1.5rem)] bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-6 space-y-4 shadow-2xl">
             <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
               <h3 className="text-lg font-bold text-zinc-100 flex items-center gap-2">
                 <FileCode className="w-5 h-5 text-amber-400" />
-                <span>Add Problem to [{activeComp.accessCode}]</span>
+                <span>{editingProblem ? 'Edit Problem' : `Add Problem to [${activeComp?.accessCode}]`}</span>
               </h3>
               <button
-                onClick={() => setShowAddProblemModal(false)}
-                className="text-zinc-400 hover:text-zinc-100 text-sm font-mono"
+                onClick={() => {
+                  setShowAddProblemModal(false);
+                  setEditingProblem(null);
+                  setProblemFormErrors({});
+                }}
+                className="text-zinc-400 hover:text-zinc-100 text-sm font-mono cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleAddProblem} className="space-y-3">
+            <form onSubmit={handleSaveProblem} className="space-y-3">
               <div>
                 <label className="block text-xs font-mono text-zinc-400 mb-1">Problem Title</label>
                 <input
                   type="text"
                   value={probTitle}
-                  onChange={(e) => setProbTitle(e.target.value)}
-                  required
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-100 focus:outline-none focus:border-amber-500"
+                  onChange={(e) => {
+                    setProbTitle(e.target.value);
+                    setProblemFormErrors(prev => ({ ...prev, title: undefined }));
+                  }}
+                  placeholder="e.g. 5. Subarray Sum Equals K"
+                  className={`w-full bg-zinc-950 border rounded-xl px-3 py-2 text-xs text-zinc-100 focus:outline-none ${
+                    problemFormErrors.title ? 'border-rose-500' : 'border-zinc-800 focus:border-amber-500'
+                  }`}
                 />
+                {problemFormErrors.title && (
+                  <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1 mt-1">
+                    <AlertTriangle className="w-3 h-3 text-rose-400 shrink-0" />
+                    <span>{problemFormErrors.title}</span>
+                  </p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -664,10 +825,64 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   <input
                     type="number"
                     value={probPoints}
-                    onChange={(e) => setProbPoints(parseInt(e.target.value) || 100)}
-                    required
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs font-mono text-zinc-100 focus:outline-none focus:border-amber-500"
+                    onChange={(e) => {
+                      setProbPoints(parseInt(e.target.value) || 0);
+                      setProblemFormErrors(prev => ({ ...prev, points: undefined }));
+                    }}
+                    className={`w-full bg-zinc-950 border rounded-xl px-3 py-2 text-xs font-mono text-zinc-100 focus:outline-none ${
+                      problemFormErrors.points ? 'border-rose-500' : 'border-zinc-800 focus:border-amber-500'
+                    }`}
                   />
+                  {problemFormErrors.points && (
+                    <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1 mt-1">
+                      <AlertTriangle className="w-3 h-3 text-rose-400 shrink-0" />
+                      <span>{problemFormErrors.points}</span>
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-mono text-zinc-400 mb-1">Time Limit (ms)</label>
+                  <input
+                    type="number"
+                    value={probTimeLimitMs}
+                    onChange={(e) => {
+                      setProbTimeLimitMs(parseInt(e.target.value) || 0);
+                      setProblemFormErrors(prev => ({ ...prev, timeLimitMs: undefined }));
+                    }}
+                    className={`w-full bg-zinc-950 border rounded-xl px-3 py-2 text-xs font-mono text-zinc-100 focus:outline-none ${
+                      problemFormErrors.timeLimitMs ? 'border-rose-500' : 'border-zinc-800 focus:border-amber-500'
+                    }`}
+                  />
+                  {problemFormErrors.timeLimitMs && (
+                    <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1 mt-1">
+                      <AlertTriangle className="w-3 h-3 text-rose-400 shrink-0" />
+                      <span>{problemFormErrors.timeLimitMs}</span>
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono text-zinc-400 mb-1">Memory Limit (MB)</label>
+                  <input
+                    type="number"
+                    value={probMemoryLimitMb}
+                    onChange={(e) => {
+                      setProbMemoryLimitMb(parseInt(e.target.value) || 0);
+                      setProblemFormErrors(prev => ({ ...prev, memoryLimitMb: undefined }));
+                    }}
+                    className={`w-full bg-zinc-950 border rounded-xl px-3 py-2 text-xs font-mono text-zinc-100 focus:outline-none ${
+                      problemFormErrors.memoryLimitMb ? 'border-rose-500' : 'border-zinc-800 focus:border-amber-500'
+                    }`}
+                  />
+                  {problemFormErrors.memoryLimitMb && (
+                    <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1 mt-1">
+                      <AlertTriangle className="w-3 h-3 text-rose-400 shrink-0" />
+                      <span>{problemFormErrors.memoryLimitMb}</span>
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -675,11 +890,22 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 <label className="block text-xs font-mono text-zinc-400 mb-1">Description</label>
                 <textarea
                   value={probDesc}
-                  onChange={(e) => setProbDesc(e.target.value)}
+                  onChange={(e) => {
+                    setProbDesc(e.target.value);
+                    setProblemFormErrors(prev => ({ ...prev, description: undefined }));
+                  }}
                   rows={3}
-                  required
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-xs text-zinc-100 focus:outline-none focus:border-amber-500"
+                  placeholder="Enter problem statement and constraints..."
+                  className={`w-full bg-zinc-950 border rounded-xl p-3 text-xs text-zinc-100 focus:outline-none ${
+                    problemFormErrors.description ? 'border-rose-500' : 'border-zinc-800 focus:border-amber-500'
+                  }`}
                 />
+                {problemFormErrors.description && (
+                  <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1 mt-1">
+                    <AlertTriangle className="w-3 h-3 text-rose-400 shrink-0" />
+                    <span>{problemFormErrors.description}</span>
+                  </p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -687,35 +913,61 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   <label className="block text-xs font-mono text-zinc-400 mb-1">Sample Input</label>
                   <textarea
                     value={probSampleIn}
-                    onChange={(e) => setProbSampleIn(e.target.value)}
+                    onChange={(e) => {
+                      setProbSampleIn(e.target.value);
+                      setProblemFormErrors(prev => ({ ...prev, sampleInput: undefined }));
+                    }}
                     rows={2}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2 text-xs font-mono text-amber-300"
+                    className={`w-full bg-zinc-950 border rounded-xl p-2 text-xs font-mono text-amber-300 focus:outline-none ${
+                      problemFormErrors.sampleInput ? 'border-rose-500' : 'border-zinc-800'
+                    }`}
                   />
+                  {problemFormErrors.sampleInput && (
+                    <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1 mt-1">
+                      <AlertTriangle className="w-3 h-3 text-rose-400 shrink-0" />
+                      <span>{problemFormErrors.sampleInput}</span>
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-xs font-mono text-zinc-400 mb-1">Sample Output</label>
                   <textarea
                     value={probSampleOut}
-                    onChange={(e) => setProbSampleOut(e.target.value)}
+                    onChange={(e) => {
+                      setProbSampleOut(e.target.value);
+                      setProblemFormErrors(prev => ({ ...prev, sampleOutput: undefined }));
+                    }}
                     rows={2}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2 text-xs font-mono text-emerald-300"
+                    className={`w-full bg-zinc-950 border rounded-xl p-2 text-xs font-mono text-emerald-300 focus:outline-none ${
+                      problemFormErrors.sampleOutput ? 'border-rose-500' : 'border-zinc-800'
+                    }`}
                   />
+                  {problemFormErrors.sampleOutput && (
+                    <p className="text-rose-400 text-[11px] font-mono font-medium flex items-center gap-1 mt-1">
+                      <AlertTriangle className="w-3 h-3 text-rose-400 shrink-0" />
+                      <span>{problemFormErrors.sampleOutput}</span>
+                    </p>
+                  )}
                 </div>
               </div>
 
               <div className="pt-2 flex gap-2">
                 <button
                   type="button"
-                  onClick={() => setShowAddProblemModal(false)}
-                  className="flex-1 py-2 rounded-xl bg-zinc-800 text-zinc-300 font-semibold text-xs"
+                  onClick={() => {
+                    setShowAddProblemModal(false);
+                    setEditingProblem(null);
+                    setProblemFormErrors({});
+                  }}
+                  className="flex-1 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-semibold text-xs transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs shadow-md"
+                  className="flex-1 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs shadow-md transition-colors cursor-pointer"
                 >
-                  Save Problem
+                  {editingProblem ? 'Update Problem' : 'Save Problem'}
                 </button>
               </div>
             </form>
@@ -753,6 +1005,52 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   onDeleteCompetition(codeToDelete);
                   setSelectedCompCode(remainingComps[0]?.accessCode || '');
                   setShowDeleteModal(false);
+                }}
+                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Confirm Delete</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE PROBLEM MODAL */}
+      {deletingProblem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-zinc-950/80 backdrop-blur-md">
+          <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center gap-3 text-rose-400 border-b border-zinc-800 pb-3">
+              <AlertTriangle className="w-6 h-6 stroke-[2.5]" />
+              <h3 className="text-lg font-bold text-zinc-100">Delete Problem</h3>
+            </div>
+            <p className="text-xs text-zinc-300 leading-relaxed">
+              Are you sure you want to delete problem <strong className="text-amber-300">{deletingProblem.title}</strong>?
+            </p>
+            <p className="text-[11px] text-zinc-500">
+              This action will remove all test cases and submissions associated with this problem. This action cannot be undone.
+            </p>
+            <div className="pt-2 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setDeletingProblem(null)}
+                className="flex-1 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-semibold text-xs transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  const probId = deletingProblem.id;
+                  setDeletingProblem(null);
+                  if (onDeleteProblem) {
+                    await onDeleteProblem(probId);
+                  } else if (activeComp) {
+                    onUpdateCompetition({
+                      ...activeComp,
+                      problems: activeComp.problems.filter(p => p.id !== probId),
+                    });
+                  }
                 }}
                 className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
               >

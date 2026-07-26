@@ -9,6 +9,9 @@ export function ClientAdminPage() {
     addCompetition,
     updateCompetition,
     deleteCompetition,
+    addProblem,
+    updateProblem,
+    deleteProblem,
     broadcastAnnouncement,
   } = useCompetition();
 
@@ -18,6 +21,9 @@ export function ClientAdminPage() {
       onAddCompetition={addCompetition}
       onUpdateCompetition={updateCompetition}
       onDeleteCompetition={deleteCompetition}
+      onAddProblem={addProblem}
+      onUpdateProblem={updateProblem}
+      onDeleteProblem={deleteProblem}
       onBroadcastAnnouncement={broadcastAnnouncement}
     />
   );
