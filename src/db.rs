@@ -27,11 +27,12 @@ pub fn update_submission_status(
             let mut stmt = conn.prepare(
                 "SELECT id FROM Submission
                  WHERE LOWER(status) = 'evaluating'
-                   AND (problemId = ?1 OR problemId = ?2)
+                   AND (problemId = ?1 OR problemId IN (SELECT id FROM Problem WHERE slug = ?2))
+                   AND (participantId = ?3 OR collegeId = ?3)
                  ORDER BY timestamp DESC LIMIT 1",
             )?;
 
-            stmt.query_row(params![job.problem_id, job.problem_slug], |row| {
+            stmt.query_row(params![job.problem_id, job.problem_slug, job.user_id], |row| {
                 row.get::<_, String>(0)
             })
             .ok()
@@ -232,5 +233,89 @@ mod tests {
         assert_eq!(status, "Accepted");
         assert_eq!(passed, 2);
         assert_eq!(total, 2);
+    }
+
+    #[test]
+    fn test_update_submission_status_fallback() {
+        let conn = connect(":memory:").unwrap();
+        conn.execute(
+            "CREATE TABLE Problem (
+                id TEXT PRIMARY KEY,
+                slug TEXT NOT NULL
+            )",
+            [],
+        )
+        .unwrap();
+
+        conn.execute(
+            "CREATE TABLE Submission (
+                id TEXT PRIMARY KEY,
+                competitionId TEXT NOT NULL,
+                problemId TEXT NOT NULL,
+                problemTitle TEXT NOT NULL,
+                participantId TEXT,
+                participantName TEXT NOT NULL,
+                collegeId TEXT NOT NULL,
+                language TEXT NOT NULL,
+                code TEXT NOT NULL,
+                status TEXT NOT NULL,
+                testCasesPassed INTEGER NOT NULL DEFAULT 0,
+                totalTestCases INTEGER NOT NULL DEFAULT 0,
+                timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                errorLog TEXT
+            )",
+            [],
+        )
+        .unwrap();
+
+        conn.execute(
+            "CREATE TABLE TestCaseResult (
+                id TEXT PRIMARY KEY,
+                submissionId TEXT NOT NULL,
+                testCaseId TEXT NOT NULL,
+                passed BOOLEAN NOT NULL,
+                input TEXT NOT NULL,
+                expectedOutput TEXT NOT NULL,
+                actualOutput TEXT NOT NULL,
+                executionTimeMs INTEGER NOT NULL,
+                memoryUsedMb REAL NOT NULL,
+                error TEXT
+            )",
+            [],
+        )
+        .unwrap();
+
+        conn.execute(
+            "INSERT INTO Problem (id, slug) VALUES ('prob-1', 'two-sum')",
+            [],
+        )
+        .unwrap();
+
+        conn.execute(
+            "INSERT INTO Submission (id, competitionId, problemId, problemTitle, participantId, participantName, collegeId, language, code, status)
+             VALUES ('sub-fallback', 'comp-1', 'prob-1', 'Two Sum', 'user-1', 'milan', '123', 'python', 'code', 'Evaluating')",
+            [],
+        )
+        .unwrap();
+
+        let job = Job {
+            submission_id: None,
+            problem_id: "prob-1".to_string(),
+            problem_slug: "two-sum".to_string(),
+            language: Language::Python,
+            method_name: "twoSum".to_string(),
+            type_schema: None,
+            code: "code".to_string(),
+            user: "milan".to_string(),
+            user_id: "user-1".to_string(),
+        };
+
+        let results = vec![TestCaseResult {
+            id: 1,
+            verdict: Verdict::Accepted,
+        }];
+
+        let updated_id = update_submission_status(&conn, &job, &results).unwrap();
+        assert_eq!(updated_id, Some("sub-fallback".to_string()));
     }
 }
