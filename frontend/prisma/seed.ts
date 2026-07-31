@@ -1,5 +1,6 @@
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
 import { PrismaClient } from '../src/app/generated/prisma/client';
+import { auth } from '../src/lib/auth';
 const INITIAL_COMPETITIONS: any[] = [
   {
     id: 'wecode-annual-2026',
@@ -48,6 +49,105 @@ const INITIAL_COMPETITIONS: any[] = [
         ],
         testCases: [
           { id: 't-1', input: '4 9\n2 7 11 15', output: '0 1', hidden: false }
+        ]
+      },
+      {
+        id: 'prob-2',
+        title: '2. Climbing Stairs',
+        slug: 'climbing-stairs',
+        methodName: 'climbStairs',
+        typeSchema: 'i:i',
+        difficulty: 'Easy',
+        points: 100,
+        timeLimitMs: 1000,
+        memoryLimitMb: 256,
+        tags: ['Dynamic Programming', 'Math', 'Memoization'],
+        description: 'You are climbing a staircase. It takes n steps to reach the top. Each time you can either climb 1 or 2 steps. In how many distinct ways can you climb to the top?',
+        inputFormat: 'A single line containing an integer n.',
+        outputFormat: 'Print the number of distinct ways to reach the top.',
+        constraints: ['1 <= n <= 45'],
+        starterTemplates: {
+          python: 'class Solution:\n    def climbStairs(self, n: int) -> int:\n        pass',
+          cpp: '#include <iostream>\nusing namespace std;\nclass Solution {\npublic:\n    int climbStairs(int n) {\n        return 0;\n    }\n};',
+          java: 'public class Solution {\n    public int climbStairs(int n) {\n        return 0;\n    }\n}',
+          c: 'int climbStairs(int n) {\n    return 0;\n}',
+          javascript: 'function climbStairs(n) {\n    return 0;\n}'
+        },
+        sampleTestCases: [
+          { id: 'st-2-1', input: '2', output: '2', explanation: '1 step + 1 step, or 2 steps' },
+          { id: 'st-2-2', input: '3', output: '3', explanation: '1+1+1, 1+2, or 2+1' }
+        ],
+        testCases: [
+          { id: 't-2-1', input: '2', output: '2', hidden: false },
+          { id: 't-2-2', input: '3', output: '3', hidden: false },
+          { id: 't-2-3', input: '5', output: '8', hidden: false },
+          { id: 't-2-4', input: '10', output: '89', hidden: true }
+        ]
+      },
+      {
+        id: 'prob-3',
+        title: '3. House Robber',
+        slug: 'house-robber',
+        methodName: 'rob',
+        typeSchema: '[i]:i',
+        difficulty: 'Medium',
+        points: 200,
+        timeLimitMs: 1000,
+        memoryLimitMb: 256,
+        tags: ['Dynamic Programming', 'Array'],
+        description: 'You are a professional robber planning to rob houses along a street. Each house has a certain amount of money stashed, the only constraint stopping you from robbing each of them is that adjacent houses have security systems connected and it will automatically contact the police if two adjacent houses were broken into on the same night. Given an integer array nums representing the amount of money of each house, return the maximum amount of money you can rob tonight without alerting the police.',
+        inputFormat: 'Line 1: N (number of houses). Line 2: N space-separated integers representing money in each house.',
+        outputFormat: 'Print the maximum amount of money you can rob.',
+        constraints: ['1 <= N <= 100', '0 <= nums[i] <= 400'],
+        starterTemplates: {
+          python: 'class Solution:\n    def rob(self, nums: List[int]) -> int:\n        pass',
+          cpp: '#include <vector>\nusing namespace std;\nclass Solution {\npublic:\n    int rob(vector<int>& nums) {\n        return 0;\n    }\n};',
+          java: 'public class Solution {\n    public int rob(int[] nums) {\n        return 0;\n    }\n}',
+          c: 'int rob(int* nums, int numsSize) {\n    return 0;\n}',
+          javascript: 'function rob(nums) {\n    return 0;\n}'
+        },
+        sampleTestCases: [
+          { id: 'st-3-1', input: '4\n1 2 3 1', output: '4', explanation: 'Rob house 1 (money = 1) and rob house 3 (money = 3). Total = 1 + 3 = 4.' },
+          { id: 'st-3-2', input: '5\n2 7 9 3 1', output: '12', explanation: 'Rob house 1 (money = 2), house 3 (money = 9) and house 5 (money = 1). Total = 2 + 9 + 1 = 12.' }
+        ],
+        testCases: [
+          { id: 't-3-1', input: '4\n1 2 3 1', output: '4', hidden: false },
+          { id: 't-3-2', input: '5\n2 7 9 3 1', output: '12', hidden: false },
+          { id: 't-3-3', input: '1\n5', output: '5', hidden: false },
+          { id: 't-3-4', input: '4\n2 1 1 2', output: '4', hidden: true }
+        ]
+      },
+      {
+        id: 'prob-4',
+        title: '4. Reverse String',
+        slug: 'reverse-string',
+        methodName: 'reverseString',
+        typeSchema: 's:s',
+        difficulty: 'Easy',
+        points: 100,
+        timeLimitMs: 1000,
+        memoryLimitMb: 256,
+        tags: ['Two Pointers', 'String'],
+        description: 'Given a string s, return the reversed string.',
+        inputFormat: 'A single line containing string s.',
+        outputFormat: 'Print the reversed string.',
+        constraints: ['1 <= s.length <= 10^5'],
+        starterTemplates: {
+          python: 'class Solution:\n    def reverseString(self, s: str) -> str:\n        pass',
+          cpp: '#include <string>\nusing namespace std;\nclass Solution {\npublic:\n    string reverseString(string s) {\n        return "";\n    }\n};',
+          java: 'public class Solution {\n    public String reverseString(String s) {\n        return "";\n    }\n}',
+          c: '#include <string.h>\nchar* reverseString(char* s) {\n    return s;\n}',
+          javascript: 'function reverseString(s) {\n    return "";\n}'
+        },
+        sampleTestCases: [
+          { id: 'st-4-1', input: 'hello', output: 'olleh' },
+          { id: 'st-4-2', input: 'Hannah', output: 'hannaH' }
+        ],
+        testCases: [
+          { id: 't-4-1', input: 'hello', output: 'olleh', hidden: false },
+          { id: 't-4-2', input: 'Hannah', output: 'hannaH', hidden: false },
+          { id: 't-4-3', input: 'wecode', output: 'edocew', hidden: false },
+          { id: 't-4-4', input: 'a', output: 'a', hidden: true }
         ]
       }
     ]
@@ -249,6 +349,23 @@ async function main() {
         errorLog: sub.errorLog,
       },
     });
+  }
+
+  // Seed Admin User
+  const adminEmail = 'admin@wecode.com';
+  const existingAdmin = await prisma.user.findUnique({ where: { email: adminEmail } });
+  if (!existingAdmin) {
+    console.log(`Seeding admin user (${adminEmail})...`);
+    await auth.api.signUpEmail({
+      body: {
+        email: adminEmail,
+        password: 'secret1234',
+        name: 'Admin',
+      },
+    });
+    console.log('✅ Admin user created.');
+  } else {
+    console.log(`Admin user (${adminEmail}) already exists.`);
   }
 
   console.log('✅ Seeding completed successfully!');
