@@ -39,6 +39,7 @@ model Problem {
     tags             String // JSON string array e.g. '["Array","Matrix"]'
     description      String
     methodName       String
+    typeSchema       String?
     inputFormat      String
     outputFormat     String
     constraints      String // JSON string array

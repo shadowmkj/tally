@@ -11,6 +11,6 @@ coverage/
 .windsurf
 .next
 
-/src/generated/prisma
+src/app/generated/
 *.db
 *.tsbuildinfo

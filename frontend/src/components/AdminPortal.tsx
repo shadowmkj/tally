@@ -73,6 +73,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     const [showAddProblemModal, setShowAddProblemModal] = useState(false);
     const [probTitle, setProbTitle] = useState('5. Subarray Sum Equals K');
     const [probMethodName, setProbMethodName] = useState('subarraySum');
+    const [probTypeSchema, setProbTypeSchema] = useState('[i],i:i');
     const [probDiff, setProbDiff] = useState<Difficulty>('Medium');
     const [probPoints, setProbPoints] = useState(200);
     const [probTimeLimitMs, setProbTimeLimitMs] = useState(1000);
@@ -91,6 +92,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     const [problemFormErrors, setProblemFormErrors] = useState<{
         title?: string;
         methodName?: string;
+        typeSchema?: string;
         points?: string;
         timeLimitMs?: string;
         memoryLimitMb?: string;
@@ -113,6 +115,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         setEditingProblem(null);
         setProbTitle('');
         setProbMethodName('');
+        setProbTypeSchema('');
         setProbDiff('Easy');
         setProbPoints(100);
         setProbTimeLimitMs(1000);
@@ -134,6 +137,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         setEditingProblem(p);
         setProbTitle(p.title);
         setProbMethodName(p.methodName || '');
+        setProbTypeSchema(p.typeSchema || '');
         setProbDiff(p.difficulty as Difficulty);
         setProbPoints(p.points);
         setProbTimeLimitMs(p.timeLimitMs || 1000);
@@ -208,6 +212,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     title: '1. Two Sum Target',
                     slug: 'two-sum-target',
                     methodName: 'twoSum',
+                    typeSchema: '[i],i:[i]',
                     difficulty: 'Easy',
                     points: 100,
                     timeLimitMs: 1000,
@@ -267,6 +272,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         const payload = {
             title: probTitle.trim(),
             methodName: probMethodName.trim(),
+            typeSchema: probTypeSchema.trim() || null,
             difficulty: probDiff,
             points: Number(probPoints),
             timeLimitMs: Number(probTimeLimitMs),
@@ -298,6 +304,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 title: probTitle.trim(),
                 slug: probTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
                 methodName: probMethodName.trim(),
+                typeSchema: probTypeSchema.trim() || null,
                 difficulty: probDiff,
                 points: Number(probPoints),
                 timeLimitMs: Number(probTimeLimitMs),
@@ -340,6 +347,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 title: probTitle.trim(),
                 slug: probTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
                 methodName: probMethodName.trim(),
+                typeSchema: probTypeSchema.trim() || null,
                 difficulty: probDiff,
                 points: Number(probPoints),
                 timeLimitMs: Number(probTimeLimitMs),
@@ -865,6 +873,20 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                                 <span>{problemFormErrors.methodName}</span>
                                             </p>
                                         )}
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-mono text-zinc-400 mb-1">Type Schema (C/C++)</label>
+                                        <input
+                                            type="text"
+                                            value={probTypeSchema}
+                                            onChange={(e) => {
+                                                setProbTypeSchema(e.target.value);
+                                                setProblemFormErrors(prev => ({ ...prev, typeSchema: undefined }));
+                                            }}
+                                            placeholder="e.g. [i],i:[i] or i:i"
+                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs font-mono text-zinc-100 focus:outline-none focus:border-amber-500"
+                                        />
                                     </div>
                                 </div>
 

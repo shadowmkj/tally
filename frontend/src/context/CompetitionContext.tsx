@@ -213,6 +213,7 @@ function formatCompetition(comp: RawCompetition): Competition {
                 title: prob.title,
                 slug: prob.slug,
                 methodName: prob.methodName || 'solve',
+                typeSchema: prob.typeSchema || null,
                 difficulty: prob.difficulty,
                 points: prob.points,
                 timeLimitMs: prob.timeLimitMs,
