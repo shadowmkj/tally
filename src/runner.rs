@@ -157,13 +157,16 @@ pub async fn run_all(
             ("buildpack-deps:bookworm", cmd)
         }
         Language::Cpp => {
-            let shell_cmd = "mkdir -p /work && cp /app/* /work/ && cd /work && \
+            let shell_cmd = r#"mkdir -p /work && cp /app/* /work/ && cd /work && \
                              if ! g++ -O0 -std=c++20 -o driver driver.cpp 2> compile.log; then \
-                               ERR=$(cat compile.log | tr '\\n' ' ' | tr '\\r' ' ' | sed 's/\"/\\\\\"/g'); \
-                               echo \"{\\\"success\\\": false, \\\"error\\\": \\\"Compilation Error: $ERR\\\"}\"; \
+                               ERR=$(grep -i "solution.cpp.*error:" compile.log); \
+                               if [ -z "$ERR" ]; then ERR=$(grep -i "error:" compile.log); fi; \
+                               if [ -z "$ERR" ]; then ERR=$(cat compile.log); fi; \
+                               ERR=$(echo "$ERR" | sed 's/\\/\\\\/g; s/"/\\"/g' | awk '{if (NR>1) printf "\\\\n"; printf "%s", $0}'); \
+                               echo "{\"success\": false, \"error\": \"Compilation Error: $ERR\"}"; \
                              else \
                                ./driver; \
-                             fi"
+                             fi"#
                 .to_string();
             let cmd = vec!["sh".to_string(), "-c".to_string(), shell_cmd];
             ("buildpack-deps:bookworm", cmd)

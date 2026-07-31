@@ -309,3 +309,52 @@ public class Solution {
     }
 }
 
+#[tokio::test]
+async fn test_cpp_syntax_error_concise() {
+    let code = r#"
+class Solution {
+public:
+    int climbStairs(int n) {
+        int a = 1
+        return a;
+    }
+};
+"#;
+
+    let cases = vec![make_test_case(1, json!({"n": 1}), json!(1))];
+
+    let results = run_all(
+        &docker(),
+        cases,
+        &Language::Cpp,
+        "climbStairs",
+        None,
+        code,
+    )
+    .await
+    .expect("run_all failed");
+
+    assert_eq!(results.len(), 1);
+    match &results[0].verdict {
+        Verdict::RuntimeError(msg) => {
+            assert!(
+                msg.contains("Compilation Error:"),
+                "Expected Compilation Error header, got: {}",
+                msg
+            );
+            assert!(
+                msg.contains("error:"),
+                "Expected error line, got: {}",
+                msg
+            );
+            assert!(
+                !msg.contains("In file included from"),
+                "Verbose include trace should be omitted, got: {}",
+                msg
+            );
+        }
+        other => panic!("Expected RuntimeError for C++ syntax error, got {:?}", other),
+    }
+}
+
+
