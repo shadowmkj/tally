@@ -272,3 +272,40 @@ class Solution:
         "Expected TLE due to infinite loop"
     );
 }
+
+#[tokio::test]
+async fn test_java_runtime_error_propagation() {
+    let code = r#"
+public class Solution {
+    public int climbStairs(int n) {
+        throw new RuntimeException("Java exception test");
+    }
+}
+"#;
+
+    let cases = vec![make_test_case(1, json!({"n": 1}), json!(1))];
+
+    let results = run_all(
+        &docker(),
+        cases,
+        &Language::Java,
+        "climbStairs",
+        None,
+        code,
+    )
+    .await
+    .expect("run_all failed");
+
+    assert_eq!(results.len(), 1);
+    match &results[0].verdict {
+        Verdict::RuntimeError(msg) => {
+            assert!(
+                msg.contains("Java exception test"),
+                "Expected error message to contain 'Java exception test', got: {}",
+                msg
+            );
+        }
+        other => panic!("Expected RuntimeError for Java exception, got {:?}", other),
+    }
+}
+

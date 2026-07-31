@@ -16,8 +16,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 // for simple key/value arguments like {"n": 5}.
 public class Driver {
     public static void main(String[] args) {
+        ObjectMapper mapper = new ObjectMapper();
+
         if (args.length < 1) {
-            System.out.println("{\"success\": false, \"error\": \"Internal Error: Method name missing.\"}");
+            printError(mapper, "Internal Error: Method name missing.");
             System.exit(1);
         }
 
@@ -45,10 +47,7 @@ public class Driver {
 
             targetMethod = best;
         } catch (NoSuchMethodException e) {
-            String msg = String.format(
-                    "{\"success\": false, \"error\": \"Method '%s' not found. Did you change the function signature?\"}",
-                    escapeJson(methodName));
-            System.out.println(msg);
+            printError(mapper, String.format("Method '%s' not found. Did you change the function signature?", methodName));
             System.exit(1);
             return;
         }
@@ -62,21 +61,16 @@ public class Driver {
                 }
 
                 try {
-                    ObjectMapper mapper = new ObjectMapper();
-
                     JsonNode root;
                     try {
                         root = mapper.readTree(line);
                     } catch (JsonProcessingException e) {
-                        String errMsg = escapeJson("Invalid JSON: " + e.getOriginalMessage());
-                        String out = String.format("{\"success\": false, \"error\": \"%s\"}", errMsg);
-                        System.out.println(out);
+                        printError(mapper, "Invalid JSON: " + e.getOriginalMessage());
                         continue;
                     }
 
                     if (!root.isObject()) {
-                        String err = "{\"success\": false, \"error\": \"Expected a JSON object with named parameters.\"}";
-                        System.out.println(err);
+                        printError(mapper, "Expected a JSON object with named parameters.");
                         continue;
                     }
 
@@ -93,8 +87,7 @@ public class Driver {
                     }
 
                     if (orderedFields.size() < paramTypes.length) {
-                        String err = "{\"success\": false, \"error\": \"Parameter mismatch: Not enough parameters provided. Please provide all parameters.\"}";
-                        System.out.println(err);
+                        printError(mapper, "Parameter mismatch: Not enough parameters provided. Please provide all parameters.");
                         continue;
                     }
 
@@ -108,45 +101,40 @@ public class Driver {
                         invokeArgs[i] = mapper.convertValue(valueNode, mapper.getTypeFactory().constructType(paramType));
                     }
 
-                     Object result = targetMethod.invoke(sol, invokeArgs);
+                    Object result = targetMethod.invoke(sol, invokeArgs);
 
-                     // Serialize the result as proper JSON (handles arrays, primitives, objects).
-                     String resultJson;
-                     try {
-                         resultJson = mapper.writeValueAsString(result);
-                     } catch (JsonProcessingException e) {
-                         String errMsg = escapeJson("Failed to serialize result: " + e.getOriginalMessage());
-                         String out = String.format("{\"success\": false, \"error\": \"%s\"}", errMsg);
-                         System.out.println(out);
-                         continue;
-                     }
+                    // Serialize the result as proper JSON (handles arrays, primitives, objects).
+                    String resultJson;
+                    try {
+                        resultJson = mapper.writeValueAsString(result);
+                    } catch (JsonProcessingException e) {
+                        printError(mapper, "Failed to serialize result: " + e.getOriginalMessage());
+                        continue;
+                    }
 
-                     String out = String.format("{\"success\": true, \"result\": %s}", resultJson);
-                     System.out.println(out);
-
-                } catch (IllegalAccessException | InvocationTargetException e) {
-                    Throwable cause = e instanceof InvocationTargetException && e.getCause() != null
-                            ? e.getCause()
-                            : e;
-                    String errMsg = escapeJson(cause.toString());
-                    String out = String.format("{\"success\": false, \"error\": \"%s\"}", errMsg);
+                    String out = String.format("{\"success\": true, \"result\": %s}", resultJson);
                     System.out.println(out);
-                } catch (RuntimeException e) {
-                    String errMsg = escapeJson(e.toString());
-                    String out = String.format("{\"success\": false, \"error\": \"%s\"}", errMsg);
-                    System.out.println(out);
+
+                } catch (Throwable t) {
+                    Throwable cause = (t instanceof InvocationTargetException && t.getCause() != null)
+                            ? t.getCause()
+                            : t;
+                    printError(mapper, cause.toString());
                 }
             }
         } catch (IOException e) {
-            String errMsg = escapeJson(e.toString());
-            String out = String.format("{\"success\": false, \"error\": \"%s\"}", errMsg);
-            System.out.println(out);
+            printError(mapper, e.toString());
         }
-     }
+    }
 
-    // Keep escapeJson for error messages.
-
-    private static String escapeJson(String s) {
-        return s.replace("\\", "\\\\").replace("\"", "\\\"");
+    private static void printError(ObjectMapper mapper, String message) {
+        Map<String, Object> errResp = new LinkedHashMap<>();
+        errResp.put("success", false);
+        errResp.put("error", message);
+        try {
+            System.out.println(mapper.writeValueAsString(errResp));
+        } catch (JsonProcessingException e) {
+            System.out.println("{\"success\": false, \"error\": \"Runtime Error\"}");
+        }
     }
 }
