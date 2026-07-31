@@ -285,16 +285,9 @@ public class Solution {
 
     let cases = vec![make_test_case(1, json!({"n": 1}), json!(1))];
 
-    let results = run_all(
-        &docker(),
-        cases,
-        &Language::Java,
-        "climbStairs",
-        None,
-        code,
-    )
-    .await
-    .expect("run_all failed");
+    let results = run_all(&docker(), cases, &Language::Java, "climbStairs", None, code)
+        .await
+        .expect("run_all failed");
 
     assert_eq!(results.len(), 1);
     match &results[0].verdict {
@@ -308,4 +301,3 @@ public class Solution {
         other => panic!("Expected RuntimeError for Java exception, got {:?}", other),
     }
 }
-
