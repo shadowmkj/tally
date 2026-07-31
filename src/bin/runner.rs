@@ -82,7 +82,7 @@ async fn main() -> Result<(), anyhow::Error> {
                         if let Ok(job) = serde_json::from_str::<Job>(&payload) {
                             println!("Processing job {} / {}", job.problem_id, job.problem_slug);
 
-                            let solution_code = prepare_solution_file(&job.code, &job.language);
+                            let solution_code = runner::prepare_solution_file(&job.code, &job.language);
 
                             // Read test cases from JSON file
                             let tests_path = std::path::Path::new("code_tests");
@@ -183,7 +183,7 @@ async fn main() -> Result<(), anyhow::Error> {
         // Read the user's solution source code
         let solution_code = fs::read_to_string(&code_path)
             .map_err(|e| anyhow::anyhow!("Failed to read solution file '{}': {}", code_path, e))?;
-        let solution_code = prepare_solution_file(&solution_code, &language);
+        let solution_code = runner::prepare_solution_file(&solution_code, &language);
 
         // Read test cases from JSON file
         let tests_path = std::path::Path::new("code_tests");
@@ -225,29 +225,3 @@ async fn main() -> Result<(), anyhow::Error> {
     Ok(())
 }
 
-fn prepare_solution_file(user_code: &str, language: &Language) -> String {
-    let prelude = match language {
-        Language::Python => {
-            "\
-from typing import *
-from collections import *
-import math
-import heapq
-import bisect
-import itertools
-"
-        }
-        Language::Java => {
-            "\
-import java.util.*;
-        "
-        }
-        Language::C => {
-            "#include <stdlib.h>\n#include <string.h>\n#include <stdio.h>\n#include <stdbool.h>\n"
-        }
-        Language::Cpp => {
-            "#include <iostream>\n#include <vector>\n#include <string>\n#include <unordered_map>\n#include <unordered_set>\n#include <algorithm>\n#include <queue>\n#include <stack>\nusing namespace std;\n"
-        }
-    };
-    format!("{}{}", prelude, user_code)
-}

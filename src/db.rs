@@ -229,4 +229,203 @@ mod tests {
         assert_eq!(passed, 2);
         assert_eq!(total, 2);
     }
+
+    fn setup_test_db() -> Connection {
+        let conn = connect(":memory:").unwrap();
+        conn.execute(
+            "CREATE TABLE Submission (
+                id TEXT PRIMARY KEY,
+                competitionId TEXT NOT NULL,
+                problemId TEXT NOT NULL,
+                problemTitle TEXT NOT NULL,
+                participantId TEXT,
+                participantName TEXT NOT NULL,
+                collegeId TEXT NOT NULL,
+                language TEXT NOT NULL,
+                code TEXT NOT NULL,
+                status TEXT NOT NULL,
+                testCasesPassed INTEGER NOT NULL DEFAULT 0,
+                totalTestCases INTEGER NOT NULL DEFAULT 0,
+                errorLog TEXT,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            )",
+            [],
+        )
+        .unwrap();
+
+        conn.execute(
+            "CREATE TABLE TestCaseResult (
+                id TEXT PRIMARY KEY,
+                submissionId TEXT NOT NULL,
+                testCaseId TEXT NOT NULL,
+                passed BOOLEAN NOT NULL,
+                input TEXT NOT NULL,
+                expectedOutput TEXT NOT NULL,
+                actualOutput TEXT NOT NULL,
+                executionTimeMs INTEGER NOT NULL,
+                memoryUsedMb REAL NOT NULL,
+                error TEXT
+            )",
+            [],
+        )
+        .unwrap();
+
+        conn
+    }
+
+    #[test]
+    fn test_update_submission_verdicts() {
+        let conn = setup_test_db();
+        conn.execute(
+            "INSERT INTO Submission (id, competitionId, problemId, problemTitle, participantName, collegeId, language, code, status)
+             VALUES ('sub-wa', 'comp-1', 'prob-1', 'Two Sum', 'milan', '123', 'python', 'code', 'Evaluating')",
+            [],
+        )
+        .unwrap();
+
+        let job = Job {
+            submission_id: Some("sub-wa".to_string()),
+            problem_id: "prob-1".to_string(),
+            problem_slug: "two-sum".to_string(),
+            language: Language::Python,
+            method_name: "twoSum".to_string(),
+            type_schema: None,
+            code: "code".to_string(),
+            user: "milan".to_string(),
+            user_id: "u1".to_string(),
+        };
+
+        let results = vec![
+            TestCaseResult {
+                id: 1,
+                verdict: Verdict::Accepted,
+            },
+            TestCaseResult {
+                id: 2,
+                verdict: Verdict::WrongAnswer {
+                    expected: serde_json::json!([0, 1]),
+                    got: serde_json::json!([1, 2]),
+                },
+            },
+        ];
+
+        let updated_id = update_submission_status(&conn, &job, &results).unwrap();
+        assert_eq!(updated_id, Some("sub-wa".to_string()));
+
+        let status: String = conn
+            .query_row(
+                "SELECT status FROM Submission WHERE id = 'sub-wa'",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(status, "Wrong Answer");
+
+        // Verify TestCaseResult table row insertion
+        let tc_count: i32 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM TestCaseResult WHERE submissionId = 'sub-wa'",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(tc_count, 2);
+    }
+
+    #[test]
+    fn test_update_submission_runtime_error() {
+        let conn = setup_test_db();
+        conn.execute(
+            "INSERT INTO Submission (id, competitionId, problemId, problemTitle, participantName, collegeId, language, code, status)
+             VALUES ('sub-re', 'comp-1', 'prob-1', 'Two Sum', 'milan', '123', 'python', 'code', 'Evaluating')",
+            [],
+        )
+        .unwrap();
+
+        let job = Job {
+            submission_id: Some("sub-re".to_string()),
+            problem_id: "prob-1".to_string(),
+            problem_slug: "two-sum".to_string(),
+            language: Language::Python,
+            method_name: "twoSum".to_string(),
+            type_schema: None,
+            code: "code".to_string(),
+            user: "milan".to_string(),
+            user_id: "u1".to_string(),
+        };
+
+        let results = vec![TestCaseResult {
+            id: 1,
+            verdict: Verdict::RuntimeError("ZeroDivisionError: division by zero".to_string()),
+        }];
+
+        let updated_id = update_submission_status(&conn, &job, &results).unwrap();
+        assert_eq!(updated_id, Some("sub-re".to_string()));
+
+        let (status, err_log): (String, Option<String>) = conn
+            .query_row(
+                "SELECT status, errorLog FROM Submission WHERE id = 'sub-re'",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .unwrap();
+        assert_eq!(status, "Runtime Error");
+        assert_eq!(
+            err_log,
+            Some("ZeroDivisionError: division by zero".to_string())
+        );
+    }
+
+    #[test]
+    fn test_update_submission_fallback_and_missing() {
+        let conn = setup_test_db();
+
+        // 1. Missing submission ID with no matching 'Evaluating' submission
+        let job_no_sub = Job {
+            submission_id: None,
+            problem_id: "prob-999".to_string(),
+            problem_slug: "non-existent".to_string(),
+            language: Language::Python,
+            method_name: "twoSum".to_string(),
+            type_schema: None,
+            code: "code".to_string(),
+            user: "milan".to_string(),
+            user_id: "u1".to_string(),
+        };
+        let res = update_submission_status(&conn, &job_no_sub, &[]).unwrap();
+        assert_eq!(res, None);
+
+        // 2. Missing submission ID with matching 'Evaluating' submission by problemId
+        conn.execute(
+            "INSERT INTO Submission (id, competitionId, problemId, problemTitle, participantName, collegeId, language, code, status)
+             VALUES ('sub-fallback', 'comp-1', 'prob-2', 'Reverse String', 'milan', '123', 'python', 'code', 'Evaluating')",
+            [],
+        )
+        .unwrap();
+
+        let job_fallback = Job {
+            submission_id: None,
+            problem_id: "prob-2".to_string(),
+            problem_slug: "reverse-string".to_string(),
+            language: Language::Python,
+            method_name: "reverseString".to_string(),
+            type_schema: None,
+            code: "code".to_string(),
+            user: "milan".to_string(),
+            user_id: "u1".to_string(),
+        };
+
+        let updated_id = update_submission_status(&conn, &job_fallback, &[]).unwrap();
+        assert_eq!(updated_id, Some("sub-fallback".to_string()));
+
+        let status: String = conn
+            .query_row(
+                "SELECT status FROM Submission WHERE id = 'sub-fallback'",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(status, "No Output");
+    }
 }
+
