@@ -128,11 +128,13 @@ pub async fn run_all(
         }
         Language::Java => {
             let shell_cmd = format!(
-                "mkdir -p /work && \
-                 cp /app/*.java /work/ && cp -r /app/lib /work/ && \
-                 cd /work && \
-                 javac -cp '.:lib/*' Driver.java Solution.java && \
-                 java -cp '.:lib/*' Driver {}",
+                "mkdir -p /work && cp /app/*.java /work/ && cp -r /app/lib /work/ && cd /work && \
+                 if ! javac -cp '.:lib/*' Driver.java Solution.java 2> compile.log; then \
+                   ERR=$(cat compile.log | tr '\\n' ' ' | tr '\\r' ' ' | sed 's/\"/\\\\\"/g'); \
+                   echo \"{{\\\"success\\\": false, \\\"error\\\": \\\"Compilation Error: $ERR\\\"}}\"; \
+                 else \
+                   java -cp '.:lib/*' Driver {}; \
+                 fi",
                 method_name
             );
             let cmd = vec!["sh".to_string(), "-c".to_string(), shell_cmd];
@@ -142,21 +144,26 @@ pub async fn run_all(
             let default_schema = "[i],i:[i]";
             let schema = type_schema.unwrap_or(default_schema);
             let shell_cmd = format!(
-                "mkdir -p /work && \
-                 cp /app/* /work/ && cd /work && \
-                 gcc -shared -fPIC -o solution.so solution.c && \
-                 gcc -o driver driver.c cJSON.c -ldl -lffi && \
-                 ./driver {} '{}'",
+                "mkdir -p /work && cp /app/* /work/ && cd /work && \
+                 if ! gcc -shared -fPIC -o solution.so solution.c 2> compile.log || ! gcc -o driver driver.c cJSON.c -ldl -lffi 2>> compile.log; then \
+                   ERR=$(cat compile.log | tr '\\n' ' ' | tr '\\r' ' ' | sed 's/\"/\\\\\"/g'); \
+                   echo \"{{\\\"success\\\": false, \\\"error\\\": \\\"Compilation Error: $ERR\\\"}}\"; \
+                 else \
+                   ./driver {} '{}'; \
+                 fi",
                 method_name, schema
             );
             let cmd = vec!["sh".to_string(), "-c".to_string(), shell_cmd];
             ("buildpack-deps:bookworm", cmd)
         }
         Language::Cpp => {
-            let shell_cmd = "mkdir -p /work && \
-                             cp /app/* /work/ && cd /work && \
-                             g++ -O0 -std=c++20 -o driver driver.cpp && \
-                             ./driver"
+            let shell_cmd = "mkdir -p /work && cp /app/* /work/ && cd /work && \
+                             if ! g++ -O0 -std=c++20 -o driver driver.cpp 2> compile.log; then \
+                               ERR=$(cat compile.log | tr '\\n' ' ' | tr '\\r' ' ' | sed 's/\"/\\\\\"/g'); \
+                               echo \"{\\\"success\\\": false, \\\"error\\\": \\\"Compilation Error: $ERR\\\"}\"; \
+                             else \
+                               ./driver; \
+                             fi"
                 .to_string();
             let cmd = vec!["sh".to_string(), "-c".to_string(), shell_cmd];
             ("buildpack-deps:bookworm", cmd)
