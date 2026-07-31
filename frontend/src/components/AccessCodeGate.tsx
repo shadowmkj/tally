@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { KeyRound, ShieldCheck, ArrowRight } from 'lucide-react';
 import type { Competition, UserSession } from '@/context/CompetitionContext';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 
 interface AccessCodeGateProps {
     competitions: Competition[];
@@ -25,10 +24,78 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
     const [collegeId, setCollegeId] = useState<string>('KNR23CS038');
     const [errorMessage, setErrorMessage] = useState<string>('');
 
-    const handleCharInput = (val: string) => {
-        const cleaned = val.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
-        setAccessCode(cleaned);
+    const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+    useEffect(() => {
+        // Auto-focus first empty box or box 0 on mount
+        const firstEmpty = accessCode.length < 6 ? accessCode.length : 0;
+        inputRefs.current[firstEmpty]?.focus();
+    }, []);
+
+    const handleBoxChange = (index: number, val: string) => {
+        const cleaned = val.toUpperCase().replace(/[^A-Z0-9]/g, '');
         setErrorMessage('');
+
+        if (cleaned.length > 1) {
+            // Handled paste or fast typing
+            const codeArr = accessCode.padEnd(6, ' ').split('');
+            let nextIndex = index;
+            for (let i = 0; i < cleaned.length && index + i < 6; i++) {
+                codeArr[index + i] = cleaned[i];
+                nextIndex = index + i + 1;
+            }
+            const newCode = codeArr.join('').trimEnd().slice(0, 6);
+            setAccessCode(newCode);
+            const focusIdx = Math.min(nextIndex, 5);
+            inputRefs.current[focusIdx]?.focus();
+            return;
+        }
+
+        const char = cleaned.slice(-1);
+        const codeArr = accessCode.padEnd(6, ' ').split('');
+        codeArr[index] = char || ' ';
+        const newCode = codeArr.join('').trimEnd().slice(0, 6);
+        setAccessCode(newCode);
+
+        if (char && index < 5) {
+            inputRefs.current[index + 1]?.focus();
+        }
+    };
+
+    const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Backspace') {
+            const charAtIndex = accessCode[index];
+            if (!charAtIndex || charAtIndex === ' ') {
+                if (index > 0) {
+                    e.preventDefault();
+                    const codeArr = accessCode.padEnd(6, ' ').split('');
+                    codeArr[index - 1] = ' ';
+                    setAccessCode(codeArr.join('').trimEnd());
+                    inputRefs.current[index - 1]?.focus();
+                }
+            } else {
+                e.preventDefault();
+                const codeArr = accessCode.padEnd(6, ' ').split('');
+                codeArr[index] = ' ';
+                setAccessCode(codeArr.join('').trimEnd());
+            }
+        } else if (e.key === 'ArrowLeft' && index > 0) {
+            e.preventDefault();
+            inputRefs.current[index - 1]?.focus();
+        } else if (e.key === 'ArrowRight' && index < 5) {
+            e.preventDefault();
+            inputRefs.current[index + 1]?.focus();
+        }
+    };
+
+    const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+        e.preventDefault();
+        const pasted = e.clipboardData.getData('text').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+        if (!pasted) return;
+        setAccessCode(pasted);
+        setErrorMessage('');
+        const focusIdx = Math.min(pasted.length, 5);
+        inputRefs.current[focusIdx]?.focus();
     };
 
     const handleJoin = (e: React.FormEvent) => {
@@ -91,39 +158,37 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
                     {/* Form */}
                     <form onSubmit={handleJoin} className="space-y-4">
 
-                        {/* 6-Digit Code Input */}
+                        {/* 6-Digit Code Typable Box Inputs */}
                         <div>
-                            <label className="block text-xs font-mono font-bold text-zinc-300 mb-2 uppercase tracking-wider text-center">
+                            <label className="block text-xs font-mono font-bold text-zinc-300 mb-3 uppercase tracking-wider text-center">
                                 6-Digit Access Code
                             </label>
 
                             <div className="flex justify-center gap-1.5 sm:gap-2">
                                 {Array.from({ length: 6 }).map((_, i) => {
                                     const char = accessCode[i] || '';
+                                    const isFilled = Boolean(char && char !== ' ');
                                     return (
-                                        <div
+                                        <input
                                             key={i}
-                                            className={`w-9 h-11 xs:w-10 xs:h-12 sm:w-12 sm:h-14 rounded-xl border flex items-center justify-center text-lg sm:text-xl font-mono font-black transition-all ${char
-                                                ? 'bg-primary-500/10 border-primary-500 text-primary-300 shadow-sm shadow-primary-500/10'
-                                                : 'bg-zinc-950/80 border-zinc-800 text-zinc-600'
+                                            ref={(el) => { inputRefs.current[i] = el; }}
+                                            type="text"
+                                            inputMode="text"
+                                            maxLength={6}
+                                            value={isFilled ? char : ''}
+                                            onChange={(e) => handleBoxChange(i, e.target.value)}
+                                            onKeyDown={(e) => handleKeyDown(i, e)}
+                                            onPaste={handlePaste}
+                                            onFocus={(e) => e.target.select()}
+                                            placeholder="•"
+                                            className={`w-9 h-11 xs:w-10 xs:h-12 sm:w-12 sm:h-14 rounded-xl border text-center text-lg sm:text-xl font-mono font-black uppercase transition-all outline-none focus:outline-none ${isFilled
+                                                ? 'bg-primary-500/10 border-primary-500 text-primary-300 shadow-sm shadow-primary-500/10 focus:ring-2 focus:ring-primary-500/40'
+                                                : 'bg-zinc-950/80 border-zinc-800 text-zinc-300 placeholder:text-zinc-600 focus:border-primary-500/80 focus:ring-2 focus:ring-primary-500/30'
                                                 }`}
-                                        >
-                                            {char || '•'}
-                                        </div>
+                                        />
                                     );
                                 })}
                             </div>
-
-                            <Input
-                                id="access-code-input"
-                                type="text"
-                                value={accessCode}
-                                onChange={(e) => handleCharInput(e.target.value)}
-                                maxLength={6}
-                                placeholder="Type 6-digit code e.g. WEC2026"
-                                className="mt-2 text-center font-mono font-bold text-primary-300 text-sm tracking-widest uppercase py-2.5 h-11"
-                                autoFocus
-                            />
                         </div>
 
                         {/* Participant Details */}
