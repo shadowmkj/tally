@@ -175,6 +175,7 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
             problem_slug: problem.slug,
             language,
             method_name: problem.methodName,
+            type_schema: problem.typeSchema || null,
             code,
             user: session?.name || "milan",
             user_id: session?.participantId || "part-guest",

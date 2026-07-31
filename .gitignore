@@ -8,3 +8,6 @@ ai
 node_modules/
 .next/
 .env
+frontend/src/app/generated/
+frontend/dev.db
+

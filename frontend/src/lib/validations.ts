@@ -35,6 +35,11 @@ export const problemSchema = z.object({
         .string({ error: 'Method name is required' })
         .trim()
         .min(1, 'Method name is required'),
+    typeSchema: z
+        .string()
+        .trim()
+        .optional()
+        .nullable(),
     difficulty: z.enum(['Easy', 'Medium', 'Hard'], {
         error: 'Difficulty must be Easy, Medium, or Hard',
     }),
