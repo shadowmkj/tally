@@ -17,7 +17,8 @@ import {
     LogOut,
     Trash2,
     AlertTriangle,
-    Pencil
+    Pencil,
+    ExternalLink
 } from 'lucide-react';
 import type { Competition, Problem, Difficulty } from '@/context/CompetitionContext';
 import { authClient } from '@/lib/auth-client';
@@ -528,13 +529,22 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                     <h3 className="text-base font-bold text-zinc-100">Contest Problem Set</h3>
                                 </div>
 
-                                <button
-                                    onClick={handleOpenAddProblemModal}
-                                    className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-primary-300 font-bold text-xs flex items-center gap-1.5 transition-colors border border-zinc-700/60 cursor-pointer"
-                                >
-                                    <PlusCircle className="w-4 h-4" />
-                                    <span>Add Problem</span>
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    <a
+                                        href={`/admin/problems?comp=${activeComp.accessCode}`}
+                                        className="px-3 py-1.5 rounded-lg bg-primary-500/10 hover:bg-primary-500/20 text-primary-400 font-bold text-xs flex items-center gap-1.5 transition-colors border border-primary-500/30 cursor-pointer"
+                                    >
+                                        <ExternalLink className="w-4 h-4" />
+                                        <span>Manage Problems Studio</span>
+                                    </a>
+                                    <button
+                                        onClick={handleOpenAddProblemModal}
+                                        className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-primary-300 font-bold text-xs flex items-center gap-1.5 transition-colors border border-zinc-700/60 cursor-pointer"
+                                    >
+                                        <PlusCircle className="w-4 h-4" />
+                                        <span>Quick Add</span>
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="space-y-3">
