@@ -471,13 +471,8 @@ mod tests {
 
     #[test]
     fn test_prepare_workspace_python() {
-        let ws = prepare_workspace(
-            &Language::Python,
-            "class Solution: pass",
-            "twoSum",
-            None,
-        )
-        .unwrap();
+        let ws =
+            prepare_workspace(&Language::Python, "class Solution: pass", "twoSum", None).unwrap();
 
         assert!(ws.path().join("driver.py").exists());
         assert!(ws.path().join("solution.py").exists());
@@ -485,13 +480,8 @@ mod tests {
 
     #[test]
     fn test_prepare_workspace_java() {
-        let ws = prepare_workspace(
-            &Language::Java,
-            "public class Solution {}",
-            "twoSum",
-            None,
-        )
-        .unwrap();
+        let ws =
+            prepare_workspace(&Language::Java, "public class Solution {}", "twoSum", None).unwrap();
 
         assert!(ws.path().join("Driver.java").exists());
         assert!(ws.path().join("Solution.java").exists());
@@ -528,4 +518,3 @@ mod tests {
         assert!(ws.path().join("solution.cpp").exists());
     }
 }
-

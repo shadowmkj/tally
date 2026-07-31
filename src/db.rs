@@ -428,4 +428,3 @@ mod tests {
         assert_eq!(status, "No Output");
     }
 }
-

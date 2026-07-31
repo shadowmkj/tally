@@ -82,7 +82,8 @@ async fn main() -> Result<(), anyhow::Error> {
                         if let Ok(job) = serde_json::from_str::<Job>(&payload) {
                             println!("Processing job {} / {}", job.problem_id, job.problem_slug);
 
-                            let solution_code = runner::prepare_solution_file(&job.code, &job.language);
+                            let solution_code =
+                                runner::prepare_solution_file(&job.code, &job.language);
 
                             // Read test cases from JSON file
                             let tests_path = std::path::Path::new("code_tests");
@@ -224,4 +225,3 @@ async fn main() -> Result<(), anyhow::Error> {
 
     Ok(())
 }
-
