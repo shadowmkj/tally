@@ -329,6 +329,33 @@ pub async fn run_all(
     Ok(results)
 }
 
+pub fn prepare_solution_file(user_code: &str, language: &Language) -> String {
+    let prelude = match language {
+        Language::Python => {
+            "\
+from typing import *
+from collections import *
+import math
+import heapq
+import bisect
+import itertools
+"
+        }
+        Language::Java => {
+            "\
+import java.util.*;
+        "
+        }
+        Language::C => {
+            "#include <stdlib.h>\n#include <string.h>\n#include <stdio.h>\n#include <stdbool.h>\n"
+        }
+        Language::Cpp => {
+            "#include <iostream>\n#include <vector>\n#include <string>\n#include <unordered_map>\n#include <unordered_set>\n#include <algorithm>\n#include <queue>\n#include <stack>\nusing namespace std;\n"
+        }
+    };
+    format!("{}{}", prelude, user_code)
+}
+
 fn generate_cpp_driver(method_name: &str, type_schema: &str) -> String {
     let parts: Vec<&str> = type_schema.split(':').collect();
     let in_schema = parts.first().copied().unwrap_or("");
@@ -416,4 +443,85 @@ int main() {{
         args_decl = args_decl,
         call_stmt = call_stmt
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_generate_cpp_driver() {
+        let code = generate_cpp_driver("twoSum", "[i],i:[i]");
+        assert!(code.contains("sol.twoSum(arg0, arg1)"));
+        assert!(code.contains("std::vector<int>"));
+        assert!(code.contains("int"));
+
+        let code_void = generate_cpp_driver("reset", "i:v");
+        assert!(code_void.contains("resp[\"result\"] = nullptr;"));
+    }
+
+    #[test]
+    fn test_prepare_solution_file() {
+        let py_code = prepare_solution_file("print(1)", &Language::Python);
+        assert!(py_code.contains("from typing import *"));
+        assert!(py_code.contains("print(1)"));
+
+        let java_code = prepare_solution_file("class Solution{}", &Language::Java);
+        assert!(java_code.contains("import java.util.*;"));
+
+        let c_code = prepare_solution_file("int main(){}", &Language::C);
+        assert!(c_code.contains("#include <stdio.h>"));
+
+        let cpp_code = prepare_solution_file("int main(){}", &Language::Cpp);
+        assert!(cpp_code.contains("#include <iostream>"));
+    }
+
+    #[test]
+    fn test_prepare_workspace_python() {
+        let ws =
+            prepare_workspace(&Language::Python, "class Solution: pass", "twoSum", None).unwrap();
+
+        assert!(ws.path().join("driver.py").exists());
+        assert!(ws.path().join("solution.py").exists());
+    }
+
+    #[test]
+    fn test_prepare_workspace_java() {
+        let ws =
+            prepare_workspace(&Language::Java, "public class Solution {}", "twoSum", None).unwrap();
+
+        assert!(ws.path().join("Driver.java").exists());
+        assert!(ws.path().join("Solution.java").exists());
+    }
+
+    #[test]
+    fn test_prepare_workspace_c() {
+        let ws = prepare_workspace(
+            &Language::C,
+            "int twoSum() { return 0; }",
+            "twoSum",
+            Some("[i],i:[i]"),
+        )
+        .unwrap();
+
+        assert!(ws.path().join("driver.c").exists());
+        assert!(ws.path().join("cJSON.c").exists());
+        assert!(ws.path().join("cJSON.h").exists());
+        assert!(ws.path().join("solution.c").exists());
+    }
+
+    #[test]
+    fn test_prepare_workspace_cpp() {
+        let ws = prepare_workspace(
+            &Language::Cpp,
+            "class Solution {};",
+            "twoSum",
+            Some("[i],i:[i]"),
+        )
+        .unwrap();
+
+        assert!(ws.path().join("json.hpp").exists());
+        assert!(ws.path().join("driver.cpp").exists());
+        assert!(ws.path().join("solution.cpp").exists());
+    }
 }

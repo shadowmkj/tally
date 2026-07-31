@@ -121,3 +121,138 @@ impl SubmissionResult {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn test_verdict_display() {
+        assert_eq!(format!("{}", Verdict::Accepted), "✅ ACCEPTED (AC)");
+        assert_eq!(
+            format!(
+                "{}",
+                Verdict::WrongAnswer {
+                    expected: json!(5),
+                    got: json!(3)
+                }
+            ),
+            "❌ WRONG ANSWER (WA) — expected 5, got 3"
+        );
+        assert_eq!(
+            format!("{}", Verdict::RuntimeError("Division by zero".into())),
+            "❌ RUNTIME ERROR (RE) — Division by zero"
+        );
+        assert_eq!(
+            format!("{}", Verdict::TimeLimitExceeded),
+            "⏱️ TIME LIMIT EXCEEDED (TLE)"
+        );
+        assert_eq!(format!("{}", Verdict::NoOutput), "❌ NO OUTPUT");
+    }
+
+    #[test]
+    fn test_language_serde() {
+        let py: Language = serde_json::from_str("\"python3\"").unwrap();
+        assert_eq!(py, Language::Python);
+
+        let py2: Language = serde_json::from_str("\"python\"").unwrap();
+        assert_eq!(py2, Language::Python);
+
+        let java: Language = serde_json::from_str("\"java\"").unwrap();
+        assert_eq!(java, Language::Java);
+
+        let c: Language = serde_json::from_str("\"c\"").unwrap();
+        assert_eq!(c, Language::C);
+
+        let cpp: Language = serde_json::from_str("\"cpp\"").unwrap();
+        assert_eq!(cpp, Language::Cpp);
+
+        let cpp2: Language = serde_json::from_str("\"c++\"").unwrap();
+        assert_eq!(cpp2, Language::Cpp);
+    }
+
+    #[test]
+    fn test_job_deserialization() {
+        let json_data = json!({
+            "problem_id": "prob-123",
+            "problem_slug": "two-sum",
+            "language": "python3",
+            "method_name": "twoSum",
+            "type_schema": null,
+            "code": "def twoSum(nums, target): pass",
+            "user": "Alice",
+            "user_id": "u-456",
+            "submissionId": "sub-789"
+        });
+
+        let job: Job = serde_json::from_value(json_data).unwrap();
+        assert_eq!(job.problem_id, "prob-123");
+        assert_eq!(job.problem_slug, "two-sum");
+        assert_eq!(job.language, Language::Python);
+        assert_eq!(job.method_name, "twoSum");
+        assert_eq!(job.submission_id, Some("sub-789".to_string()));
+
+        // Also test submission_id snake_case alias
+        let json_snake = json!({
+            "problem_id": "prob-123",
+            "problem_slug": "two-sum",
+            "language": "c++",
+            "method_name": "twoSum",
+            "code": "code",
+            "user": "Bob",
+            "user_id": "u-789",
+            "submission_id": "sub-101"
+        });
+
+        let job_snake: Job = serde_json::from_value(json_snake).unwrap();
+        assert_eq!(job_snake.language, Language::Cpp);
+        assert_eq!(job_snake.submission_id, Some("sub-101".to_string()));
+    }
+
+    #[test]
+    fn test_driver_response_deserialization() {
+        let succ_json = json!({
+            "success": true,
+            "result": [0, 1]
+        });
+        let resp: DriverResponse = serde_json::from_value(succ_json).unwrap();
+        assert!(resp.success);
+        assert_eq!(resp.result, Some(json!([0, 1])));
+        assert!(resp.error.is_none());
+
+        let err_json = json!({
+            "success": false,
+            "error": "IndexError: list index out of range"
+        });
+        let err_resp: DriverResponse = serde_json::from_value(err_json).unwrap();
+        assert!(!err_resp.success);
+        assert_eq!(
+            err_resp.error,
+            Some("IndexError: list index out of range".to_string())
+        );
+    }
+
+    #[test]
+    fn test_submission_result_new() {
+        let tc = TestCaseResult {
+            id: 1,
+            verdict: Verdict::Accepted,
+        };
+        let sub = SubmissionResult::new(
+            "Alice".to_string(),
+            "u-1".to_string(),
+            vec![tc],
+            "p-1".to_string(),
+            "two-sum".to_string(),
+            true,
+            1,
+            0,
+        );
+
+        assert_eq!(sub.user, "Alice");
+        assert_eq!(sub.passed, 1);
+        assert_eq!(sub.failed, 0);
+        assert!(sub.success);
+    }
+}
