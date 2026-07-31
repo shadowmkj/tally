@@ -272,3 +272,385 @@ class Solution:
         "Expected TLE due to infinite loop"
     );
 }
+
+#[tokio::test]
+async fn test_java_solution_accepted_and_wrong_answer() {
+    let code = r#"
+public class Solution {
+    public int climbStairs(int n) {
+        if (n <= 1) return 1;
+        int a = 1, b = 1;
+        for (int i = 2; i <= n; i++) {
+            int temp = a + b;
+            a = b;
+            b = temp;
+        }
+        return b;
+    }
+}
+"#;
+
+    let cases = vec![
+        make_test_case(1, json!({"n": 1}), json!(1)),
+        make_test_case(2, json!({"n": 2}), json!(2)),
+        make_test_case(3, json!({"n": 5}), json!(8)),
+    ];
+
+    let results = run_all(&docker(), cases, &Language::Java, "climbStairs", None, code)
+        .await
+        .expect("run_all failed for Java");
+
+    assert_eq!(results.len(), 3);
+    for r in &results {
+        assert_eq!(r.verdict, Verdict::Accepted);
+    }
+}
+
+#[tokio::test]
+async fn test_cpp_solution_accepted() {
+    let code = r#"
+class Solution {
+public:
+    int climbStairs(int n) {
+        if (n <= 1) return 1;
+        int a = 1, b = 1;
+        for (int i = 2; i <= n; i++) {
+            int temp = a + b;
+            a = b;
+            b = temp;
+        }
+        return b;
+    }
+};
+"#;
+
+    let cases = vec![
+        make_test_case(1, json!({"n": 1}), json!(1)),
+        make_test_case(2, json!({"n": 5}), json!(8)),
+    ];
+
+    let results = run_all(
+        &docker(),
+        cases,
+        &Language::Cpp,
+        "climbStairs",
+        Some("i:i"),
+        code,
+    )
+    .await
+    .expect("run_all failed for C++");
+
+    assert_eq!(results.len(), 2);
+    for r in &results {
+        assert_eq!(r.verdict, Verdict::Accepted);
+    }
+}
+
+#[tokio::test]
+async fn test_c_solution_accepted() {
+    let code = r#"
+int climbStairs(int n) {
+    if (n <= 1) return 1;
+    int a = 1, b = 1;
+    for (int i = 2; i <= n; i++) {
+        int temp = a + b;
+        a = b;
+        b = temp;
+    }
+    return b;
+}
+"#;
+
+    let cases = vec![
+        make_test_case(1, json!({"n": 1}), json!(1)),
+        make_test_case(2, json!({"n": 5}), json!(8)),
+    ];
+
+    let results = run_all(
+        &docker(),
+        cases,
+        &Language::C,
+        "climbStairs",
+        Some("i:i"),
+        code,
+    )
+    .await
+    .expect("run_all failed for C");
+
+    assert_eq!(results.len(), 2);
+    for r in &results {
+        assert_eq!(r.verdict, Verdict::Accepted);
+    }
+}
+
+// =============================================================================
+// Comprehensive Submission Case Tests: Accepted, Syntax Error, Code Logic Error
+// Languages: Python, Java, C, C++
+// =============================================================================
+
+// --- Python Submission Cases ---
+
+#[tokio::test]
+async fn test_python_syntax_error() {
+    let code = r#"
+class Solution:
+    def climbStairs(self, n: int) -> int
+        return 1
+"#;
+
+    let cases = vec![make_test_case(1, json!({"n": 1}), json!(1))];
+
+    let results = run_all(
+        &docker(),
+        cases,
+        &Language::Python,
+        "climbStairs",
+        None,
+        code,
+    )
+    .await
+    .expect("run_all failed");
+
+    assert_eq!(results.len(), 1);
+    assert!(
+        matches!(
+            results[0].verdict,
+            Verdict::NoOutput | Verdict::RuntimeError(_)
+        ),
+        "Expected NoOutput or RuntimeError due to Python syntax error, got {:?}",
+        results[0].verdict
+    );
+}
+
+#[tokio::test]
+async fn test_python_code_logic_error() {
+    let code = r#"
+class Solution:
+    def climbStairs(self, n: int) -> int:
+        return n + 100
+"#;
+
+    let cases = vec![make_test_case(1, json!({"n": 5}), json!(8))];
+
+    let results = run_all(
+        &docker(),
+        cases,
+        &Language::Python,
+        "climbStairs",
+        None,
+        code,
+    )
+    .await
+    .expect("run_all failed");
+
+    assert_eq!(results.len(), 1);
+    match &results[0].verdict {
+        Verdict::WrongAnswer { expected, got } => {
+            assert_eq!(*expected, json!(8));
+            assert_eq!(*got, json!(105));
+        }
+        other => panic!("Expected WrongAnswer, got {:?}", other),
+    }
+}
+
+// --- Java Submission Cases ---
+
+#[tokio::test]
+async fn test_java_syntax_error() {
+    let code = r#"
+public class Solution {
+    public int climbStairs(int n) {
+        return n
+    }
+}
+"#;
+
+    let cases = vec![make_test_case(1, json!({"n": 1}), json!(1))];
+
+    let results = run_all(&docker(), cases, &Language::Java, "climbStairs", None, code)
+        .await
+        .expect("run_all failed");
+
+    assert_eq!(results.len(), 1);
+    match &results[0].verdict {
+        Verdict::RuntimeError(msg) => {
+            assert!(
+                !msg.trim().is_empty(),
+                "Expected non-empty compilation error message"
+            );
+        }
+        other => panic!(
+            "Expected RuntimeError containing compiler error output, got {:?}",
+            other
+        ),
+    }
+}
+
+#[tokio::test]
+async fn test_java_code_logic_error() {
+    let code = r#"
+public class Solution {
+    public int climbStairs(int n) {
+        return n + 100;
+    }
+}
+"#;
+
+    let cases = vec![make_test_case(1, json!({"n": 5}), json!(8))];
+
+    let results = run_all(&docker(), cases, &Language::Java, "climbStairs", None, code)
+        .await
+        .expect("run_all failed");
+
+    assert_eq!(results.len(), 1);
+    match &results[0].verdict {
+        Verdict::WrongAnswer { expected, got } => {
+            assert_eq!(*expected, json!(8));
+            assert_eq!(*got, json!(105));
+        }
+        other => panic!("Expected WrongAnswer, got {:?}", other),
+    }
+}
+
+// --- C Submission Cases ---
+
+#[tokio::test]
+async fn test_c_syntax_error() {
+    let code = r#"
+int climbStairs(int n) {
+    return n
+}
+"#;
+
+    let cases = vec![make_test_case(1, json!({"n": 1}), json!(1))];
+
+    let results = run_all(
+        &docker(),
+        cases,
+        &Language::C,
+        "climbStairs",
+        Some("i:i"),
+        code,
+    )
+    .await
+    .expect("run_all failed");
+
+    assert_eq!(results.len(), 1);
+    match &results[0].verdict {
+        Verdict::RuntimeError(msg) => {
+            assert!(
+                !msg.trim().is_empty(),
+                "Expected non-empty compilation error message"
+            );
+        }
+        other => panic!(
+            "Expected RuntimeError containing compiler error output, got {:?}",
+            other
+        ),
+    }
+}
+
+#[tokio::test]
+async fn test_c_code_logic_error() {
+    let code = r#"
+int climbStairs(int n) {
+    return n + 100;
+}
+"#;
+
+    let cases = vec![make_test_case(1, json!({"n": 5}), json!(8))];
+
+    let results = run_all(
+        &docker(),
+        cases,
+        &Language::C,
+        "climbStairs",
+        Some("i:i"),
+        code,
+    )
+    .await
+    .expect("run_all failed");
+
+    assert_eq!(results.len(), 1);
+    match &results[0].verdict {
+        Verdict::WrongAnswer { expected, got } => {
+            assert_eq!(*expected, json!(8));
+            assert_eq!(*got, json!(105));
+        }
+        other => panic!("Expected WrongAnswer, got {:?}", other),
+    }
+}
+
+// --- C++ Submission Cases ---
+
+#[tokio::test]
+async fn test_cpp_syntax_error() {
+    let code = r#"
+class Solution {
+public:
+    int climbStairs(int n)
+        return n;
+};
+"#;
+
+    let cases = vec![make_test_case(1, json!({"n": 1}), json!(1))];
+
+    let results = run_all(
+        &docker(),
+        cases,
+        &Language::Cpp,
+        "climbStairs",
+        Some("i:i"),
+        code,
+    )
+    .await
+    .expect("run_all failed");
+
+    assert_eq!(results.len(), 1);
+    match &results[0].verdict {
+        Verdict::RuntimeError(msg) => {
+            assert!(
+                !msg.trim().is_empty(),
+                "Expected non-empty compilation error message"
+            );
+        }
+        other => panic!(
+            "Expected RuntimeError containing compiler error output, got {:?}",
+            other
+        ),
+    }
+}
+
+#[tokio::test]
+async fn test_cpp_code_logic_error() {
+    let code = r#"
+class Solution {
+public:
+    int climbStairs(int n) {
+        return n + 100;
+    }
+};
+"#;
+
+    let cases = vec![make_test_case(1, json!({"n": 5}), json!(8))];
+
+    let results = run_all(
+        &docker(),
+        cases,
+        &Language::Cpp,
+        "climbStairs",
+        Some("i:i"),
+        code,
+    )
+    .await
+    .expect("run_all failed");
+
+    assert_eq!(results.len(), 1);
+    match &results[0].verdict {
+        Verdict::WrongAnswer { expected, got } => {
+            assert_eq!(*expected, json!(8));
+            assert_eq!(*got, json!(105));
+        }
+        other => panic!("Expected WrongAnswer, got {:?}", other),
+    }
+}

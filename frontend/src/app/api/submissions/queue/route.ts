@@ -3,10 +3,10 @@ import { redis } from '@/lib/redis';
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const newSubmit = body.newSubmit || body;
+    const body = await req.json().catch(() => null);
+    const newSubmit = body?.newSubmit || body;
 
-    if (!newSubmit) {
+    if (!newSubmit || (typeof newSubmit === 'object' && Object.keys(newSubmit).length === 0)) {
       return NextResponse.json(
         { error: 'Missing newSubmit job data' },
         { status: 400 }

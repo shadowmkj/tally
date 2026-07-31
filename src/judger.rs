@@ -96,4 +96,47 @@ mod tests {
             }
         );
     }
+
+    #[test]
+    fn judge_array_accepted_and_wrong_answer() {
+        let res_ac = DriverResponse {
+            success: true,
+            result: Some(json!([0, 1])),
+            error: None,
+        };
+        assert_eq!(judge(&res_ac, &json!([0, 1])), Verdict::Accepted);
+
+        let res_wa = DriverResponse {
+            success: true,
+            result: Some(json!([1, 0])),
+            error: None,
+        };
+        assert_eq!(
+            judge(&res_wa, &json!([0, 1])),
+            Verdict::WrongAnswer {
+                expected: json!([0, 1]),
+                got: json!([1, 0]),
+            }
+        );
+    }
+
+    #[test]
+    fn judge_object_and_boolean() {
+        let res_bool = DriverResponse {
+            success: true,
+            result: Some(json!(true)),
+            error: None,
+        };
+        assert_eq!(judge(&res_bool, &json!(true)), Verdict::Accepted);
+
+        let res_obj = DriverResponse {
+            success: true,
+            result: Some(json!({"val": 10, "next": null})),
+            error: None,
+        };
+        assert_eq!(
+            judge(&res_obj, &json!({"val": 10, "next": null})),
+            Verdict::Accepted
+        );
+    }
 }
