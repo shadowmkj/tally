@@ -1,82 +1,59 @@
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
-import { auth } from '@/lib/auth';
 import fs from 'fs/promises';
 import path from 'path';
+import { auth } from '@/lib/auth';
+import type { SampleTestCase, TestCase } from '@/context/CompetitionContext';
 
 async function getCodeTestsDir(): Promise<string> {
-    if (process.env.CODE_TESTS_DIR) {
-        const customPath = path.resolve(process.env.CODE_TESTS_DIR);
-        await fs.mkdir(customPath, { recursive: true });
-        return customPath;
-    }
-    const parentPath = path.resolve(process.cwd(), '../code_tests');
-    try {
-        await fs.stat(parentPath);
-        return parentPath;
-    } catch {
-        const currentPath = path.resolve(process.cwd(), 'code_tests');
-        await fs.mkdir(currentPath, { recursive: true });
-        return currentPath;
-    }
+    const dir = process.env.CODE_TESTS_DIR || path.resolve(process.cwd(), '../code_tests');
+    await fs.mkdir(dir, { recursive: true });
+    return dir;
 }
 
-function parseTestCasesContent(rawContent: string) {
-    const trimmed = rawContent.trim();
-    let items: any[] = [];
+interface TestCasesParseResult {
+    sampleTestCases: SampleTestCase[];
+    hiddenTestCases: TestCase[];
+    rawItems: any[];
+    parseErrors: string[];
+}
+
+function parseTestCasesContent(content: string): TestCasesParseResult {
+    const sampleTestCases: SampleTestCase[] = [];
+    const hiddenTestCases: TestCase[] = [];
+    const items: any[] = [];
     const parseErrors: string[] = [];
 
-    if (trimmed.startsWith('[')) {
+    const lines = content.split(/\r?\n/).filter(line => line.trim() !== '');
+
+    lines.forEach((line, index) => {
+        let item: any;
         try {
-            const parsed = JSON.parse(trimmed);
-            if (Array.isArray(parsed)) {
-                items = parsed;
-            } else {
-                parseErrors.push('Failed to parse JSON array: Expected top-level JSON array');
-            }
-        } catch (e: any) {
-            parseErrors.push(`Failed to parse JSON array: ${e?.message || String(e)}`);
+            item = JSON.parse(line);
+            items.push(item);
+        } catch {
+            parseErrors.push(`Line ${index + 1}: Invalid JSON structure`);
+            return;
         }
-    } else {
-        // Line by line JSONL parsing
-        const lines = trimmed.split('\n');
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
-            const l = line.trim();
-            if (!l) continue;
-            try {
-                items.push(JSON.parse(l));
-            } catch (e: any) {
-                parseErrors.push(`Line ${i + 1}: ${e?.message || String(e)}`);
-            }
-        }
-    }
 
-    const sampleTestCases: Array<{ id: string; input: string; output: string; explanation: string }> = [];
-    const hiddenTestCases: Array<{ id: string; input: string; output: string; hidden: boolean }> = [];
-
-    items.forEach((item, idx) => {
-        const id = item.id ? String(item.id) : `tc-${idx + 1}`;
-        const rawInput = typeof item.input === 'object' ? JSON.stringify(item.input, null, 2) : String(item.input ?? '');
-        const rawOutput = item.expected !== undefined
-            ? (typeof item.expected === 'object' ? JSON.stringify(item.expected) : String(item.expected))
-            : (typeof item.output === 'object' ? JSON.stringify(item.output) : String(item.output ?? ''));
-        const explanation = item.explanation ? String(item.explanation) : '';
-        const isHidden = Boolean(item.is_hidden ?? item.hidden ?? false);
+        const inputStr = typeof item.input === 'string' ? item.input : JSON.stringify(item.input ?? '');
+        const outputStr = typeof item.expected === 'string' ? item.expected : JSON.stringify(item.expected ?? '');
+        const isHidden = item.is_hidden === true || item.hidden === true;
+        const explanation = item.explanation || undefined;
 
         if (!isHidden) {
             sampleTestCases.push({
-                id: `st-${id}`,
-                input: rawInput,
-                output: rawOutput,
-                explanation,
+                id: `st-${index + 1}`,
+                input: inputStr,
+                output: outputStr,
+                explanation: explanation || '',
             });
         }
 
         hiddenTestCases.push({
-            id: `ht-${id}`,
-            input: rawInput,
-            output: rawOutput,
+            id: `tc-${index + 1}`,
+            input: inputStr,
+            output: outputStr,
             hidden: isHidden,
         });
     });

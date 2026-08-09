@@ -5,9 +5,12 @@ __pycache__
 /*.pyc
 *.class
 ai
+ai_docs/
 node_modules/
 .next/
 .env
 frontend/src/app/generated/
 frontend/dev.db
-
+tmp/
+coverage/
+lcov.info

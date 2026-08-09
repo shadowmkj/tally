@@ -107,6 +107,7 @@ describe('Test Files API Route (/api/test-files)', () => {
         const data = await res.json();
         expect(data.error).toContain('Unauthorized');
     });
+
     test('GET /api/test-files lists existing test files in code_tests directory', async () => {
         const req = new Request('http://localhost:3000/api/test-files');
         const res = await GET(req);
