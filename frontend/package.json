@@ -2,6 +2,7 @@
   "name": "wecode-next",
   "private": true,
   "version": "0.1.0",
+  "packageManager": "pnpm@10.5.2",
   "type": "module",
   "scripts": {
     "dev": "next dev --port 3000",
@@ -67,10 +68,5 @@
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "better-sqlite3"
-    ]
   }
 }
