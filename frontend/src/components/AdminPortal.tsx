@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
     ShieldCheck,
@@ -530,13 +531,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                 </div>
 
                                 <div className="flex items-center gap-2">
-                                    <a
-                                        href={`/admin/problems?comp=${activeComp.accessCode}`}
+                                    <Link
+                                        href={`/admin/problems?comp=${encodeURIComponent(activeComp.accessCode)}`}
                                         className="px-3 py-1.5 rounded-lg bg-primary-500/10 hover:bg-primary-500/20 text-primary-400 font-bold text-xs flex items-center gap-1.5 transition-colors border border-primary-500/30 cursor-pointer"
                                     >
                                         <ExternalLink className="w-4 h-4" />
                                         <span>Manage Problems Studio</span>
-                                    </a>
+                                    </Link>
                                     <button
                                         onClick={handleOpenAddProblemModal}
                                         className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-primary-300 font-bold text-xs flex items-center gap-1.5 transition-colors border border-zinc-700/60 cursor-pointer"

@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useCompetition } from '@/context/CompetitionContext';
 import type { Problem, Difficulty } from '@/context/CompetitionContext';
+import { useSelectedCompetition } from '@/hooks/useSelectedCompetition';
 import { authClient } from '@/lib/auth-client';
 import { AdminLoginForm } from '@/components/AdminLoginForm';
 import { ModalPortal } from '@/components/ModalPortal';
@@ -30,18 +31,7 @@ export function AdminProblemsManager() {
     const searchParams = useSearchParams();
     const { competitions, addProblem, deleteProblem } = useCompetition();
     const { data: session, isPending: sessionPending } = authClient.useSession();
-    const compParam = searchParams.get('comp') || '';
-    const [selectedCompCode, setSelectedCompCode] = useState<string>(compParam);
-
-    useEffect(() => {
-        const comp = searchParams.get('comp') || '';
-        if (comp && competitions.some(c => c.accessCode.toUpperCase() === comp.toUpperCase() || c.id === comp)) {
-            const found = competitions.find(c => c.accessCode.toUpperCase() === comp.toUpperCase() || c.id === comp);
-            if (found) setSelectedCompCode(found.accessCode);
-        } else if (!selectedCompCode && competitions.length > 0) {
-            setSelectedCompCode(competitions[0].accessCode);
-        }
-    }, [competitions, searchParams]);
+    const [selectedCompCode, setSelectedCompCode] = useSelectedCompetition(searchParams);
 
     const activeComp = useMemo(() => {
         const targetCode = selectedCompCode || searchParams.get('comp') || '';

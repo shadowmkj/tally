@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { useCompetition } from '@/context/CompetitionContext';
 import type { Problem, Difficulty, SampleTestCase, TestCase } from '@/context/CompetitionContext';
+import { useSelectedCompetition } from '@/hooks/useSelectedCompetition';
 import { authClient } from '@/lib/auth-client';
 import { problemSchema } from '@/lib/validations';
 import { AdminLoginForm } from '@/components/AdminLoginForm';
@@ -38,17 +39,7 @@ export function AdminProblemForm() {
     const { data: session, isPending: sessionPending } = authClient.useSession();
     const { competitions, addProblem, updateProblem } = useCompetition();
 
-    const [selectedCompCode, setSelectedCompCode] = useState<string>(compCodeFromUrl);
-
-    useEffect(() => {
-        const comp = searchParams.get('comp') || '';
-        if (comp && competitions.some(c => c.accessCode.toUpperCase() === comp.toUpperCase() || c.id === comp)) {
-            const found = competitions.find(c => c.accessCode.toUpperCase() === comp.toUpperCase() || c.id === comp);
-            if (found) setSelectedCompCode(found.accessCode);
-        } else if (!selectedCompCode && competitions.length > 0) {
-            setSelectedCompCode(competitions[0].accessCode);
-        }
-    }, [competitions, searchParams]);
+    const [selectedCompCode, setSelectedCompCode] = useSelectedCompetition(searchParams);
 
     const activeComp = useMemo(() => {
         const targetCode = selectedCompCode || searchParams.get('comp') || '';
