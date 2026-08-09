@@ -162,4 +162,51 @@ describe('Test Files API Route (/api/test-files)', () => {
         const data = await res.json();
         expect(data.error).toContain('exceeds maximum allowed limit');
     });
+
+    test('POST /api/test-files returns 400 for invalid filenames or path traversal attempts', async () => {
+        const invalidNames = ['.hidden.jsonl', '../traversal.jsonl', 'invalid.exe', 'file;bad.jsonl'];
+
+        for (const filename of invalidNames) {
+            const req = new Request('http://localhost:3000/api/test-files', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    filename,
+                    content: '[]',
+                }),
+            });
+
+            const res = await POST(req);
+            expect(res.status).toBe(400);
+
+            const data = await res.json();
+            expect(data.error).toContain('Invalid filename');
+        }
+    });
+
+    test('POST /api/test-files returns 409 Conflict when file already exists', async () => {
+        const testFileName = `unit-test-duplicate-${Date.now()}.jsonl`;
+        const payload = JSON.stringify({ filename: testFileName, content: '[]' });
+
+        const req1 = new Request('http://localhost:3000/api/test-files', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: payload,
+        });
+
+        const res1 = await POST(req1);
+        expect(res1.status).toBe(200);
+
+        const req2 = new Request('http://localhost:3000/api/test-files', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: payload,
+        });
+
+        const res2 = await POST(req2);
+        expect(res2.status).toBe(409);
+
+        const data2 = await res2.json();
+        expect(data2.error).toContain('already exists');
+    });
 });

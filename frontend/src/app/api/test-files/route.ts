@@ -138,6 +138,14 @@ export async function GET(req: Request) {
 }
 
 const MAX_UPLOAD_SIZE_BYTES = 10 * 1024 * 1024; // 10MB (sufficient for 500+ test cases)
+const SAFE_FILENAME_REGEX = /^[a-zA-Z0-9_-]+\.(jsonl|json|txt)$/;
+
+function isValidFileName(name: string): boolean {
+    if (!name || name.startsWith('.') || name.includes('/') || name.includes('\\') || name.includes('..')) {
+        return false;
+    }
+    return SAFE_FILENAME_REGEX.test(name);
+}
 
 // POST: Upload or write a test case file into code_tests directory
 export async function POST(req: Request) {
@@ -172,8 +180,12 @@ export async function POST(req: Request) {
                 return NextResponse.json({ error: 'File size exceeds maximum allowed limit (10MB)' }, { status: 400 });
             }
 
-            const name = customName?.trim() || file.name;
-            fileName = path.basename(name);
+            const rawName = (customName?.trim() || file.name).trim();
+            if (!isValidFileName(rawName)) {
+                return NextResponse.json({ error: 'Invalid filename. Must be an alphanumeric name ending with .jsonl, .json, or .txt' }, { status: 400 });
+            }
+
+            fileName = rawName;
             fileContent = await file.text();
         } else {
             const body = await req.json();
@@ -183,17 +195,26 @@ export async function POST(req: Request) {
             if (typeof body.content === 'string' && Buffer.byteLength(body.content, 'utf-8') > MAX_UPLOAD_SIZE_BYTES) {
                 return NextResponse.json({ error: 'File size exceeds maximum allowed limit (10MB)' }, { status: 400 });
             }
-            fileName = path.basename(body.filename);
+
+            const rawName = String(body.filename).trim();
+            if (!isValidFileName(rawName)) {
+                return NextResponse.json({ error: 'Invalid filename. Must be an alphanumeric name ending with .jsonl, .json, or .txt' }, { status: 400 });
+            }
+
+            fileName = rawName;
             fileContent = body.content;
         }
 
-        // Ensure valid extension
-        if (!fileName.endsWith('.jsonl') && !fileName.endsWith('.json') && !fileName.endsWith('.txt')) {
-            fileName += '.jsonl';
-        }
-
         const filePath = path.join(dir, fileName);
-        await fs.writeFile(filePath, fileContent, 'utf-8');
+
+        try {
+            await fs.writeFile(filePath, fileContent, { encoding: 'utf-8', flag: 'wx' });
+        } catch (err: any) {
+            if (err?.code === 'EEXIST') {
+                return NextResponse.json({ error: `File '${fileName}' already exists in code_tests directory` }, { status: 409 });
+            }
+            throw err;
+        }
 
         const parsed = parseTestCasesContent(fileContent);
 
