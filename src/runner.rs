@@ -450,18 +450,45 @@ int main() {{
     )
 }
 
-/// Connect to Docker daemon using unix://, tcp://, or http:// endpoint URL.
+/// Connect to Docker daemon using unix://, tcp://, http://, or https:// endpoint URL.
 pub fn create_docker_client(endpoint: &str) -> Result<Docker> {
-    if endpoint.starts_with("tcp://")
-        || endpoint.starts_with("http://")
-        || endpoint.starts_with("https://")
-    {
+    if endpoint.starts_with("https://") {
+        if let Ok(cert_dir) = std::env::var("DOCKER_CERT_PATH") {
+            let cert_path = std::path::Path::new(&cert_dir);
+            let key = cert_path.join("key.pem");
+            let cert = cert_path.join("cert.pem");
+            let ca = cert_path.join("ca.pem");
+            Docker::connect_with_ssl(
+                endpoint,
+                &key,
+                &cert,
+                &ca,
+                120,
+                bollard::API_DEFAULT_VERSION,
+            )
+            .context("while connecting to Docker over HTTPS/SSL with certificates")
+        } else {
+            Docker::connect_with_ssl_defaults()
+                .context("while connecting to Docker over HTTPS/SSL defaults")
+        }
+    } else if endpoint.starts_with("tcp://") || endpoint.starts_with("http://") {
         Docker::connect_with_http(endpoint, 120, bollard::API_DEFAULT_VERSION)
             .context("while connecting to Docker over HTTP/TCP")
     } else {
         Docker::connect_with_unix(endpoint, 120, bollard::API_DEFAULT_VERSION)
             .context("while connecting to Docker over Unix socket")
     }
+}
+
+/// Verify that the Docker daemon is reachable by sending an awaited ping request.
+pub async fn verify_docker_connection(docker: &Docker, endpoint: &str) -> Result<()> {
+    docker.ping().await.with_context(|| {
+        format!(
+            "while verifying Docker daemon reachability at '{}'",
+            endpoint
+        )
+    })?;
+    Ok(())
 }
 
 #[cfg(test)]
@@ -484,6 +511,46 @@ mod tests {
     fn test_create_docker_client_http_endpoint() {
         let client = create_docker_client("http://127.0.0.1:2375");
         assert!(client.is_ok(), "HTTP endpoint client creation failed");
+    }
+
+    #[test]
+    fn test_create_docker_client_https_endpoint() {
+        let client = create_docker_client("https://127.0.0.1:2376");
+        assert!(client.is_ok(), "HTTPS endpoint client creation failed");
+    }
+
+    #[test]
+    fn test_create_docker_client_https_with_cert_path() {
+        let temp_dir = tempfile::tempdir().expect("failed to create temp dir");
+        let cert_dir = temp_dir.path();
+        std::fs::write(cert_dir.join("key.pem"), "key").unwrap();
+        std::fs::write(cert_dir.join("cert.pem"), "cert").unwrap();
+        std::fs::write(cert_dir.join("ca.pem"), "ca").unwrap();
+
+        unsafe {
+            std::env::set_var("DOCKER_CERT_PATH", cert_dir.to_str().unwrap());
+        }
+        let client = create_docker_client("https://127.0.0.1:2376");
+        unsafe {
+            std::env::remove_var("DOCKER_CERT_PATH");
+        }
+
+        assert!(
+            client.is_ok(),
+            "HTTPS endpoint client creation with DOCKER_CERT_PATH failed"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_verify_docker_connection_unreachable() {
+        let client = create_docker_client("tcp://127.0.0.1:1").expect("failed to construct client");
+        let result = verify_docker_connection(&client, "tcp://127.0.0.1:1").await;
+        assert!(
+            result.is_err(),
+            "Expected ping to fail for unreachable endpoint"
+        );
+        let err_msg = format!("{:#}", result.unwrap_err());
+        assert!(err_msg.contains("127.0.0.1:1"));
     }
 
     #[test]
