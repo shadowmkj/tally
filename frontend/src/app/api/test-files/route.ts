@@ -24,18 +24,31 @@ function parseTestCasesContent(content: string): TestCasesParseResult {
     const items: any[] = [];
     const parseErrors: string[] = [];
 
-    const lines = content.split(/\r?\n/).filter(line => line.trim() !== '');
+    const trimmed = content.trim();
+    let rawArray: any[] = [];
 
-    lines.forEach((line, index) => {
-        let item: any;
+    if (trimmed.startsWith('[')) {
         try {
-            item = JSON.parse(line);
-            items.push(item);
+            const parsed = JSON.parse(trimmed);
+            if (Array.isArray(parsed)) {
+                rawArray = parsed;
+            }
         } catch {
-            parseErrors.push(`Line ${index + 1}: Invalid JSON structure`);
-            return;
+            parseErrors.push("Invalid JSON array structure");
         }
+    } else {
+        const lines = trimmed.split(/\r?\n/).filter(line => line.trim() !== '');
+        lines.forEach((line, index) => {
+            try {
+                rawArray.push(JSON.parse(line));
+            } catch {
+                parseErrors.push(`Line ${index + 1}: Invalid JSON structure`);
+            }
+        });
+    }
 
+    rawArray.forEach((item, index) => {
+        items.push(item);
         const inputStr = typeof item.input === 'string' ? item.input : JSON.stringify(item.input ?? '');
         const outputStr = typeof item.expected === 'string' ? item.expected : JSON.stringify(item.expected ?? '');
         const isHidden = item.is_hidden === true || item.hidden === true;
