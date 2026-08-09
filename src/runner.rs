@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use bollard::Docker;
 use bollard::container::{
     AttachContainerOptions, AttachContainerResults, Config, CreateContainerOptions,
@@ -450,9 +450,38 @@ int main() {{
     )
 }
 
+/// Connect to Docker daemon using unix://, tcp://, or http:// endpoint URL.
+pub fn create_docker_client(endpoint: &str) -> Result<Docker> {
+    if endpoint.starts_with("tcp://") || endpoint.starts_with("http://") || endpoint.starts_with("https://") {
+        Docker::connect_with_http(endpoint, 120, bollard::API_DEFAULT_VERSION)
+            .context("while connecting to Docker over HTTP/TCP")
+    } else {
+        Docker::connect_with_unix(endpoint, 120, bollard::API_DEFAULT_VERSION)
+            .context("while connecting to Docker over Unix socket")
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_create_docker_client_unix_endpoint() {
+        let client = create_docker_client("unix:///var/run/docker.sock");
+        assert!(client.is_ok(), "Unix socket client creation failed");
+    }
+
+    #[test]
+    fn test_create_docker_client_tcp_endpoint() {
+        let client = create_docker_client("tcp://127.0.0.1:2375");
+        assert!(client.is_ok(), "TCP endpoint client creation failed");
+    }
+
+    #[test]
+    fn test_create_docker_client_http_endpoint() {
+        let client = create_docker_client("http://127.0.0.1:2375");
+        assert!(client.is_ok(), "HTTP endpoint client creation failed");
+    }
 
     #[test]
     fn test_generate_cpp_driver() {

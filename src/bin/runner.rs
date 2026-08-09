@@ -1,6 +1,5 @@
 use std::fs;
 
-use bollard::{API_DEFAULT_VERSION, Docker};
 use clap::Parser;
 use redis::AsyncCommands;
 use tally::models::{Job, Language, TestCase, Verdict};
@@ -60,7 +59,7 @@ async fn main() -> Result<(), anyhow::Error> {
         cli.sqlite_path
     );
 
-    let docker = Docker::connect_with_unix(&cli.docker_socket, 120, API_DEFAULT_VERSION)?;
+    let docker = runner::create_docker_client(&cli.docker_socket)?;
     println!("Successfully connected to Docker daemon.");
 
     if let Some(queue) = cli.listen_queue {

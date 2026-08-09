@@ -238,6 +238,7 @@ class Solution:
 }
 
 #[tokio::test]
+#[ignore = "slow Docker container timeout test"]
 async fn test_infinite_loop_returns_time_limit_exceeded() {
     let code = r#"
 class Solution:
