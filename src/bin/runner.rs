@@ -96,7 +96,10 @@ async fn main() -> Result<(), anyhow::Error> {
                                 Ok(file) => match serde_json::from_reader(file) {
                                     Ok(cases) => cases,
                                     Err(e) => {
-                                        let err_msg = format!("Failed to parse test cases file {:?}: {}", tests_file, e);
+                                        let err_msg = format!(
+                                            "Failed to parse test cases file {:?}: {}",
+                                            tests_file, e
+                                        );
                                         eprintln!("{}", err_msg);
                                         let _ = tally::db::update_submission_error(
                                             &sqlite_conn,
@@ -108,7 +111,10 @@ async fn main() -> Result<(), anyhow::Error> {
                                     }
                                 },
                                 Err(e) => {
-                                    let err_msg = format!("Failed to load test cases file {:?}: {}", tests_file, e);
+                                    let err_msg = format!(
+                                        "Failed to load test cases file {:?}: {}",
+                                        tests_file, e
+                                    );
                                     eprintln!("{}", err_msg);
                                     let _ = tally::db::update_submission_error(
                                         &sqlite_conn,
@@ -121,7 +127,8 @@ async fn main() -> Result<(), anyhow::Error> {
                             };
 
                             if test_cases.is_empty() {
-                                let err_msg = format!("No test cases found for {}", job.problem_slug);
+                                let err_msg =
+                                    format!("No test cases found for {}", job.problem_slug);
                                 eprintln!("{}", err_msg);
                                 let _ = tally::db::update_submission_error(
                                     &sqlite_conn,

@@ -11,8 +11,7 @@ fn docker() -> Docker {
         Docker::connect_with_unix(&socket, 120, API_DEFAULT_VERSION)
             .expect("Failed to connect to Docker daemon")
     } else {
-        Docker::connect_with_local_defaults()
-            .expect("Failed to connect to Docker daemon")
+        Docker::connect_with_local_defaults().expect("Failed to connect to Docker daemon")
     }
 }
 
