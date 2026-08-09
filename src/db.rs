@@ -126,6 +126,46 @@ pub fn update_submission_status(
     Ok(Some(sub_id))
 }
 
+/// Updates submission status to an error status (e.g. "System Error") in SQLite when a runner system failure occurs.
+pub fn update_submission_error(
+    conn: &Connection,
+    job: &Job,
+    status: &str,
+    error_msg: &str,
+) -> Result<Option<String>> {
+    let target_submission_id = match &job.submission_id {
+        Some(id) if !id.is_empty() => Some(id.clone()),
+        _ => {
+            let mut stmt = conn.prepare(
+                "SELECT id FROM Submission
+                 WHERE LOWER(status) = 'evaluating'
+                   AND (problemId = ?1 OR problemId = ?2)
+                 ORDER BY timestamp DESC LIMIT 1",
+            )?;
+
+            stmt.query_row(params![job.problem_id, job.problem_slug], |row| {
+                row.get::<_, String>(0)
+            })
+            .ok()
+        }
+    };
+
+    let sub_id = match target_submission_id {
+        Some(id) => id,
+        None => return Ok(None),
+    };
+
+    conn.execute(
+        "UPDATE Submission
+         SET status = ?1,
+             errorLog = ?2
+         WHERE id = ?3",
+        params![status, error_msg, sub_id],
+    )?;
+
+    Ok(Some(sub_id))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

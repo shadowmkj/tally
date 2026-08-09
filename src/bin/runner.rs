@@ -93,20 +93,42 @@ async fn main() -> Result<(), anyhow::Error> {
                             let tests_path = std::path::Path::new("code_tests");
                             let tests_file = tests_path.join(format!("{}.jsonl", job.problem_slug));
                             let test_cases: Vec<TestCase> = match fs::File::open(&tests_file) {
-                                Ok(file) => {
-                                    serde_json::from_reader(file).unwrap_or_else(|_| vec![])
-                                }
+                                Ok(file) => match serde_json::from_reader(file) {
+                                    Ok(cases) => cases,
+                                    Err(e) => {
+                                        let err_msg = format!("Failed to parse test cases file {:?}: {}", tests_file, e);
+                                        eprintln!("{}", err_msg);
+                                        let _ = tally::db::update_submission_error(
+                                            &sqlite_conn,
+                                            &job,
+                                            "System Error",
+                                            &err_msg,
+                                        );
+                                        continue;
+                                    }
+                                },
                                 Err(e) => {
-                                    eprintln!(
-                                        "Failed to load test cases from {:?}: {}",
-                                        tests_file, e
+                                    let err_msg = format!("Failed to load test cases file {:?}: {}", tests_file, e);
+                                    eprintln!("{}", err_msg);
+                                    let _ = tally::db::update_submission_error(
+                                        &sqlite_conn,
+                                        &job,
+                                        "System Error",
+                                        &err_msg,
                                     );
                                     continue;
                                 }
                             };
 
                             if test_cases.is_empty() {
-                                println!("No test cases found for {}", job.problem_slug);
+                                let err_msg = format!("No test cases found for {}", job.problem_slug);
+                                eprintln!("{}", err_msg);
+                                let _ = tally::db::update_submission_error(
+                                    &sqlite_conn,
+                                    &job,
+                                    "System Error",
+                                    &err_msg,
+                                );
                                 continue;
                             }
 
@@ -160,7 +182,32 @@ async fn main() -> Result<(), anyhow::Error> {
                                     }
                                 }
                                 Err(e) => {
-                                    eprintln!("Error running job {}: {:?}", job.problem_id, e);
+                                    let err_msg = format!("System Error: {:#}", e);
+                                    eprintln!("Error running job {}: {}", job.problem_id, err_msg);
+                                    match tally::db::update_submission_error(
+                                        &sqlite_conn,
+                                        &job,
+                                        "System Error",
+                                        &err_msg,
+                                    ) {
+                                        Ok(Some(sub_id)) => {
+                                            println!(
+                                                "Updated SQLite submission '{}' to System Error.",
+                                                sub_id
+                                            );
+                                        }
+                                        Ok(None) => {
+                                            eprintln!(
+                                                "No matching submission found in SQLite database to update error status."
+                                            );
+                                        }
+                                        Err(db_err) => {
+                                            eprintln!(
+                                                "Failed to update SQLite submission error: {:?}",
+                                                db_err
+                                            );
+                                        }
+                                    }
                                 }
                             }
                         } else {

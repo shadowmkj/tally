@@ -6,8 +6,14 @@ use tally::runner::run_all;
 const DOCKER_SOCKET: &str = "unix:///var/run/docker.sock";
 
 fn docker() -> Docker {
-    Docker::connect_with_unix(DOCKER_SOCKET, 120, API_DEFAULT_VERSION)
-        .expect("Failed to connect to Docker daemon")
+    let socket = std::env::var("DOCKER_HOST").unwrap_or_else(|_| DOCKER_SOCKET.to_string());
+    if socket.starts_with("unix://") {
+        Docker::connect_with_unix(&socket, 120, API_DEFAULT_VERSION)
+            .expect("Failed to connect to Docker daemon")
+    } else {
+        Docker::connect_with_local_defaults()
+            .expect("Failed to connect to Docker daemon")
+    }
 }
 
 fn make_test_case(id: i32, input: serde_json::Value, expected: serde_json::Value) -> TestCase {
