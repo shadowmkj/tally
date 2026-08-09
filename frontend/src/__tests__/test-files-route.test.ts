@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeAll, afterAll, beforeEach, mock } from 'bun:test';
+import { describe, test, expect, beforeAll, afterAll, beforeEach, afterEach, mock } from 'bun:test';
 import { GET, POST } from '../app/api/test-files/route';
 import { auth } from '../lib/auth';
 import fs from 'fs/promises';
@@ -6,6 +6,7 @@ import path from 'path';
 
 describe('Test Files API Route (/api/test-files)', () => {
     const testDir = path.resolve(process.cwd(), 'tmp/unit_test_code_tests');
+    const createdFiles: string[] = [];
 
     beforeAll(async () => {
         process.env.CODE_TESTS_DIR = testDir;
@@ -25,6 +26,19 @@ describe('Test Files API Route (/api/test-files)', () => {
             user: { id: 'test-user-1', email: 'admin@example.com', name: 'Admin User' },
             session: { id: 'test-session-1', userId: 'test-user-1' },
         }));
+    });
+
+    afterEach(async () => {
+        while (createdFiles.length > 0) {
+            const filePath = createdFiles.pop();
+            if (filePath) {
+                try {
+                    await fs.rm(filePath, { force: true });
+                } catch {
+                    // Ignore missing file error during cleanup
+                }
+            }
+        }
     });
 
     afterAll(async () => {
@@ -95,6 +109,9 @@ describe('Test Files API Route (/api/test-files)', () => {
 
     test('POST /api/test-files saves JSON payload into code_tests directory', async () => {
         const testFileName = `unit-test-${Date.now()}.jsonl`;
+        const testFilePath = path.join(testDir, testFileName);
+        createdFiles.push(testFilePath);
+
         const testContent = JSON.stringify([
             { id: 1, input: { n: 5 }, expected: 8, is_hidden: false, explanation: 'Sample case' },
             { id: 2, input: { n: 10 }, expected: 89, is_hidden: true, explanation: 'Hidden case' }
@@ -123,6 +140,9 @@ describe('Test Files API Route (/api/test-files)', () => {
 
     test('POST /api/test-files returns parseErrors when file content contains malformed JSONL', async () => {
         const testFileName = `unit-test-malformed-${Date.now()}.jsonl`;
+        const testFilePath = path.join(testDir, testFileName);
+        createdFiles.push(testFilePath);
+
         const testContent = `{"id": 1, "input": 1, "expected": 2}\nINVALID_JSON_LINE\n{"id": 2, "input": 2, "expected": 4}`;
 
         const req = new Request('http://localhost:3000/api/test-files', {
