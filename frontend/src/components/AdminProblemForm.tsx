@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
     ArrowLeft,
@@ -100,6 +100,11 @@ export function AdminProblemForm() {
     const [isSaving, setIsSaving] = useState(false);
     const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
+    const showToast = (text: string, type: 'success' | 'error' = 'success') => {
+        setToastMessage({ text, type });
+        setTimeout(() => setToastMessage(null), 3500);
+    };
+
     // Fetch existing test files from code_tests folder
     useEffect(() => {
         fetch('/api/test-files')
@@ -112,9 +117,12 @@ export function AdminProblemForm() {
             .catch(err => console.error('Failed to fetch existing test files:', err));
     }, []);
 
+    const initializedProblemIdRef = useRef<string | null>(null);
+
     // Fill form if editing
     useEffect(() => {
-        if (editingProblem) {
+        if (editingProblem && initializedProblemIdRef.current !== editingProblem.id) {
+            initializedProblemIdRef.current = editingProblem.id;
             setTitle(editingProblem.title);
             setSlug(editingProblem.slug || '');
             setMethodName(editingProblem.methodName || 'solve');
@@ -156,6 +164,8 @@ export function AdminProblemForm() {
             setStarterJava(editingProblem.starterTemplates?.java || '');
             setStarterC(editingProblem.starterTemplates?.c || '');
             setStarterJs(editingProblem.starterTemplates?.javascript || '');
+        } else if (!editingProblem) {
+            initializedProblemIdRef.current = null;
         }
     }, [editingProblem]);
 
@@ -178,21 +188,16 @@ export function AdminProblemForm() {
             const res = await fetch(`/api/test-files?file=${encodeURIComponent(fileNameToLoad)}`);
             if (!res.ok) {
                 const err = await res.json();
-                setToastMessage({ text: err.error || 'Failed to load file', type: 'error' });
+                showToast(err.error || 'Failed to load file', 'error');
                 return;
             }
             const data = await res.json();
-            if (data.sampleTestCases && data.sampleTestCases.length > 0) {
-                setSampleTestCases(data.sampleTestCases);
-            }
-            if (data.hiddenTestCases && data.hiddenTestCases.length > 0) {
-                setHiddenTestCases(data.hiddenTestCases);
-            }
+            setSampleTestCases(data.sampleTestCases || []);
+            setHiddenTestCases(data.hiddenTestCases || []);
             setAttachedTestFile(`code_tests/${data.filename} (${data.count} test cases loaded)`);
-            setToastMessage({ text: `Loaded code_tests/${data.filename} with ${data.count} test cases!`, type: 'success' });
-            setTimeout(() => setToastMessage(null), 3500);
+            showToast(`Loaded code_tests/${data.filename} with ${data.count} test cases!`, 'success');
         } catch (e: any) {
-            setToastMessage({ text: e?.message || 'Error loading test file', type: 'error' });
+            showToast(e?.message || 'Error loading test file', 'error');
         }
     };
 
@@ -213,26 +218,21 @@ export function AdminProblemForm() {
 
             if (!res.ok) {
                 const err = await res.json();
-                setToastMessage({ text: err.error || 'Upload failed', type: 'error' });
+                showToast(err.error || 'Upload failed', 'error');
                 return;
             }
 
             const data = await res.json();
-            if (data.sampleTestCases && data.sampleTestCases.length > 0) {
-                setSampleTestCases(data.sampleTestCases);
-            }
-            if (data.hiddenTestCases && data.hiddenTestCases.length > 0) {
-                setHiddenTestCases(data.hiddenTestCases);
-            }
+            setSampleTestCases(data.sampleTestCases || []);
+            setHiddenTestCases(data.hiddenTestCases || []);
 
             setAttachedTestFile(`code_tests/${data.filename} (${data.count} test cases uploaded & loaded)`);
             setExistingTestFiles(prev => prev.includes(data.filename) ? prev : [...prev, data.filename]);
             setSelectedExistingFile(data.filename);
 
-            setToastMessage({ text: `File saved to code_tests/${data.filename}! Loaded ${data.count} test cases.`, type: 'success' });
-            setTimeout(() => setToastMessage(null), 3500);
+            showToast(`File saved to code_tests/${data.filename}! Loaded ${data.count} test cases.`, 'success');
         } catch (e: any) {
-            setToastMessage({ text: e?.message || 'Error uploading file', type: 'error' });
+            showToast(e?.message || 'Error uploading file', 'error');
         } finally {
             setUploadingFile(false);
         }
@@ -245,8 +245,7 @@ export function AdminProblemForm() {
         setStarterJava(`import java.util.*;\n\npublic class Solution {\n    public int ${m}() {\n        // Write your code here\n        return 0;\n    }\n}`);
         setStarterC(`#include <stdio.h>\n#include <stdlib.h>\n\nint ${m}() {\n    // Write your code here\n    return 0;\n}`);
         setStarterJs(`function ${m}() {\n    // Write your code here\n    return 0;\n}`);
-        setToastMessage({ text: 'Generated standard boilerplate for all languages!', type: 'success' });
-        setTimeout(() => setToastMessage(null), 3000);
+        showToast('Generated standard boilerplate for all languages!', 'success');
     };
 
     const handleSaveProblem = async (e: React.FormEvent) => {
@@ -254,11 +253,13 @@ export function AdminProblemForm() {
         if (!activeComp) return;
         setFormErrors({});
 
+        const toStr = (val: any): string => (typeof val === 'string' ? val : val != null ? String(val) : '');
+
         const trimmedTitle = title.trim();
         const trimmedSlug = slug.trim() || trimmedTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-');
         const trimmedMethod = methodName.trim() || 'solve';
-        const sampleIn = sampleTestCases[0]?.input.trim() || '';
-        const sampleOut = sampleTestCases[0]?.output.trim() || '';
+        const sampleIn = toStr(sampleTestCases[0]?.input).trim();
+        const sampleOut = toStr(sampleTestCases[0]?.output).trim();
 
         const payload = {
             title: trimmedTitle,
@@ -302,21 +303,21 @@ export function AdminProblemForm() {
             .filter(Boolean);
 
         const finalSampleTCs: SampleTestCase[] = sampleTestCases
-            .filter(st => st.input.trim() || st.output.trim())
+            .filter(st => toStr(st?.input).trim() || toStr(st?.output).trim())
             .map((st, i) => ({
-                id: st.id && st.id.length > 5 ? st.id : `st-${now}-${i}`,
-                input: st.input.trim(),
-                output: st.output.trim(),
-                explanation: st.explanation.trim() || null,
+                id: st?.id && typeof st.id === 'string' && st.id.length > 5 ? st.id : `st-${now}-${i}`,
+                input: toStr(st?.input).trim(),
+                output: toStr(st?.output).trim(),
+                explanation: toStr(st?.explanation).trim() || null,
             }));
 
         const finalHiddenTCs: TestCase[] = hiddenTestCases
-            .filter(tc => tc.input.trim() || tc.output.trim())
+            .filter(tc => toStr(tc?.input).trim() || toStr(tc?.output).trim())
             .map((tc, i) => ({
-                id: tc.id && tc.id.length > 5 ? tc.id : `tc-${now}-${i}`,
-                input: tc.input.trim(),
-                output: tc.output.trim(),
-                hidden: tc.hidden ?? true,
+                id: tc?.id && typeof tc.id === 'string' && tc.id.length > 5 ? tc.id : `tc-${now}-${i}`,
+                input: toStr(tc?.input).trim(),
+                output: toStr(tc?.output).trim(),
+                hidden: tc?.hidden ?? true,
             }));
 
         const problemData: Problem = {
@@ -354,8 +355,7 @@ export function AdminProblemForm() {
             }
             router.push(`/admin/problems?comp=${encodeURIComponent(activeComp.accessCode)}`);
         } catch (err: any) {
-            setToastMessage({ text: err?.message || 'Failed to save problem', type: 'error' });
-            setTimeout(() => setToastMessage(null), 3500);
+            showToast(err?.message || 'Failed to save problem', 'error');
         } finally {
             setIsSaving(false);
         }
