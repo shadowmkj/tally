@@ -60,6 +60,7 @@ async fn main() -> Result<(), anyhow::Error> {
     );
 
     let docker = runner::create_docker_client(&cli.docker_socket)?;
+    runner::verify_docker_connection(&docker, &cli.docker_socket).await?;
     println!("Successfully connected to Docker daemon.");
 
     if let Some(queue) = cli.listen_queue {
