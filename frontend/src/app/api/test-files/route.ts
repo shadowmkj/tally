@@ -1,39 +1,51 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 
-function getCodeTestsDir(): string {
+async function getCodeTestsDir(): Promise<string> {
+    if (process.env.CODE_TESTS_DIR) {
+        const customPath = path.resolve(process.env.CODE_TESTS_DIR);
+        await fs.mkdir(customPath, { recursive: true });
+        return customPath;
+    }
     const parentPath = path.resolve(process.cwd(), '../code_tests');
-    if (fs.existsSync(parentPath)) {
+    try {
+        await fs.stat(parentPath);
         return parentPath;
+    } catch {
+        const currentPath = path.resolve(process.cwd(), 'code_tests');
+        await fs.mkdir(currentPath, { recursive: true });
+        return currentPath;
     }
-    const currentPath = path.resolve(process.cwd(), 'code_tests');
-    if (!fs.existsSync(currentPath)) {
-        fs.mkdirSync(currentPath, { recursive: true });
-    }
-    return currentPath;
 }
 
 function parseTestCasesContent(rawContent: string) {
     const trimmed = rawContent.trim();
     let items: any[] = [];
+    const parseErrors: string[] = [];
 
     if (trimmed.startsWith('[')) {
         try {
-            items = JSON.parse(trimmed);
-        } catch (e) {
-            console.error('Failed to parse JSON array:', e);
+            const parsed = JSON.parse(trimmed);
+            if (Array.isArray(parsed)) {
+                items = parsed;
+            } else {
+                parseErrors.push('Failed to parse JSON array: Expected top-level JSON array');
+            }
+        } catch (e: any) {
+            parseErrors.push(`Failed to parse JSON array: ${e?.message || String(e)}`);
         }
     } else {
         // Line by line JSONL parsing
         const lines = trimmed.split('\n');
-        for (const line of lines) {
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
             const l = line.trim();
             if (!l) continue;
             try {
                 items.push(JSON.parse(l));
-            } catch (e) {
-                // Ignore non-json lines
+            } catch (e: any) {
+                parseErrors.push(`Line ${i + 1}: ${e?.message || String(e)}`);
             }
         }
     }
@@ -67,13 +79,13 @@ function parseTestCasesContent(rawContent: string) {
         });
     });
 
-    return { sampleTestCases, hiddenTestCases, rawItems: items };
+    return { sampleTestCases, hiddenTestCases, rawItems: items, parseErrors };
 }
 
 // GET: List existing files in code_tests or read specific file content
 export async function GET(req: Request) {
     try {
-        const dir = getCodeTestsDir();
+        const dir = await getCodeTestsDir();
         const { searchParams } = new URL(req.url);
         const fileName = searchParams.get('file');
 
@@ -81,23 +93,28 @@ export async function GET(req: Request) {
             const safeName = path.basename(fileName);
             const filePath = path.join(dir, safeName);
 
-            if (!fs.existsSync(filePath)) {
-                return NextResponse.json({ error: `File '${safeName}' not found in code_tests directory` }, { status: 404 });
+            try {
+                const rawContent = await fs.readFile(filePath, 'utf-8');
+                const parsed = parseTestCasesContent(rawContent);
+
+                return NextResponse.json({
+                    filename: safeName,
+                    rawContent,
+                    sampleTestCases: parsed.sampleTestCases,
+                    hiddenTestCases: parsed.hiddenTestCases,
+                    count: parsed.hiddenTestCases.length,
+                    parseErrors: parsed.parseErrors,
+                });
+            } catch (err: any) {
+                if (err?.code === 'ENOENT') {
+                    return NextResponse.json({ error: `File '${safeName}' not found in code_tests directory` }, { status: 404 });
+                }
+                throw err;
             }
-
-            const rawContent = fs.readFileSync(filePath, 'utf-8');
-            const parsed = parseTestCasesContent(rawContent);
-
-            return NextResponse.json({
-                filename: safeName,
-                rawContent,
-                sampleTestCases: parsed.sampleTestCases,
-                hiddenTestCases: parsed.hiddenTestCases,
-                count: parsed.hiddenTestCases.length,
-            });
         }
 
-        const files = fs.readdirSync(dir).filter(f => f.endsWith('.jsonl') || f.endsWith('.json') || f.endsWith('.txt'));
+        const allFiles = await fs.readdir(dir);
+        const files = allFiles.filter(f => f.endsWith('.jsonl') || f.endsWith('.json') || f.endsWith('.txt'));
 
         return NextResponse.json({ files });
     } catch (err: any) {
@@ -109,7 +126,7 @@ export async function GET(req: Request) {
 // POST: Upload or write a test case file into code_tests directory
 export async function POST(req: Request) {
     try {
-        const dir = getCodeTestsDir();
+        const dir = await getCodeTestsDir();
         const contentType = req.headers.get('content-type') || '';
 
         let fileName = '';
@@ -142,7 +159,7 @@ export async function POST(req: Request) {
         }
 
         const filePath = path.join(dir, fileName);
-        fs.writeFileSync(filePath, fileContent, 'utf-8');
+        await fs.writeFile(filePath, fileContent, 'utf-8');
 
         const parsed = parseTestCasesContent(fileContent);
 
@@ -153,6 +170,7 @@ export async function POST(req: Request) {
             sampleTestCases: parsed.sampleTestCases,
             hiddenTestCases: parsed.hiddenTestCases,
             count: parsed.hiddenTestCases.length,
+            parseErrors: parsed.parseErrors,
             message: `File '${fileName}' successfully saved to code_tests folder.`,
         });
     } catch (err: any) {
