@@ -74,7 +74,7 @@ export function AdminProblemsManager() {
         router.push(`/admin/problems/create?comp=${encodeURIComponent(selectedCompCode)}&edit=${encodeURIComponent(p.id)}`);
     };
 
-    const handleDuplicateProblem = (p: Problem) => {
+    const handleDuplicateProblem = async (p: Problem) => {
         if (!activeComp) return;
         const now = Date.now();
         const rand = Math.random().toString(36).substring(2, 7);
@@ -86,8 +86,12 @@ export function AdminProblemsManager() {
             sampleTestCases: (p.sampleTestCases || []).map((st, i) => ({ ...st, id: `st-${now}-${i}` })),
             testCases: (p.testCases || []).map((tc, i) => ({ ...tc, id: `tc-${now}-${i}` })),
         };
-        addProblem(activeComp.id, dupProblem);
-        showToast(`Problem "${dupProblem.title}" duplicated successfully!`);
+        try {
+            await addProblem(activeComp.id, dupProblem);
+            showToast(`Problem "${dupProblem.title}" duplicated successfully!`);
+        } catch (err: any) {
+            showToast(err?.message || 'Failed to duplicate problem', 'error');
+        }
     };
 
     const handleDeleteConfirm = async () => {

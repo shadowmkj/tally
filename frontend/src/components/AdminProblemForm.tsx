@@ -352,7 +352,7 @@ export function AdminProblemForm() {
             } else {
                 await addProblem(activeComp.id, problemData);
             }
-            router.push(`/admin/problems?comp=${activeComp.accessCode}`);
+            router.push(`/admin/problems?comp=${encodeURIComponent(activeComp.accessCode)}`);
         } catch (err: any) {
             setToastMessage({ text: err?.message || 'Failed to save problem', type: 'error' });
             setTimeout(() => setToastMessage(null), 3500);
@@ -401,7 +401,7 @@ export function AdminProblemForm() {
                     <div className="flex items-center gap-4">
                         <button
                             type="button"
-                            onClick={() => router.push(`/admin/problems?comp=${selectedCompCode}`)}
+                            onClick={() => router.push(`/admin/problems?comp=${encodeURIComponent(selectedCompCode)}`)}
                             className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-100 transition-all cursor-pointer group"
                             title="Back to Problems Manager"
                         >
@@ -428,7 +428,7 @@ export function AdminProblemForm() {
                     <div className="flex items-center gap-3">
                         <button
                             type="button"
-                            onClick={() => router.push(`/admin/problems?comp=${selectedCompCode}`)}
+                            onClick={() => router.push(`/admin/problems?comp=${encodeURIComponent(selectedCompCode)}`)}
                             className="px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-300 text-xs font-semibold cursor-pointer"
                         >
                             Cancel
@@ -1079,7 +1079,7 @@ export function AdminProblemForm() {
                         <div className="flex items-center gap-3">
                             <button
                                 type="button"
-                                onClick={() => router.push(`/admin/problems?comp=${selectedCompCode}`)}
+                                onClick={() => router.push(`/admin/problems?comp=${encodeURIComponent(selectedCompCode)}`)}
                                 className="px-5 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold cursor-pointer"
                             >
                                 Cancel
