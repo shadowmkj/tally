@@ -142,4 +142,24 @@ describe('Test Files API Route (/api/test-files)', () => {
         expect(data.parseErrors.length).toBe(1);
         expect(data.parseErrors[0]).toContain('Line 2');
     });
+
+    test('POST /api/test-files returns 400 when file content exceeds 10MB limit', async () => {
+        const testFileName = `unit-test-oversized-${Date.now()}.jsonl`;
+        const oversizedContent = 'a'.repeat(10 * 1024 * 1024 + 1);
+
+        const req = new Request('http://localhost:3000/api/test-files', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                filename: testFileName,
+                content: oversizedContent,
+            }),
+        });
+
+        const res = await POST(req);
+        expect(res.status).toBe(400);
+
+        const data = await res.json();
+        expect(data.error).toContain('exceeds maximum allowed limit');
+    });
 });

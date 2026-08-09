@@ -137,6 +137,8 @@ export async function GET(req: Request) {
     }
 }
 
+const MAX_UPLOAD_SIZE_BYTES = 10 * 1024 * 1024; // 10MB (sufficient for 500+ test cases)
+
 // POST: Upload or write a test case file into code_tests directory
 export async function POST(req: Request) {
     try {
@@ -166,6 +168,10 @@ export async function POST(req: Request) {
                 return NextResponse.json({ error: 'No file provided in form upload' }, { status: 400 });
             }
 
+            if (file.size > MAX_UPLOAD_SIZE_BYTES) {
+                return NextResponse.json({ error: 'File size exceeds maximum allowed limit (10MB)' }, { status: 400 });
+            }
+
             const name = customName?.trim() || file.name;
             fileName = path.basename(name);
             fileContent = await file.text();
@@ -173,6 +179,9 @@ export async function POST(req: Request) {
             const body = await req.json();
             if (!body.filename || !body.content) {
                 return NextResponse.json({ error: 'Missing filename or content in JSON request' }, { status: 400 });
+            }
+            if (typeof body.content === 'string' && Buffer.byteLength(body.content, 'utf-8') > MAX_UPLOAD_SIZE_BYTES) {
+                return NextResponse.json({ error: 'File size exceeds maximum allowed limit (10MB)' }, { status: 400 });
             }
             fileName = path.basename(body.filename);
             fileContent = body.content;
