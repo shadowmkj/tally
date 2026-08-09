@@ -452,7 +452,10 @@ int main() {{
 
 /// Connect to Docker daemon using unix://, tcp://, or http:// endpoint URL.
 pub fn create_docker_client(endpoint: &str) -> Result<Docker> {
-    if endpoint.starts_with("tcp://") || endpoint.starts_with("http://") || endpoint.starts_with("https://") {
+    if endpoint.starts_with("tcp://")
+        || endpoint.starts_with("http://")
+        || endpoint.starts_with("https://")
+    {
         Docker::connect_with_http(endpoint, 120, bollard::API_DEFAULT_VERSION)
             .context("while connecting to Docker over HTTP/TCP")
     } else {
