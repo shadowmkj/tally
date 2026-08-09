@@ -515,7 +515,19 @@ mod tests {
 
     #[test]
     fn test_create_docker_client_https_endpoint() {
+        let temp_dir = tempfile::tempdir().expect("failed to create temp dir");
+        let cert_dir = temp_dir.path();
+        std::fs::write(cert_dir.join("key.pem"), "key").unwrap();
+        std::fs::write(cert_dir.join("cert.pem"), "cert").unwrap();
+        std::fs::write(cert_dir.join("ca.pem"), "ca").unwrap();
+
+        unsafe {
+            std::env::set_var("DOCKER_CERT_PATH", cert_dir.to_str().unwrap());
+        }
         let client = create_docker_client("https://127.0.0.1:2376");
+        unsafe {
+            std::env::remove_var("DOCKER_CERT_PATH");
+        }
         assert!(client.is_ok(), "HTTPS endpoint client creation failed");
     }
 
