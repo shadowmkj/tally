@@ -46,7 +46,7 @@ export function AdminProblemsManager() {
 
     const handleSelectCompChange = (newCode: string) => {
         setSelectedCompCode(newCode);
-        router.replace(`/admin/problems?comp=${newCode}`);
+        router.replace(`/admin/problems?comp=${encodeURIComponent(newCode)}`);
     };
 
     // Search and filter states
@@ -67,11 +67,11 @@ export function AdminProblemsManager() {
     const [isDeleting, setIsDeleting] = useState(false);
 
     const handleOpenAddPage = () => {
-        router.push(`/admin/problems/create?comp=${selectedCompCode}`);
+        router.push(`/admin/problems/create?comp=${encodeURIComponent(selectedCompCode)}`);
     };
 
     const handleOpenEditPage = (p: Problem) => {
-        router.push(`/admin/problems/create?comp=${selectedCompCode}&edit=${p.id}`);
+        router.push(`/admin/problems/create?comp=${encodeURIComponent(selectedCompCode)}&edit=${encodeURIComponent(p.id)}`);
     };
 
     const handleDuplicateProblem = (p: Problem) => {
