@@ -455,43 +455,127 @@ export function AdminProblemsManager() {
 
             {/* DELETE PROBLEM CONFIRMATION MODAL */}
             {deletingProblem && (
-                <ModalPortal>
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/80 backdrop-blur-md animate-fadeIn">
-                        <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-6 space-y-6 shadow-2xl">
-                            <div className="flex items-center gap-4">
-                                <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400">
-                                    <AlertCircle className="w-6 h-6 stroke-[2]" />
-                                </div>
-                                <div>
-                                    <h3 className="text-lg font-black text-zinc-100">Delete Problem?</h3>
-                                    <p className="text-xs text-zinc-400 mt-0.5">This action cannot be undone.</p>
-                                </div>
-                            </div>
-
-                            <p className="text-xs text-zinc-300 bg-zinc-950/60 p-3 rounded-xl border border-zinc-800/60">
-                                Are you sure you want to delete <strong className="text-rose-300 font-bold">{deletingProblem.title}</strong> from competition <span className="font-mono text-primary-400">{activeComp?.accessCode}</span>?
-                            </p>
-
-                            <div className="flex items-center justify-end gap-3 pt-2">
-                                <button
-                                    onClick={() => setDeletingProblem(null)}
-                                    disabled={isDeleting}
-                                    className="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold cursor-pointer"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={handleDeleteConfirm}
-                                    disabled={isDeleting}
-                                    className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center gap-2 cursor-pointer shadow-lg shadow-rose-600/20"
-                                >
-                                    {isDeleting ? 'Deleting...' : 'Confirm Delete'}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </ModalPortal>
+                <DeleteConfirmationModal
+                    problem={deletingProblem}
+                    activeCompCode={activeComp?.accessCode}
+                    isDeleting={isDeleting}
+                    onConfirm={handleDeleteConfirm}
+                    onCancel={() => setDeletingProblem(null)}
+                />
             )}
         </div>
+    );
+}
+
+interface DeleteConfirmationModalProps {
+    problem: Problem;
+    activeCompCode?: string;
+    isDeleting: boolean;
+    onConfirm: () => void;
+    onCancel: () => void;
+}
+
+function DeleteConfirmationModal({
+    problem,
+    activeCompCode,
+    isDeleting,
+    onConfirm,
+    onCancel,
+}: DeleteConfirmationModalProps) {
+    const cancelButtonRef = React.useRef<HTMLButtonElement>(null);
+    const dialogRef = React.useRef<HTMLDivElement>(null);
+    const previousFocusRef = React.useRef<HTMLElement | null>(null);
+
+    React.useEffect(() => {
+        previousFocusRef.current = document.activeElement as HTMLElement | null;
+        cancelButtonRef.current?.focus();
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                if (!isDeleting) {
+                    onCancel();
+                }
+                return;
+            }
+
+            if (e.key === 'Tab' && dialogRef.current) {
+                const focusables = dialogRef.current.querySelectorAll<HTMLElement>(
+                    'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+                );
+                if (focusables.length === 0) return;
+
+                const first = focusables[0];
+                const last = focusables[focusables.length - 1];
+
+                if (e.shiftKey) {
+                    if (document.activeElement === first) {
+                        e.preventDefault();
+                        last.focus();
+                    }
+                } else {
+                    if (document.activeElement === last) {
+                        e.preventDefault();
+                        first.focus();
+                    }
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            if (previousFocusRef.current && typeof previousFocusRef.current.focus === 'function') {
+                previousFocusRef.current.focus();
+            }
+        };
+    }, [isDeleting, onCancel]);
+
+    return (
+        <ModalPortal>
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/80 backdrop-blur-md animate-fadeIn">
+                <div
+                    ref={dialogRef}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="delete-dialog-title"
+                    className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-6 space-y-6 shadow-2xl"
+                >
+                    <div className="flex items-center gap-4">
+                        <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400">
+                            <AlertCircle className="w-6 h-6 stroke-[2]" />
+                        </div>
+                        <div>
+                            <h3 id="delete-dialog-title" className="text-lg font-black text-zinc-100">
+                                Delete Problem?
+                            </h3>
+                            <p className="text-xs text-zinc-400 mt-0.5">This action cannot be undone.</p>
+                        </div>
+                    </div>
+
+                    <p className="text-xs text-zinc-300 bg-zinc-950/60 p-3 rounded-xl border border-zinc-800/60">
+                        Are you sure you want to delete <strong className="text-rose-300 font-bold">{problem.title}</strong> from competition <span className="font-mono text-primary-400">{activeCompCode}</span>?
+                    </p>
+
+                    <div className="flex items-center justify-end gap-3 pt-2">
+                        <button
+                            ref={cancelButtonRef}
+                            onClick={onCancel}
+                            disabled={isDeleting}
+                            className="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold cursor-pointer"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={onConfirm}
+                            disabled={isDeleting}
+                            className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center gap-2 cursor-pointer shadow-lg shadow-rose-600/20"
+                        >
+                            {isDeleting ? 'Deleting...' : 'Confirm Delete'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </ModalPortal>
     );
 }
