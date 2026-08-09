@@ -101,6 +101,15 @@ async function checkAdminAuth(reqHeaders: Headers) {
     }
 }
 
+const SAFE_FILENAME_REGEX = /^[a-zA-Z0-9_-]+\.(jsonl|json|txt)$/;
+
+function isValidFileName(name: string): boolean {
+    if (!name || name.startsWith('.') || name.includes('/') || name.includes('\\') || name.includes('..')) {
+        return false;
+    }
+    return SAFE_FILENAME_REGEX.test(name);
+}
+
 // GET: List existing files in code_tests or read specific file content
 export async function GET(req: Request) {
     try {
@@ -120,6 +129,9 @@ export async function GET(req: Request) {
         const fileName = searchParams.get('file');
 
         if (fileName) {
+            if (!isValidFileName(fileName)) {
+                return NextResponse.json({ error: 'Invalid filename or unsupported extension' }, { status: 400 });
+            }
             const safeName = path.basename(fileName);
             const filePath = path.join(dir, safeName);
 
@@ -155,14 +167,6 @@ export async function GET(req: Request) {
 }
 
 const MAX_UPLOAD_SIZE_BYTES = 10 * 1024 * 1024; // 10MB (sufficient for 500+ test cases)
-const SAFE_FILENAME_REGEX = /^[a-zA-Z0-9_-]+\.(jsonl|json|txt)$/;
-
-function isValidFileName(name: string): boolean {
-    if (!name || name.startsWith('.') || name.includes('/') || name.includes('\\') || name.includes('..')) {
-        return false;
-    }
-    return SAFE_FILENAME_REGEX.test(name);
-}
 
 // POST: Upload or write a test case file into code_tests directory
 export async function POST(req: Request) {
@@ -205,15 +209,26 @@ export async function POST(req: Request) {
             fileName = rawName;
             fileContent = await file.text();
         } else {
-            const body = await req.json();
-            if (!body.filename || !body.content) {
-                return NextResponse.json({ error: 'Missing filename or content in JSON request' }, { status: 400 });
+            let body: any;
+            try {
+                body = await req.json();
+            } catch {
+                return NextResponse.json({ error: 'Invalid or malformed JSON payload' }, { status: 400 });
             }
-            if (typeof body.content === 'string' && Buffer.byteLength(body.content, 'utf-8') > MAX_UPLOAD_SIZE_BYTES) {
+
+            if (!body || typeof body !== 'object' || Array.isArray(body)) {
+                return NextResponse.json({ error: 'Request body must be a JSON object' }, { status: 400 });
+            }
+
+            if (typeof body.filename !== 'string' || typeof body.content !== 'string' || !body.filename.trim() || !body.content.trim()) {
+                return NextResponse.json({ error: 'Missing or invalid filename or content in JSON request' }, { status: 400 });
+            }
+
+            if (Buffer.byteLength(body.content, 'utf-8') > MAX_UPLOAD_SIZE_BYTES) {
                 return NextResponse.json({ error: 'File size exceeds maximum allowed limit (10MB)' }, { status: 400 });
             }
 
-            const rawName = String(body.filename).trim();
+            const rawName = body.filename.trim();
             if (!isValidFileName(rawName)) {
                 return NextResponse.json({ error: 'Invalid filename. Must be an alphanumeric name ending with .jsonl, .json, or .txt' }, { status: 400 });
             }
