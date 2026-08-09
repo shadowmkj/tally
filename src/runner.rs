@@ -29,7 +29,9 @@ fn prepare_workspace(
     method_name: &str,
     type_schema: Option<&str>,
 ) -> Result<tempfile::TempDir> {
-    let dir = tempfile::tempdir()?;
+    let tmp_parent = crate_root().join("tmp");
+    std::fs::create_dir_all(&tmp_parent)?;
+    let dir = tempfile::Builder::new().tempdir_in(&tmp_parent)?;
     let root = crate_root();
 
     match language {
