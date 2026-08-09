@@ -1,5 +1,6 @@
-import { describe, test, expect, beforeAll, afterAll } from 'bun:test';
+import { describe, test, expect, beforeAll, afterAll, beforeEach, mock } from 'bun:test';
 import { GET, POST } from '../app/api/test-files/route';
+import { auth } from '../lib/auth';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -19,6 +20,13 @@ describe('Test Files API Route (/api/test-files)', () => {
         }
     });
 
+    beforeEach(() => {
+        (auth.api as any).getSession = mock(() => Promise.resolve({
+            user: { id: 'test-user-1', email: 'admin@example.com', name: 'Admin User' },
+            session: { id: 'test-session-1', userId: 'test-user-1' },
+        }));
+    });
+
     afterAll(async () => {
         try {
             await fs.rm(testDir, { recursive: true, force: true });
@@ -26,6 +34,32 @@ describe('Test Files API Route (/api/test-files)', () => {
             // Ignore cleanup error
         }
         delete process.env.CODE_TESTS_DIR;
+    });
+
+    test('GET /api/test-files returns 401 Unauthorized when session is missing', async () => {
+        (auth.api as any).getSession = mock(() => Promise.resolve(null));
+
+        const req = new Request('http://localhost:3000/api/test-files');
+        const res = await GET(req);
+        expect(res.status).toBe(401);
+
+        const data = await res.json();
+        expect(data.error).toBe('Unauthorized');
+    });
+
+    test('POST /api/test-files returns 401 Unauthorized when session is missing', async () => {
+        (auth.api as any).getSession = mock(() => Promise.resolve(null));
+
+        const req = new Request('http://localhost:3000/api/test-files', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename: 'test.jsonl', content: '[]' }),
+        });
+        const res = await POST(req);
+        expect(res.status).toBe(401);
+
+        const data = await res.json();
+        expect(data.error).toBe('Unauthorized');
     });
     test('GET /api/test-files lists existing test files in code_tests directory', async () => {
         const req = new Request('http://localhost:3000/api/test-files');
