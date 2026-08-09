@@ -139,6 +139,15 @@ describe('Test Files API Route (/api/test-files)', () => {
         expect(data.error).toContain('not found');
     });
 
+    test('GET /api/test-files?file=../secret.txt returns 400 for invalid filenames or path traversal attempts', async () => {
+        const req = new Request('http://localhost:3000/api/test-files?file=../secret.txt');
+        const res = await GET(req);
+        expect(res.status).toBe(400);
+
+        const data = await res.json();
+        expect(data.error).toContain('Invalid filename');
+    });
+
     test('POST /api/test-files saves JSON payload into code_tests directory', async () => {
         const testFileName = `unit-test-${Date.now()}.jsonl`;
         const testFilePath = path.join(testDir, testFileName);
@@ -271,7 +280,7 @@ describe('Test Files API Route (/api/test-files)', () => {
         const res1 = await POST(missingFilenameReq);
         expect(res1.status).toBe(400);
         const data1 = await res1.json();
-        expect(data1.error).toContain('Missing filename or content');
+        expect(data1.error).toContain('filename or content');
 
         const missingContentReq = new Request('http://localhost:3000/api/test-files', {
             method: 'POST',
@@ -281,7 +290,7 @@ describe('Test Files API Route (/api/test-files)', () => {
         const res2 = await POST(missingContentReq);
         expect(res2.status).toBe(400);
         const data2 = await res2.json();
-        expect(data2.error).toContain('Missing filename or content');
+        expect(data2.error).toContain('filename or content');
 
         const emptyBodyReq = new Request('http://localhost:3000/api/test-files', {
             method: 'POST',
@@ -291,7 +300,7 @@ describe('Test Files API Route (/api/test-files)', () => {
         const res3 = await POST(emptyBodyReq);
         expect(res3.status).toBe(400);
         const data3 = await res3.json();
-        expect(data3.error).toContain('Missing filename or content');
+        expect(data3.error).toContain('filename or content');
     });
 
     test('POST /api/test-files returns 400 when multipart form upload is missing file', async () => {
@@ -310,7 +319,7 @@ describe('Test Files API Route (/api/test-files)', () => {
         expect(data.error).toContain('No file provided');
     });
 
-    test('POST /api/test-files returns 500 when JSON body is malformed', async () => {
+    test('POST /api/test-files returns 400 when JSON body is malformed', async () => {
         const req = new Request('http://localhost:3000/api/test-files', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -318,9 +327,53 @@ describe('Test Files API Route (/api/test-files)', () => {
         });
 
         const res = await POST(req);
-        expect(res.status).toBe(500);
+        expect(res.status).toBe(400);
 
         const data = await res.json();
-        expect(data.error).toBe('Failed to save test file');
+        expect(data.error).toContain('JSON');
+    });
+
+    test('POST /api/test-files returns 400 for non-object JSON bodies', async () => {
+        const arrayReq = new Request('http://localhost:3000/api/test-files', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(['item1', 'item2']),
+        });
+        const res1 = await POST(arrayReq);
+        expect(res1.status).toBe(400);
+        const data1 = await res1.json();
+        expect(data1.error).toContain('JSON object');
+
+        const numberReq = new Request('http://localhost:3000/api/test-files', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(12345),
+        });
+        const res2 = await POST(numberReq);
+        expect(res2.status).toBe(400);
+        const data2 = await res2.json();
+        expect(data2.error).toContain('JSON object');
+    });
+
+    test('POST /api/test-files returns 400 when filename or content are non-string types', async () => {
+        const nonStringFilenameReq = new Request('http://localhost:3000/api/test-files', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename: 12345, content: 'sample content' }),
+        });
+        const res1 = await POST(nonStringFilenameReq);
+        expect(res1.status).toBe(400);
+        const data1 = await res1.json();
+        expect(data1.error).toContain('Missing or invalid filename or content');
+
+        const nonStringContentReq = new Request('http://localhost:3000/api/test-files', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename: 'test.jsonl', content: { key: 'value' } }),
+        });
+        const res2 = await POST(nonStringContentReq);
+        expect(res2.status).toBe(400);
+        const data2 = await res2.json();
+        expect(data2.error).toContain('Missing or invalid filename or content');
     });
 });
