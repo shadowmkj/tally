@@ -26,14 +26,25 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
 
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+
       - name: Pre-pull Docker images for integration tests
         run: |
           docker pull python:3.9-slim
           docker pull openjdk:27-ea-slim
           docker pull buildpack-deps:bookworm
 
-      - name: Run Cargo tests
-        run: cargo test -- --test-threads=1
+      - name: Run Cargo tests with Coverage
+        run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info -- --test-threads=1
+
+      - name: Upload Rust Coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./lcov.info
+          flags: rust
+          fail_ci_if_error: false
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -58,6 +69,14 @@ jobs:
         working-directory: frontend
         run: pnpm db:generate
 
-      - name: Run Frontend Tests via Bun
+      - name: Run Frontend Tests via Bun with Coverage
         working-directory: frontend
-        run: pnpm test
+        run: pnpm test --coverage
+
+      - name: Upload Frontend Coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./frontend/coverage/lcov.info
+          flags: frontend
+          fail_ci_if_error: false
