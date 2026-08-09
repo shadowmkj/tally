@@ -24,6 +24,7 @@ import {
 import type { Competition, Problem, Difficulty } from '@/context/CompetitionContext';
 import { authClient } from '@/lib/auth-client';
 import { createCompetitionSchema, problemSchema } from '@/lib/validations';
+import { SUPPORTED_LANGUAGES, LanguageId } from '@/lib/languages';
 import { ModalPortal } from '@/components/ModalPortal';
 
 interface AdminPortalProps {
@@ -84,7 +85,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     const [probSampleIn, setProbSampleIn] = useState('3\n1 1 1\n2');
     const [probSampleOut, setProbSampleOut] = useState('2');
 
-    const [starterTab, setStarterTab] = useState<'python' | 'cpp' | 'java' | 'c' | 'javascript'>('python');
+    const [starterTab, setStarterTab] = useState<LanguageId>(SUPPORTED_LANGUAGES[0].id);
     const [probStarterPython, setProbStarterPython] = useState<string>('');
     const [probStarterCpp, setProbStarterCpp] = useState<string>('');
     const [probStarterJava, setProbStarterJava] = useState<string>('');
@@ -1050,17 +1051,17 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                                     </div>
 
                                     <div className="flex border-b border-zinc-800 gap-1 overflow-x-auto">
-                                        {(['python', 'cpp', 'java', 'c', 'javascript'] as const).map(lang => (
+                                        {SUPPORTED_LANGUAGES.map(lang => (
                                             <button
-                                                key={lang}
+                                                key={lang.id}
                                                 type="button"
-                                                onClick={() => setStarterTab(lang)}
-                                                className={`px-3 py-1.5 text-xs font-mono rounded-t-lg transition-colors cursor-pointer capitalize ${starterTab === lang
+                                                onClick={() => setStarterTab(lang.id)}
+                                                className={`px-3 py-1.5 text-xs font-mono rounded-t-lg transition-colors cursor-pointer capitalize ${starterTab === lang.id
                                                     ? 'bg-zinc-800 text-primary-400 font-bold border-t-2 border-primary-500'
                                                     : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40'
                                                     }`}
                                             >
-                                                {lang === 'cpp' ? 'C++' : lang === 'javascript' ? 'JavaScript' : lang}
+                                                {lang.name}
                                             </button>
                                         ))}
                                     </div>

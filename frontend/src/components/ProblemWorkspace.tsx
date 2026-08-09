@@ -22,6 +22,7 @@ import {
     ArrowLeft
 } from 'lucide-react';
 import type { Problem, Submission, TestCaseResult, Language, SubmissionStatus, UserSession } from '@/context/CompetitionContext';
+import { SUPPORTED_LANGUAGES } from '@/lib/languages';
 
 function runCodeOnTestCases(problem: Problem, code: string, language: Language, customInput?: string) {
     const total = (problem.sampleTestCases?.length || 0) + (problem.testCases?.length || 0) || 1;
@@ -456,11 +457,11 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
                                 onChange={(e) => setLanguage(e.target.value as Language)}
                                 className="bg-zinc-950 border border-zinc-800 rounded-lg px-2.5 py-1 text-xs font-mono font-semibold text-primary-300 focus:outline-none focus:border-primary-500 cursor-pointer"
                             >
-                                <option value="python">Python 3</option>
-                                <option value="cpp">C++ 20</option>
-                                <option value="java">Java 17</option>
-                                <option value="c">C (GCC)</option>
-                                <option value="javascript">JavaScript (Node.js)</option>
+                                {SUPPORTED_LANGUAGES.map(lang => (
+                                    <option key={lang.id} value={lang.id}>
+                                        {lang.label}
+                                    </option>
+                                ))}
                             </select>
                         </div>
 

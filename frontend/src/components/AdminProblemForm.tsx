@@ -27,6 +27,7 @@ import type { Problem, Difficulty, SampleTestCase, TestCase } from '@/context/Co
 import { useSelectedCompetition } from '@/hooks/useSelectedCompetition';
 import { authClient } from '@/lib/auth-client';
 import { problemSchema } from '@/lib/validations';
+import { SUPPORTED_LANGUAGES, LanguageId } from '@/lib/languages';
 import { AdminLoginForm } from '@/components/AdminLoginForm';
 import { Input } from '@/components/ui/input';
 
@@ -80,16 +81,16 @@ export function AdminProblemForm() {
     const [attachedTestFile, setAttachedTestFile] = useState<string | null>(null);
 
     // Test cases
-    const [sampleTestCases, setSampleTestCases] = useState<Array<{ id: string; input: string; output: string; explanation: string }>>([
-        { id: 'st-1', input: '3\n1 2 3', output: '6', explanation: 'Sum of 1+2+3 = 6' }
+    const [sampleTestCases, setSampleTestCases] = useState<Array<{ id: string; input: string; output: string; explanation: string; persisted?: boolean }>>([
+        { id: 'st-1', input: '3\n1 2 3', output: '6', explanation: 'Sum of 1+2+3 = 6', persisted: false }
     ]);
-    const [hiddenTestCases, setHiddenTestCases] = useState<Array<{ id: string; input: string; output: string; hidden: boolean }>>([
-        { id: 'tc-1', input: '3\n1 2 3', output: '6', hidden: false },
-        { id: 'tc-2', input: '5\n10 20 30 40 50', output: '150', hidden: true }
+    const [hiddenTestCases, setHiddenTestCases] = useState<Array<{ id: string; input: string; output: string; hidden: boolean; persisted?: boolean }>>([
+        { id: 'tc-1', input: '3\n1 2 3', output: '6', hidden: false, persisted: false },
+        { id: 'tc-2', input: '5\n10 20 30 40 50', output: '150', hidden: true, persisted: false }
     ]);
 
     // Starter templates
-    const [starterLangTab, setStarterLangTab] = useState<'python' | 'cpp' | 'java' | 'c' | 'javascript'>('python');
+    const [starterLangTab, setStarterLangTab] = useState<LanguageId>(SUPPORTED_LANGUAGES[0].id);
     const [starterPython, setStarterPython] = useState('class Solution:\n    def solve(self, nums: List[int], target: int) -> int:\n        # Write your solution here\n        pass');
     const [starterCpp, setStarterCpp] = useState('#include <iostream>\n#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    int solve(vector<int>& nums, int target) {\n        // Write your solution here\n        return 0;\n    }\n};');
     const [starterJava, setStarterJava] = useState('import java.util.*;\n\npublic class Solution {\n    public int solve(int[] nums, int target) {\n        // Write your solution here\n        return 0;\n    }\n}');
@@ -143,9 +144,10 @@ export function AdminProblemForm() {
                         id: st.id || `st-${i}`,
                         input: st.input || '',
                         output: st.output || '',
-                        explanation: st.explanation || ''
+                        explanation: st.explanation || '',
+                        persisted: true,
                     }))
-                    : [{ id: 'st-1', input: '', output: '', explanation: '' }]
+                    : [{ id: 'st-1', input: '', output: '', explanation: '', persisted: false }]
             );
 
             setHiddenTestCases(
@@ -154,9 +156,10 @@ export function AdminProblemForm() {
                         id: tc.id || `tc-${i}`,
                         input: tc.input || '',
                         output: tc.output || '',
-                        hidden: tc.hidden ?? true
+                        hidden: tc.hidden ?? true,
+                        persisted: true,
                     }))
-                    : [{ id: 'tc-1', input: '', output: '', hidden: true }]
+                    : [{ id: 'tc-1', input: '', output: '', hidden: true, persisted: false }]
             );
 
             setStarterPython(editingProblem.starterTemplates?.python || '');
@@ -305,7 +308,7 @@ export function AdminProblemForm() {
         const finalSampleTCs: SampleTestCase[] = sampleTestCases
             .filter(st => toStr(st?.input).trim() || toStr(st?.output).trim())
             .map((st, i) => ({
-                id: st?.id && typeof st.id === 'string' && st.id.length > 5 ? st.id : `st-${now}-${i}`,
+                id: st?.persisted && st?.id ? st.id : `st-${now}-${i}`,
                 input: toStr(st?.input).trim(),
                 output: toStr(st?.output).trim(),
                 explanation: toStr(st?.explanation).trim() || null,
@@ -314,7 +317,7 @@ export function AdminProblemForm() {
         const finalHiddenTCs: TestCase[] = hiddenTestCases
             .filter(tc => toStr(tc?.input).trim() || toStr(tc?.output).trim())
             .map((tc, i) => ({
-                id: tc?.id && typeof tc.id === 'string' && tc.id.length > 5 ? tc.id : `tc-${now}-${i}`,
+                id: tc?.persisted && tc?.id ? tc.id : `tc-${now}-${i}`,
                 input: toStr(tc?.input).trim(),
                 output: toStr(tc?.output).trim(),
                 hidden: tc?.hidden ?? true,
@@ -384,11 +387,10 @@ export function AdminProblemForm() {
             {/* Toast Notification */}
             {toastMessage && (
                 <div className="fixed top-6 right-6 z-50 animate-fadeIn">
-                    <div className={`px-5 py-3 rounded-2xl shadow-2xl border backdrop-blur-xl flex items-center gap-3 text-sm font-medium ${
-                        toastMessage.type === 'success'
-                            ? 'bg-emerald-950/90 border-emerald-500/30 text-emerald-300'
-                            : 'bg-rose-950/90 border-rose-500/30 text-rose-300'
-                    }`}>
+                    <div className={`px-5 py-3 rounded-2xl shadow-2xl border backdrop-blur-xl flex items-center gap-3 text-sm font-medium ${toastMessage.type === 'success'
+                        ? 'bg-emerald-950/90 border-emerald-500/30 text-emerald-300'
+                        : 'bg-rose-950/90 border-rose-500/30 text-rose-300'
+                        }`}>
                         {toastMessage.type === 'success' ? <Check className="w-5 h-5 text-emerald-400" /> : <AlertCircle className="w-5 h-5 text-rose-400" />}
                         <span>{toastMessage.text}</span>
                     </div>
@@ -844,7 +846,7 @@ export function AdminProblemForm() {
                                 </h3>
                                 <button
                                     type="button"
-                                    onClick={() => setSampleTestCases(prev => [...prev, { id: `st-${Date.now()}-${prev.length}`, input: '', output: '', explanation: '' }])}
+                                    onClick={() => setSampleTestCases(prev => [...prev, { id: `st-${Date.now()}-${prev.length}`, input: '', output: '', explanation: '', persisted: false }])}
                                     className="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-primary-300 font-bold text-xs flex items-center gap-1.5 cursor-pointer border border-zinc-700/60"
                                 >
                                     <Plus className="w-3.5 h-3.5" />
@@ -907,7 +909,7 @@ export function AdminProblemForm() {
                                 </h3>
                                 <button
                                     type="button"
-                                    onClick={() => setHiddenTestCases(prev => [...prev, { id: `tc-${Date.now()}-${prev.length}`, input: '', output: '', hidden: true }])}
+                                    onClick={() => setHiddenTestCases(prev => [...prev, { id: `tc-${Date.now()}-${prev.length}`, input: '', output: '', hidden: true, persisted: false }])}
                                     className="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-primary-300 font-bold text-xs flex items-center gap-1.5 cursor-pointer border border-zinc-700/60"
                                 >
                                     <Plus className="w-3.5 h-3.5" />
@@ -1001,18 +1003,18 @@ export function AdminProblemForm() {
 
                         {/* Language Selection Bar */}
                         <div className="flex items-center gap-2 border-b border-zinc-800 pb-3 overflow-x-auto">
-                            {['python', 'cpp', 'java', 'c', 'javascript'].map(lang => (
+                            {SUPPORTED_LANGUAGES.map(lang => (
                                 <button
-                                    key={lang}
+                                    key={lang.id}
                                     type="button"
-                                    onClick={() => setStarterLangTab(lang as any)}
+                                    onClick={() => setStarterLangTab(lang.id)}
                                     className={`px-4 py-2 rounded-xl text-xs font-mono uppercase font-bold cursor-pointer transition-all ${
-                                        starterLangTab === lang
+                                        starterLangTab === lang.id
                                             ? 'bg-primary-500/10 border border-primary-500/30 text-primary-400 shadow'
                                             : 'text-zinc-400 hover:text-zinc-200'
                                     }`}
                                 >
-                                    {lang}
+                                    {lang.name}
                                 </button>
                             ))}
                         </div>
