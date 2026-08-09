@@ -1,7 +1,32 @@
-import { describe, test, expect } from 'bun:test';
+import { describe, test, expect, beforeAll, afterAll } from 'bun:test';
 import { GET, POST } from '../app/api/test-files/route';
+import fs from 'fs/promises';
+import path from 'path';
 
 describe('Test Files API Route (/api/test-files)', () => {
+    const testDir = path.resolve(process.cwd(), 'tmp/unit_test_code_tests');
+
+    beforeAll(async () => {
+        process.env.CODE_TESTS_DIR = testDir;
+        await fs.mkdir(testDir, { recursive: true });
+
+        const sourcePath = path.resolve(process.cwd(), '../code_tests/two-sum.jsonl');
+        try {
+            const content = await fs.readFile(sourcePath, 'utf-8');
+            await fs.writeFile(path.join(testDir, 'two-sum.jsonl'), content, 'utf-8');
+        } catch {
+            await fs.writeFile(path.join(testDir, 'two-sum.jsonl'), '{"id": 1, "input": [2, 7], "expected": [0, 1]}', 'utf-8');
+        }
+    });
+
+    afterAll(async () => {
+        try {
+            await fs.rm(testDir, { recursive: true, force: true });
+        } catch {
+            // Ignore cleanup error
+        }
+        delete process.env.CODE_TESTS_DIR;
+    });
     test('GET /api/test-files lists existing test files in code_tests directory', async () => {
         const req = new Request('http://localhost:3000/api/test-files');
         const res = await GET(req);
@@ -23,6 +48,15 @@ describe('Test Files API Route (/api/test-files)', () => {
         expect(data.sampleTestCases.length).toBeGreaterThan(0);
         expect(data.hiddenTestCases.length).toBeGreaterThan(0);
         expect(data.count).toBe(data.hiddenTestCases.length);
+    });
+
+    test('GET /api/test-files?file=nonexistent-file.jsonl returns 404', async () => {
+        const req = new Request('http://localhost:3000/api/test-files?file=nonexistent-file.jsonl');
+        const res = await GET(req);
+        expect(res.status).toBe(404);
+
+        const data = await res.json();
+        expect(data.error).toContain('not found');
     });
 
     test('POST /api/test-files saves JSON payload into code_tests directory', async () => {
@@ -49,5 +83,29 @@ describe('Test Files API Route (/api/test-files)', () => {
         expect(data.filename).toBe(testFileName);
         expect(data.sampleTestCases.length).toBe(1);
         expect(data.hiddenTestCases.length).toBe(2);
+        expect(Array.isArray(data.parseErrors)).toBe(true);
+        expect(data.parseErrors.length).toBe(0);
+    });
+
+    test('POST /api/test-files returns parseErrors when file content contains malformed JSONL', async () => {
+        const testFileName = `unit-test-malformed-${Date.now()}.jsonl`;
+        const testContent = `{"id": 1, "input": 1, "expected": 2}\nINVALID_JSON_LINE\n{"id": 2, "input": 2, "expected": 4}`;
+
+        const req = new Request('http://localhost:3000/api/test-files', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                filename: testFileName,
+                content: testContent,
+            }),
+        });
+
+        const res = await POST(req);
+        expect(res.status).toBe(200);
+
+        const data = await res.json();
+        expect(data.success).toBe(true);
+        expect(data.parseErrors.length).toBe(1);
+        expect(data.parseErrors[0]).toContain('Line 2');
     });
 });
