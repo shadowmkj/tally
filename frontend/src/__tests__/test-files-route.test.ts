@@ -23,7 +23,7 @@ describe('Test Files API Route (/api/test-files)', () => {
 
     beforeEach(() => {
         (auth.api as any).getSession = mock(() => Promise.resolve({
-            user: { id: 'test-user-1', email: 'admin@example.com', name: 'Admin User' },
+            user: { id: 'test-user-1', email: 'admin@example.com', name: 'Admin User', role: 'admin' },
             session: { id: 'test-session-1', userId: 'test-user-1' },
         }));
     });
@@ -58,7 +58,7 @@ describe('Test Files API Route (/api/test-files)', () => {
         expect(res.status).toBe(401);
 
         const data = await res.json();
-        expect(data.error).toBe('Unauthorized');
+        expect(data.error).toContain('Unauthorized');
     });
 
     test('POST /api/test-files returns 401 Unauthorized when session is missing', async () => {
@@ -73,7 +73,39 @@ describe('Test Files API Route (/api/test-files)', () => {
         expect(res.status).toBe(401);
 
         const data = await res.json();
-        expect(data.error).toBe('Unauthorized');
+        expect(data.error).toContain('Unauthorized');
+    });
+
+    test('GET /api/test-files returns 401 Unauthorized when user is authenticated but not an admin', async () => {
+        (auth.api as any).getSession = mock(() => Promise.resolve({
+            user: { id: 'test-user-2', email: 'student@example.com', name: 'Student User', role: 'user' },
+            session: { id: 'test-session-2', userId: 'test-user-2' },
+        }));
+
+        const req = new Request('http://localhost:3000/api/test-files');
+        const res = await GET(req);
+        expect(res.status).toBe(401);
+
+        const data = await res.json();
+        expect(data.error).toContain('Unauthorized');
+    });
+
+    test('POST /api/test-files returns 401 Unauthorized when user is authenticated but not an admin', async () => {
+        (auth.api as any).getSession = mock(() => Promise.resolve({
+            user: { id: 'test-user-2', email: 'student@example.com', name: 'Student User', role: 'user' },
+            session: { id: 'test-session-2', userId: 'test-user-2' },
+        }));
+
+        const req = new Request('http://localhost:3000/api/test-files', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename: 'test.jsonl', content: '[]' }),
+        });
+        const res = await POST(req);
+        expect(res.status).toBe(401);
+
+        const data = await res.json();
+        expect(data.error).toContain('Unauthorized');
     });
     test('GET /api/test-files lists existing test files in code_tests directory', async () => {
         const req = new Request('http://localhost:3000/api/test-files');

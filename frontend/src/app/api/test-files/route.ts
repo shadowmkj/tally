@@ -84,6 +84,23 @@ function parseTestCasesContent(rawContent: string) {
     return { sampleTestCases, hiddenTestCases, rawItems: items, parseErrors };
 }
 
+async function checkAdminAuth(reqHeaders: Headers) {
+    try {
+        const session = await auth.api.getSession({ headers: reqHeaders });
+        if (!session || !session.user) {
+            return false;
+        }
+        const user = session.user as any;
+        if (user.role && user.role !== 'admin') {
+            return false;
+        }
+        return true;
+    } catch (err) {
+        console.error('Error verifying admin session:', err);
+        return false;
+    }
+}
+
 // GET: List existing files in code_tests or read specific file content
 export async function GET(req: Request) {
     try {
@@ -93,9 +110,9 @@ export async function GET(req: Request) {
         } catch {
             reqHeaders = req.headers;
         }
-        const session = await auth.api.getSession({ headers: reqHeaders });
-        if (!session || !session.user) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        const isAdmin = await checkAdminAuth(reqHeaders);
+        if (!isAdmin) {
+            return NextResponse.json({ error: 'Unauthorized: Admin authentication required' }, { status: 401 });
         }
 
         const dir = await getCodeTestsDir();
@@ -156,9 +173,9 @@ export async function POST(req: Request) {
         } catch {
             reqHeaders = req.headers;
         }
-        const session = await auth.api.getSession({ headers: reqHeaders });
-        if (!session || !session.user) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        const isAdmin = await checkAdminAuth(reqHeaders);
+        if (!isAdmin) {
+            return NextResponse.json({ error: 'Unauthorized: Admin authentication required' }, { status: 401 });
         }
 
         const dir = await getCodeTestsDir();
