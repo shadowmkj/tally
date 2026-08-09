@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { headers } from 'next/headers';
+import { auth } from '@/lib/auth';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -85,6 +87,17 @@ function parseTestCasesContent(rawContent: string) {
 // GET: List existing files in code_tests or read specific file content
 export async function GET(req: Request) {
     try {
+        let reqHeaders: Headers;
+        try {
+            reqHeaders = await headers();
+        } catch {
+            reqHeaders = req.headers;
+        }
+        const session = await auth.api.getSession({ headers: reqHeaders });
+        if (!session || !session.user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const dir = await getCodeTestsDir();
         const { searchParams } = new URL(req.url);
         const fileName = searchParams.get('file');
@@ -126,6 +139,17 @@ export async function GET(req: Request) {
 // POST: Upload or write a test case file into code_tests directory
 export async function POST(req: Request) {
     try {
+        let reqHeaders: Headers;
+        try {
+            reqHeaders = await headers();
+        } catch {
+            reqHeaders = req.headers;
+        }
+        const session = await auth.api.getSession({ headers: reqHeaders });
+        if (!session || !session.user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const dir = await getCodeTestsDir();
         const contentType = req.headers.get('content-type') || '';
 
