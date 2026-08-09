@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Tally Documentation & Setup Guide
+    url: https://github.com/your-username/tally/blob/main/CONTRIBUTING.md
+    about: Read our contributing guide for local setup, testing commands, and architecture overview.

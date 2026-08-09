@@ -1,0 +1,44 @@
+name: ✨ Feature Request
+description: Suggest an idea or feature enhancement for Tally
+title: "[FEAT]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for proposing a feature! Please provide as much detail as possible about your use case and proposed design.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement / Use Case
+      description: Is your feature request related to a problem or limitation? Please describe.
+      placeholder: I'm frustrated when...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution or feature you'd like to see implemented.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Have you considered any alternative solutions or workarounds?
+
+  - type: dropdown
+    id: target-area
+    attributes:
+      label: Primary Target Area
+      options:
+        - Admin Studio / Problem Creator UI
+        - Student Workspace & IDE
+        - Language Execution Drivers (C, C++, Java, Python, Go, Rust)
+        - Submissions Queue & Judger Mechanics
+        - Leaderboard & Contest Scoring
+        - Authentication & Permissions
