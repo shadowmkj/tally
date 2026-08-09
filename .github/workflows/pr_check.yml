@@ -54,6 +54,10 @@ jobs:
         working-directory: frontend
         run: pnpm install --frozen-lockfile
 
+      - name: Generate Prisma Client
+        working-directory: frontend
+        run: pnpm db:generate
+
       - name: Run Frontend Tests via Bun
         working-directory: frontend
         run: pnpm test
