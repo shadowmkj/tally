@@ -209,4 +209,66 @@ describe('Test Files API Route (/api/test-files)', () => {
         const data2 = await res2.json();
         expect(data2.error).toContain('already exists');
     });
+
+    test('POST /api/test-files returns 400 when filename or content is missing in JSON request', async () => {
+        const missingFilenameReq = new Request('http://localhost:3000/api/test-files', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content: '[]' }),
+        });
+        const res1 = await POST(missingFilenameReq);
+        expect(res1.status).toBe(400);
+        const data1 = await res1.json();
+        expect(data1.error).toContain('Missing filename or content');
+
+        const missingContentReq = new Request('http://localhost:3000/api/test-files', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename: 'test.jsonl' }),
+        });
+        const res2 = await POST(missingContentReq);
+        expect(res2.status).toBe(400);
+        const data2 = await res2.json();
+        expect(data2.error).toContain('Missing filename or content');
+
+        const emptyBodyReq = new Request('http://localhost:3000/api/test-files', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({}),
+        });
+        const res3 = await POST(emptyBodyReq);
+        expect(res3.status).toBe(400);
+        const data3 = await res3.json();
+        expect(data3.error).toContain('Missing filename or content');
+    });
+
+    test('POST /api/test-files returns 400 when multipart form upload is missing file', async () => {
+        const formData = new FormData();
+        formData.append('filename', 'test.jsonl');
+
+        const req = new Request('http://localhost:3000/api/test-files', {
+            method: 'POST',
+            body: formData,
+        });
+
+        const res = await POST(req);
+        expect(res.status).toBe(400);
+
+        const data = await res.json();
+        expect(data.error).toContain('No file provided');
+    });
+
+    test('POST /api/test-files returns 500 when JSON body is malformed', async () => {
+        const req = new Request('http://localhost:3000/api/test-files', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: 'invalid-json{{{',
+        });
+
+        const res = await POST(req);
+        expect(res.status).toBe(500);
+
+        const data = await res.json();
+        expect(data.error).toBe('Failed to save test file');
+    });
 });
