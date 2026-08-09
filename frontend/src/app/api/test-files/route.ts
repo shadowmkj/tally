@@ -122,7 +122,8 @@ export async function GET(req: Request) {
                 if (err?.code === 'ENOENT') {
                     return NextResponse.json({ error: `File '${safeName}' not found in code_tests directory` }, { status: 404 });
                 }
-                throw err;
+                console.error(`Failed to read test file '${safeName}':`, err);
+                return NextResponse.json({ error: 'Failed to read test file' }, { status: 500 });
             }
         }
 
@@ -132,7 +133,7 @@ export async function GET(req: Request) {
         return NextResponse.json({ files });
     } catch (err: any) {
         console.error('Failed in GET /api/test-files:', err);
-        return NextResponse.json({ error: err?.message || 'Failed to access code_tests' }, { status: 500 });
+        return NextResponse.json({ error: 'Failed to access code_tests' }, { status: 500 });
     }
 }
 
@@ -199,6 +200,6 @@ export async function POST(req: Request) {
         });
     } catch (err: any) {
         console.error('Failed in POST /api/test-files:', err);
-        return NextResponse.json({ error: err?.message || 'Failed to save test file' }, { status: 500 });
+        return NextResponse.json({ error: 'Failed to save test file' }, { status: 500 });
     }
 }
