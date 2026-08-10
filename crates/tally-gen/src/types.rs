@@ -1,13 +1,15 @@
 // ==============================================================================
-// Data Structures & Type Definitions
+// Domain Data Types & Enums
 // ==============================================================================
+
+// This module defines the core data structures used throughout tally-gen for
+// representing test cases and specifying export output formats.
 
 use clap::ValueEnum;
 use serde::{Deserialize, Serialize};
 
 /// Represents a single generated test case with its unique ID,
 /// generated input text, calculated expected output, and visibility state.
-#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct GeneratedTestCase {
     pub id: String,
