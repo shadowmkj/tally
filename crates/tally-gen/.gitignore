@@ -1,0 +1,12 @@
+# Local build artifacts
+/target
+
+# Generated testcase output files & directories
+/output.jsonl
+/*.jsonl
+/input.txt
+/failures/
+/tests/
+
+# OS metadata
+.DS_Store
