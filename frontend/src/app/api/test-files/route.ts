@@ -14,18 +14,18 @@ async function getCodeTestsDir(): Promise<string> {
 interface TestCasesParseResult {
     sampleTestCases: SampleTestCase[];
     hiddenTestCases: TestCase[];
-    rawItems: any[];
+    rawItems: unknown[];
     parseErrors: string[];
 }
 
 function parseTestCasesContent(content: string): TestCasesParseResult {
     const sampleTestCases: SampleTestCase[] = [];
     const hiddenTestCases: TestCase[] = [];
-    const items: any[] = [];
+    const items: unknown[] = [];
     const parseErrors: string[] = [];
 
     const trimmed = content.trim();
-    let rawArray: any[] = [];
+    let rawArray: unknown[] = [];
 
     if (trimmed.startsWith('[')) {
         try {
@@ -80,7 +80,7 @@ async function checkAdminAuth(reqHeaders: Headers) {
         if (!session || !session.user) {
             return false;
         }
-        const user = session.user as any;
+        const user = session.user as { role?: string };
         if (user.role && user.role !== 'admin') {
             return false;
         }
@@ -137,8 +137,8 @@ export async function GET(req: Request) {
                     count: parsed.hiddenTestCases.length,
                     parseErrors: parsed.parseErrors,
                 });
-            } catch (err: any) {
-                if (err?.code === 'ENOENT') {
+            } catch (err: unknown) {
+                if ((err as { code?: string })?.code === 'ENOENT') {
                     return NextResponse.json({ error: `File '${safeName}' not found in code_tests directory` }, { status: 404 });
                 }
                 console.error(`Failed to read test file '${safeName}':`, err);
@@ -150,7 +150,7 @@ export async function GET(req: Request) {
         const files = allFiles.filter(f => f.endsWith('.jsonl') || f.endsWith('.json') || f.endsWith('.txt'));
 
         return NextResponse.json({ files });
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error('Failed in GET /api/test-files:', err);
         return NextResponse.json({ error: 'Failed to access code_tests' }, { status: 500 });
     }
@@ -160,18 +160,12 @@ const MAX_UPLOAD_SIZE_BYTES = 10 * 1024 * 1024; // 10MB (sufficient for 500+ tes
 
 // POST: Upload or write a test case file into code_tests directory
 export async function POST(req: Request) {
-    try {
-        let reqHeaders: Headers;
-        try {
-            reqHeaders = await headers();
-        } catch {
-            reqHeaders = req.headers;
-        }
-        const isAdmin = await checkAdminAuth(reqHeaders);
-        if (!isAdmin) {
-            return NextResponse.json({ error: 'Unauthorized: Admin authentication required' }, { status: 401 });
-        }
+    const isAdmin = await checkAdminAuth(req.headers);
+    if (!isAdmin) {
+        return NextResponse.json({ error: 'Unauthorized: Admin authentication required' }, { status: 401 });
+    }
 
+    try {
         const dir = await getCodeTestsDir();
         const contentType = req.headers.get('content-type') || '';
 
@@ -199,7 +193,7 @@ export async function POST(req: Request) {
             fileName = rawName;
             fileContent = await file.text();
         } else {
-            let body: any;
+            let body: Record<string, unknown>;
             try {
                 body = await req.json();
             } catch {
@@ -231,8 +225,8 @@ export async function POST(req: Request) {
 
         try {
             await fs.writeFile(filePath, fileContent, { encoding: 'utf-8', flag: 'wx' });
-        } catch (err: any) {
-            if (err?.code === 'EEXIST') {
+        } catch (err: unknown) {
+            if ((err as { code?: string })?.code === 'EEXIST') {
                 return NextResponse.json({ error: `File '${fileName}' already exists in code_tests directory` }, { status: 409 });
             }
             throw err;
@@ -250,7 +244,7 @@ export async function POST(req: Request) {
             parseErrors: parsed.parseErrors,
             message: `File '${fileName}' successfully saved to code_tests folder.`,
         });
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error('Failed in POST /api/test-files:', err);
         return NextResponse.json({ error: 'Failed to save test file' }, { status: 500 });
     }

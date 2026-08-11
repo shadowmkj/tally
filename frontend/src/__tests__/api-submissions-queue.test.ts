@@ -2,11 +2,13 @@ import { describe, test, expect, mock } from 'bun:test';
 import { POST, GET } from '../app/api/submissions/queue/route';
 import { redis } from '../lib/redis';
 
+type RedisMock = Record<string, unknown>;
+
 describe('Submissions Queue API Route', () => {
     test('POST /api/submissions/queue enqueues job into Redis', async () => {
         const originalRpush = redis.rpush;
         const rpushSpy = mock((_queue: string, _item: string) => Promise.resolve(1));
-        (redis as any).rpush = rpushSpy;
+        (redis as unknown as RedisMock).rpush = rpushSpy;
 
         try {
             const jobPayload = {
@@ -37,7 +39,7 @@ describe('Submissions Queue API Route', () => {
 
             expect(rpushSpy).toHaveBeenCalled();
         } finally {
-            (redis as any).rpush = originalRpush;
+            (redis as unknown as RedisMock).rpush = originalRpush;
         }
     });
 
@@ -64,8 +66,8 @@ describe('Submissions Queue API Route', () => {
             user: 'milan',
         });
 
-        (redis as any).llen = mock(() => Promise.resolve(1));
-        (redis as any).lrange = mock(() => Promise.resolve([sampleJob]));
+        (redis as unknown as RedisMock).llen = mock(() => Promise.resolve(1));
+        (redis as unknown as RedisMock).lrange = mock(() => Promise.resolve([sampleJob]));
 
         try {
             const res = await GET();
@@ -77,8 +79,8 @@ describe('Submissions Queue API Route', () => {
             expect(json.jobs.length).toBe(1);
             expect(json.jobs[0].problem_id).toBe('prob-1');
         } finally {
-            (redis as any).llen = originalLlen;
-            (redis as any).lrange = originalLrange;
+            (redis as unknown as RedisMock).llen = originalLlen;
+            (redis as unknown as RedisMock).lrange = originalLrange;
         }
     });
 });

@@ -60,8 +60,8 @@ export function AdminLoginForm() {
 
             router.push(redirectTo);
             router.refresh();
-        } catch (err: any) {
-            setError(err.message || 'An unexpected error occurred during authentication.');
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'An unexpected error occurred during authentication.');
             setLoading(false);
         }
     };

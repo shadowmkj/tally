@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import type {
     Competition as PrismaCompetition,
     Participant as PrismaParticipant,
@@ -374,20 +374,20 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
         || competitions[0]
         || EMPTY_COMPETITION;
 
-    const markAnnouncementsAsRead = () => {
+    const markAnnouncementsAsRead = useCallback(() => {
         if (!activeCompetition?.announcements) return;
         const currentIds = activeCompetition.announcements.map(a => a.id);
         setReadAnnouncementIds(prev => {
             const set = new Set([...prev, ...currentIds]);
             return Array.from(set);
         });
-    };
+    }, [activeCompetition?.announcements]);
 
     useEffect(() => {
         if (showAnnouncements && activeCompetition?.announcements?.length > 0) {
             markAnnouncementsAsRead();
         }
-    }, [showAnnouncements, activeCompetition]);
+    }, [showAnnouncements, activeCompetition, markAnnouncementsAsRead]);
 
     const unreadAnnouncementsCount = (activeCompetition?.announcements || []).filter(
         a => !readAnnouncementIds.includes(a.id)

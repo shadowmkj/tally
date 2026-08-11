@@ -2,10 +2,12 @@ import { describe, test, expect, mock } from 'bun:test';
 import { GET } from '../app/api/submissions/[id]/route';
 import prisma from '../lib/prisma';
 
+type PrismaModelMock = Record<string, unknown>;
+
 describe('Submission Status Poll API Route GET /api/submissions/[id]', () => {
     test('returns 404 when submission is not found', async () => {
         const originalFindUnique = prisma.submission.findUnique;
-        (prisma.submission as any).findUnique = mock(() => Promise.resolve(null));
+        (prisma.submission as unknown as PrismaModelMock).findUnique = mock(() => Promise.resolve(null));
 
         try {
             const req = new Request('http://localhost:3000/api/submissions/non-existent');
@@ -18,7 +20,7 @@ describe('Submission Status Poll API Route GET /api/submissions/[id]', () => {
             expect(json.error).toBe('Submission not found');
             expect(json.completed).toBe(false);
         } finally {
-            (prisma.submission as any).findUnique = originalFindUnique;
+            (prisma.submission as unknown as PrismaModelMock).findUnique = originalFindUnique;
         }
     });
 
@@ -32,7 +34,7 @@ describe('Submission Status Poll API Route GET /api/submissions/[id]', () => {
             totalTestCases: 5,
             results: [],
         };
-        (prisma.submission as any).findUnique = mock(() => Promise.resolve(mockSub));
+        (prisma.submission as unknown as PrismaModelMock).findUnique = mock(() => Promise.resolve(mockSub));
 
         try {
             const req = new Request('http://localhost:3000/api/submissions/sub-eval');
@@ -47,7 +49,7 @@ describe('Submission Status Poll API Route GET /api/submissions/[id]', () => {
             expect(json.completed).toBe(false);
             expect(json.submission).toEqual(mockSub);
         } finally {
-            (prisma.submission as any).findUnique = originalFindUnique;
+            (prisma.submission as unknown as PrismaModelMock).findUnique = originalFindUnique;
         }
     });
 
@@ -63,7 +65,7 @@ describe('Submission Status Poll API Route GET /api/submissions/[id]', () => {
                 { id: 'res-1', passed: true, expectedOutput: '1', actualOutput: '1' }
             ],
         };
-        (prisma.submission as any).findUnique = mock(() => Promise.resolve(mockSub));
+        (prisma.submission as unknown as PrismaModelMock).findUnique = mock(() => Promise.resolve(mockSub));
 
         try {
             const req = new Request('http://localhost:3000/api/submissions/sub-ac');
@@ -77,7 +79,7 @@ describe('Submission Status Poll API Route GET /api/submissions/[id]', () => {
             expect(json.status).toBe('Accepted');
             expect(json.completed).toBe(true);
         } finally {
-            (prisma.submission as any).findUnique = originalFindUnique;
+            (prisma.submission as unknown as PrismaModelMock).findUnique = originalFindUnique;
         }
     });
 });

@@ -11,7 +11,7 @@ export function cn(...inputs: ClassValue[]) {
  * - JSON Arrays: formatted as clean indented JSON arrays
  * - Raw Strings / Multiline text: stripped of quotes and formatted cleanly
  */
-export function formatTestCaseValue(val: any): string {
+export function formatTestCaseValue(val: unknown): string {
     if (val === null || val === undefined) return '';
 
     let parsed = val;

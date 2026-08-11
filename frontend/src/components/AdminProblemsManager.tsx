@@ -88,8 +88,8 @@ export function AdminProblemsManager() {
         try {
             await addProblem(activeComp.id, dupProblem);
             showToast(`Problem "${dupProblem.title}" duplicated successfully!`);
-        } catch (err: any) {
-            showToast(err?.message || 'Failed to duplicate problem', 'error');
+        } catch (err: unknown) {
+            showToast(err instanceof Error ? err.message : 'Failed to duplicate problem', 'error');
         }
     };
 
@@ -100,8 +100,8 @@ export function AdminProblemsManager() {
             await deleteProblem(deletingProblem.id);
             showToast(`Problem "${deletingProblem.title}" deleted.`);
             setDeletingProblem(null);
-        } catch (err: any) {
-            showToast(err?.message || 'Failed to delete problem', 'error');
+        } catch (err: unknown) {
+            showToast(err instanceof Error ? err.message : 'Failed to delete problem', 'error');
         } finally {
             setIsDeleting(false);
         }
@@ -314,7 +314,7 @@ export function AdminProblemsManager() {
 
                         <select
                             value={sortBy}
-                            onChange={e => setSortBy(e.target.value as any)}
+                            onChange={e => setSortBy(e.target.value as 'points' | 'difficulty' | 'title')}
                             className="bg-zinc-950 border border-zinc-800 text-xs font-semibold rounded-xl px-3 py-2 text-zinc-300 focus:outline-none cursor-pointer"
                         >
                             <option value="points">Sort by Points</option>

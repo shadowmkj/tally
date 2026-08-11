@@ -30,6 +30,7 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
         // Auto-focus first empty box or box 0 on mount
         const firstEmpty = accessCode.length < 6 ? accessCode.length : 0;
         inputRefs.current[firstEmpty]?.focus();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleBoxChange = (index: number, val: string) => {

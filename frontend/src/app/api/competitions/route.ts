@@ -143,10 +143,10 @@ export async function POST(req: Request) {
 
         await delCache(COMPETITIONS_CACHE_KEY);
         return NextResponse.json({ competition: newComp });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Failed to create competition via Prisma:', error);
         return NextResponse.json(
-            { error: error?.message || 'Failed to create competition' },
+            { error: error instanceof Error ? error.message : 'Failed to create competition' },
             { status: 500 }
         );
     }
@@ -251,14 +251,22 @@ export async function PUT(req: Request) {
 
         await delCache(COMPETITIONS_CACHE_KEY);
         return NextResponse.json({ competition: finalComp });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Failed to update competition via Prisma:', error);
-        return NextResponse.json({ error: error?.message || 'Failed to update competition' }, { status: 500 });
+        return NextResponse.json({ error: error instanceof Error ? error.message : 'Failed to update competition' }, { status: 500 });
     }
 }
 
 export async function DELETE(req: Request) {
     try {
+        const session = await authClient.getSession({
+            headers: req.headers,
+        });
+
+        if (!session?.user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const { searchParams } = new URL(req.url);
         const id = searchParams.get('id');
         const accessCode = searchParams.get('accessCode');
@@ -275,10 +283,10 @@ export async function DELETE(req: Request) {
 
         await delCache(COMPETITIONS_CACHE_KEY);
         return NextResponse.json({ success: true, message: 'Competition deleted successfully' });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Failed to delete competition via Prisma:', error);
         return NextResponse.json(
-            { error: error?.message || 'Failed to delete competition' },
+            { error: error instanceof Error ? error.message : 'Failed to delete competition' },
             { status: 500 }
         );
     }

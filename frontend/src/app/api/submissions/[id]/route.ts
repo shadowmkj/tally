@@ -34,10 +34,10 @@ export async function GET(
             completed: !isEvaluating,
             submission,
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('[Submission Poll Error]:', error);
         return NextResponse.json(
-            { error: error?.message || 'Failed to poll submission status' },
+            { error: error instanceof Error ? error.message : 'Failed to poll submission status' },
             { status: 500 }
         );
     }

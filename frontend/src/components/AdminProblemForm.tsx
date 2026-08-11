@@ -219,8 +219,8 @@ export function AdminProblemForm() {
             setSelectedExistingFile(data.filename || fileNameToLoad);
             setAttachedTestFile(`code_tests/${data.filename} (${data.count} test cases loaded)`);
             showToast(`Loaded code_tests/${data.filename} with ${data.count} test cases!`, 'success');
-        } catch (e: any) {
-            showToast(e?.message || 'Error loading test file', 'error');
+        } catch (e: unknown) {
+            showToast(e instanceof Error ? e.message : 'Error loading test file', 'error');
         }
     };
 
@@ -255,8 +255,8 @@ export function AdminProblemForm() {
             setExistingTestFiles(prev => prev.includes(data.filename) ? prev : [...prev, data.filename]);
 
             showToast(`File saved to code_tests/${data.filename}! Loaded ${data.count} test cases.`, 'success');
-        } catch (e: any) {
-            showToast(e?.message || 'Error uploading file', 'error');
+        } catch (e: unknown) {
+            showToast(e instanceof Error ? e.message : 'Error uploading file', 'error');
         } finally {
             setUploadingFile(false);
         }
@@ -277,7 +277,7 @@ export function AdminProblemForm() {
         if (!activeComp) return;
         setFormErrors({});
 
-        const toStr = (val: any): string => (typeof val === 'string' ? val : val != null ? String(val) : '');
+        const toStr = (val: unknown): string => (typeof val === 'string' ? val : val != null ? String(val) : '');
 
         const trimmedTitle = title.trim();
         const trimmedSlug = slug.trim() || trimmedTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -381,8 +381,8 @@ export function AdminProblemForm() {
                 await addProblem(activeComp.id, problemData);
             }
             router.push(`/admin/problems?comp=${encodeURIComponent(activeComp.accessCode)}`);
-        } catch (err: any) {
-            showToast(err?.message || 'Failed to save problem', 'error');
+        } catch (err: unknown) {
+            showToast(err instanceof Error ? err.message : 'Failed to save problem', 'error');
         } finally {
             setIsSaving(false);
         }

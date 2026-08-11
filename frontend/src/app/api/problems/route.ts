@@ -75,9 +75,9 @@ export async function POST(req: Request) {
         });
 
         return NextResponse.json({ problem: createdProblem });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Failed to create problem:', error);
-        return NextResponse.json({ error: error?.message || 'Failed to create problem' }, { status: 500 });
+        return NextResponse.json({ error: error instanceof Error ? error.message : 'Failed to create problem' }, { status: 500 });
     }
 }
 
@@ -141,9 +141,9 @@ export async function PUT(req: Request) {
         });
 
         return NextResponse.json({ problem: updatedProblem });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Failed to update problem:', error);
-        return NextResponse.json({ error: error?.message || 'Failed to update problem' }, { status: 500 });
+        return NextResponse.json({ error: error instanceof Error ? error.message : 'Failed to update problem' }, { status: 500 });
     }
 }
 
@@ -166,8 +166,8 @@ export async function DELETE(req: Request) {
         });
 
         return NextResponse.json({ success: true, message: 'Problem deleted successfully' });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Failed to delete problem:', error);
-        return NextResponse.json({ error: error?.message || 'Failed to delete problem' }, { status: 500 });
+        return NextResponse.json({ error: error instanceof Error ? error.message : 'Failed to delete problem' }, { status: 500 });
     }
 }

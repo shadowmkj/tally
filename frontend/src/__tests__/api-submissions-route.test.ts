@@ -2,10 +2,15 @@ import { describe, test, expect, mock } from 'bun:test';
 import { POST } from '../app/api/submissions/route';
 import prisma from '../lib/prisma';
 
+// Prisma's generated client uses complex mapped types that don't accept mock functions
+// directly. We cast through `unknown` to a string-keyed intermediate type, allowing us
+// to patch specific methods for each test without losing type safety elsewhere.
+type PrismaModelMock = Record<string, unknown>;
+
 describe('Submission API Route POST /api/submissions', () => {
     test('returns 400 when competition is not found', async () => {
         const origCompFindFirst = prisma.competition.findFirst;
-        (prisma.competition as any).findFirst = mock(() => Promise.resolve(null));
+        (prisma.competition as unknown as PrismaModelMock).findFirst = mock(() => Promise.resolve(null));
 
         try {
             const req = new Request('http://localhost:3000/api/submissions', {
@@ -26,7 +31,7 @@ describe('Submission API Route POST /api/submissions', () => {
             const json = await res.json();
             expect(json.error).toBe('No competition found in database');
         } finally {
-            (prisma.competition as any).findFirst = origCompFindFirst;
+            (prisma.competition as unknown as PrismaModelMock).findFirst = origCompFindFirst;
         }
     });
 
@@ -34,8 +39,8 @@ describe('Submission API Route POST /api/submissions', () => {
         const origCompFindFirst = prisma.competition.findFirst;
         const origProbFindFirst = prisma.problem.findFirst;
 
-        (prisma.competition as any).findFirst = mock(() => Promise.resolve({ id: 'comp-1' }));
-        (prisma.problem as any).findFirst = mock(() => Promise.resolve(null));
+        (prisma.competition as unknown as PrismaModelMock).findFirst = mock(() => Promise.resolve({ id: 'comp-1' }));
+        (prisma.problem as unknown as PrismaModelMock).findFirst = mock(() => Promise.resolve(null));
 
         try {
             const req = new Request('http://localhost:3000/api/submissions', {
@@ -56,8 +61,8 @@ describe('Submission API Route POST /api/submissions', () => {
             const json = await res.json();
             expect(json.error).toBe("Problem 'missing-prob' not found in database");
         } finally {
-            (prisma.competition as any).findFirst = origCompFindFirst;
-            (prisma.problem as any).findFirst = origProbFindFirst;
+            (prisma.competition as unknown as PrismaModelMock).findFirst = origCompFindFirst;
+            (prisma.problem as unknown as PrismaModelMock).findFirst = origProbFindFirst;
         }
     });
 
@@ -68,9 +73,9 @@ describe('Submission API Route POST /api/submissions', () => {
         const origSubUpsert = prisma.submission.upsert;
         const origPartUpsert = prisma.participant.upsert;
 
-        (prisma.competition as any).findFirst = mock(() => Promise.resolve({ id: 'comp-1' }));
-        (prisma.problem as any).findFirst = mock(() => Promise.resolve({ id: 'prob-1', title: 'Two Sum' }));
-        (prisma.participant as any).findFirst = mock(() => Promise.resolve({ id: 'part-1' }));
+        (prisma.competition as unknown as PrismaModelMock).findFirst = mock(() => Promise.resolve({ id: 'comp-1' }));
+        (prisma.problem as unknown as PrismaModelMock).findFirst = mock(() => Promise.resolve({ id: 'prob-1', title: 'Two Sum' }));
+        (prisma.participant as unknown as PrismaModelMock).findFirst = mock(() => Promise.resolve({ id: 'part-1' }));
 
         const createdSub = {
             id: 'sub-999',
@@ -79,8 +84,8 @@ describe('Submission API Route POST /api/submissions', () => {
             status: 'Evaluating',
             code: 'def solution(): pass',
         };
-        (prisma.submission as any).upsert = mock(() => Promise.resolve(createdSub));
-        (prisma.participant as any).upsert = mock(() => Promise.resolve({ id: 'part-1' }));
+        (prisma.submission as unknown as PrismaModelMock).upsert = mock(() => Promise.resolve(createdSub));
+        (prisma.participant as unknown as PrismaModelMock).upsert = mock(() => Promise.resolve({ id: 'part-1' }));
 
         try {
             const req = new Request('http://localhost:3000/api/submissions', {
@@ -114,11 +119,11 @@ describe('Submission API Route POST /api/submissions', () => {
             const json = await res.json();
             expect(json.submission).toEqual(createdSub);
         } finally {
-            (prisma.competition as any).findFirst = origCompFindFirst;
-            (prisma.problem as any).findFirst = origProbFindFirst;
-            (prisma.participant as any).findFirst = origPartFindFirst;
-            (prisma.submission as any).upsert = origSubUpsert;
-            (prisma.participant as any).upsert = origPartUpsert;
+            (prisma.competition as unknown as PrismaModelMock).findFirst = origCompFindFirst;
+            (prisma.problem as unknown as PrismaModelMock).findFirst = origProbFindFirst;
+            (prisma.participant as unknown as PrismaModelMock).findFirst = origPartFindFirst;
+            (prisma.submission as unknown as PrismaModelMock).upsert = origSubUpsert;
+            (prisma.participant as unknown as PrismaModelMock).upsert = origPartUpsert;
         }
     });
 });

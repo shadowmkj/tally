@@ -25,10 +25,10 @@ export async function POST(req: Request) {
       job: newSubmit,
       submittedAt: new Date().toISOString(),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[Redis Queue] Failed to push to "jobs":', error);
     return NextResponse.json(
-      { error: error?.message || 'Failed to push job to Redis queue' },
+      { error: error instanceof Error ? error.message : 'Failed to push job to Redis queue' },
       { status: 500 }
     );
   }
@@ -53,9 +53,9 @@ export async function GET() {
       totalLength: length,
       jobs: parsedJobs,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error?.message || 'Failed to fetch Redis queue' },
+      { error: error instanceof Error ? error.message : 'Failed to fetch Redis queue' },
       { status: 500 }
     );
   }

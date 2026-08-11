@@ -25,7 +25,7 @@ function createRedisInstance(): Redis {
   });
 
   client.on('connect', () => {
-    console.log('[Redis] Successfully connected to Redis instance');
+    console.info('[Redis] Successfully connected to Redis instance');
   });
 
   return client;

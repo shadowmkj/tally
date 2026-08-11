@@ -42,7 +42,7 @@ const eslintConfig = [
       'no-var': 'error',
       'prefer-const': 'error',
       'no-duplicate-imports': 'error',
-      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      'no-console': ['warn', { allow: ['info', 'warn', 'error'] }],
       'no-debugger': 'error',
       'eqeqeq': ['error', 'always', { null: 'ignore' }],
 
