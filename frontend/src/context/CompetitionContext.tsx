@@ -34,13 +34,14 @@ export type StarterTemplates = Record<string, string>;
 
 export type Problem = Omit<
     PrismaProblem,
-    'tags' | 'constraints' | 'starterTemplates' | 'competitionId' | 'createdAt' | 'updatedAt' | 'acceptanceRate'
+    'tags' | 'constraints' | 'starterTemplates' | 'competitionId' | 'createdAt' | 'updatedAt' | 'acceptanceRate' | 'testFile'
 > & {
     tags: string[];
     constraints: string[];
     starterTemplates: StarterTemplates;
     sampleTestCases: SampleTestCase[];
     testCases: TestCase[];
+    testFile?: string | null;
     acceptanceRate?: number | null;
     competitionId?: string;
     createdAt?: Date | string;

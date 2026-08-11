@@ -62,6 +62,7 @@ fn test_full_submission_db_lifecycle() {
         code: "def twoSum(nums, target): return [0, 1]".to_string(),
         user: "Alice".to_string(),
         user_id: "u-alice".to_string(),
+        test_file: None,
     };
 
     // 3. Create test case results
@@ -167,6 +168,7 @@ fn test_submission_db_wrong_answer_lifecycle() {
         code: "class Solution {}".to_string(),
         user: "Bob".to_string(),
         user_id: "u-bob".to_string(),
+        test_file: None,
     };
 
     let results = vec![

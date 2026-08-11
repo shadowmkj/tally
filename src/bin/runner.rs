@@ -91,7 +91,11 @@ async fn main() -> Result<(), anyhow::Error> {
 
                             // Read test cases from JSON file
                             let tests_path = std::path::Path::new("code_tests");
-                            let tests_file = tests_path.join(format!("{}.jsonl", job.problem_slug));
+                            let test_filename = match &job.test_file {
+                                Some(f) if !f.trim().is_empty() => f.trim().to_string(),
+                                _ => format!("{}.jsonl", job.problem_slug),
+                            };
+                            let tests_file = tests_path.join(&test_filename);
                             let test_cases: Vec<TestCase> = match fs::File::open(&tests_file) {
                                 Ok(file) => match serde_json::from_reader(file) {
                                     Ok(cases) => cases,

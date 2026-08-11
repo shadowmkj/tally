@@ -215,6 +215,7 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
             submission_id: submissionId,
             problem_id: problem.id,
             problem_slug: problem.slug,
+            test_file: problem.testFile || (problem.slug ? `${problem.slug}.jsonl` : null),
             language,
             method_name: problem.methodName,
             type_schema: problem.typeSchema || null,

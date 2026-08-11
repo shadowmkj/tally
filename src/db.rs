@@ -248,6 +248,7 @@ mod tests {
             code: "code".to_string(),
             user: "milan".to_string(),
             user_id: "u1".to_string(),
+            test_file: None,
         };
 
         let results = vec![
@@ -341,6 +342,7 @@ mod tests {
             code: "code".to_string(),
             user: "milan".to_string(),
             user_id: "u1".to_string(),
+            test_file: None,
         };
 
         let results = vec![
@@ -400,6 +402,7 @@ mod tests {
             code: "code".to_string(),
             user: "milan".to_string(),
             user_id: "u1".to_string(),
+            test_file: None,
         };
 
         let results = vec![TestCaseResult {
@@ -439,6 +442,7 @@ mod tests {
             code: "code".to_string(),
             user: "milan".to_string(),
             user_id: "u1".to_string(),
+            test_file: None,
         };
         let res = update_submission_status(&conn, &job_no_sub, &[], 0).unwrap();
         assert_eq!(res, None);
@@ -461,6 +465,7 @@ mod tests {
             code: "code".to_string(),
             user: "milan".to_string(),
             user_id: "u1".to_string(),
+            test_file: None,
         };
 
         let updated_id = update_submission_status(&conn, &job_fallback, &[], 0).unwrap();

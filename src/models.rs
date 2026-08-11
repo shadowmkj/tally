@@ -83,6 +83,8 @@ pub struct Job {
     pub user_id: String,
     #[serde(default, alias = "submission_id", alias = "submissionId")]
     pub submission_id: Option<String>,
+    #[serde(default, alias = "test_file", alias = "testFile")]
+    pub test_file: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]

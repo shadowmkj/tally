@@ -79,6 +79,7 @@ export function AdminProblemForm() {
     const [manualFileName, setManualFileName] = useState<string>('');
     const [uploadingFile, setUploadingFile] = useState(false);
     const [attachedTestFile, setAttachedTestFile] = useState<string | null>(null);
+    const [testFile, setTestFile] = useState<string>('');
 
     // Test cases
     const [sampleTestCases, setSampleTestCases] = useState<Array<{ id: string; input: string; output: string; explanation: string; persisted?: boolean }>>([
@@ -137,6 +138,12 @@ export function AdminProblemForm() {
             setOutputFormat(editingProblem.outputFormat || '');
             setConstraintsText(Array.isArray(editingProblem.constraints) ? editingProblem.constraints.join('\n') : '');
             setTagsText(Array.isArray(editingProblem.tags) ? editingProblem.tags.join(', ') : '');
+
+            if (editingProblem.testFile) {
+                setTestFile(editingProblem.testFile);
+                setSelectedExistingFile(editingProblem.testFile);
+                setAttachedTestFile(`code_tests/${editingProblem.testFile}`);
+            }
 
             setSampleTestCases(
                 (editingProblem.sampleTestCases || []).length > 0
@@ -197,6 +204,8 @@ export function AdminProblemForm() {
             const data = await res.json();
             setSampleTestCases(data.sampleTestCases || []);
             setHiddenTestCases(data.hiddenTestCases || []);
+            setTestFile(data.filename || fileNameToLoad);
+            setSelectedExistingFile(data.filename || fileNameToLoad);
             setAttachedTestFile(`code_tests/${data.filename} (${data.count} test cases loaded)`);
             showToast(`Loaded code_tests/${data.filename} with ${data.count} test cases!`, 'success');
         } catch (e: any) {
@@ -228,10 +237,11 @@ export function AdminProblemForm() {
             const data = await res.json();
             setSampleTestCases(data.sampleTestCases || []);
             setHiddenTestCases(data.hiddenTestCases || []);
+            setTestFile(data.filename);
+            setSelectedExistingFile(data.filename);
 
             setAttachedTestFile(`code_tests/${data.filename} (${data.count} test cases uploaded & loaded)`);
             setExistingTestFiles(prev => prev.includes(data.filename) ? prev : [...prev, data.filename]);
-            setSelectedExistingFile(data.filename);
 
             showToast(`File saved to code_tests/${data.filename}! Loaded ${data.count} test cases.`, 'success');
         } catch (e: any) {
@@ -323,12 +333,15 @@ export function AdminProblemForm() {
                 hidden: tc?.hidden ?? true,
             }));
 
+        const targetTestFile = testFile || selectedExistingFile || (trimmedSlug ? `${trimmedSlug}.jsonl` : '');
+
         const problemData: Problem = {
             id: editingProblem ? editingProblem.id : `p-${now}-${rand}`,
             title: trimmedTitle,
             slug: trimmedSlug,
             methodName: trimmedMethod,
             typeSchema: typeSchema.trim() || null,
+            testFile: targetTestFile || null,
             difficulty,
             points: Number(points),
             timeLimitMs: Number(timeLimitMs),

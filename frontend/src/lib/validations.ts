@@ -40,6 +40,11 @@ export const problemSchema = z.object({
         .trim()
         .optional()
         .nullable(),
+    testFile: z
+        .string()
+        .trim()
+        .optional()
+        .nullable(),
     difficulty: z.enum(['Easy', 'Medium', 'Hard'], {
         error: 'Difficulty must be Easy, Medium, or Hard',
     }),
