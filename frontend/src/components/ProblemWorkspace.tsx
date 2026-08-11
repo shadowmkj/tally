@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import Editor from '@monaco-editor/react';
 import confetti from 'canvas-confetti';
 import {
-    Play,
     Send,
     RotateCcw,
     CheckCircle2,
@@ -25,7 +24,7 @@ import type { Problem, Submission, TestCaseResult, Language, SubmissionStatus, U
 import { SUPPORTED_LANGUAGES } from '@/lib/languages';
 import { formatTestCaseValue } from '@/lib/utils';
 
-function runCodeOnTestCases(problem: Problem, code: string, language: Language, customInput?: string) {
+function runCodeOnTestCases(problem: Problem) {
     const total = (problem.sampleTestCases?.length || 0) + (problem.testCases?.length || 0) || 1;
     return {
         status: 'Accepted' as SubmissionStatus,
@@ -60,9 +59,7 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
     const [code, setCode] = useState<string>(problem.starterTemplates[language] || '');
     const [leftTab, setLeftTab] = useState<'description' | 'submissions' | 'hints'>('description');
     const [bottomDrawerOpen, setBottomDrawerOpen] = useState<boolean>(true);
-    const [bottomTab, setBottomTab] = useState<'testcase' | 'result'>('testcase');
-
-    const [customInput, setCustomInput] = useState<string>(problem.sampleTestCases[0]?.input || '');
+    const [bottomTab, setBottomTab] = useState<'result'>('result');
     const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
     const [isRunning, setIsRunning] = useState<boolean>(false);
@@ -164,7 +161,7 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
         setBottomTab('result');
 
         setTimeout(() => {
-            const result = runCodeOnTestCases(problem, code, language, customInput);
+            const result = runCodeOnTestCases(problem);
             setLatestResult({
                 ...result,
                 isSubmitMode: false,
@@ -547,27 +544,8 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
                         <div className="h-9 px-4 bg-zinc-950 border-b border-zinc-800 flex items-center justify-between shrink-0">
                             <div className="flex items-center gap-2">
                                 <button
-                                    onClick={() => {
-                                        setBottomTab('testcase');
-                                        setBottomDrawerOpen(true);
-                                    }}
-                                    className={`px-3 py-1 rounded text-xs font-mono font-semibold transition-colors ${bottomTab === 'testcase' && bottomDrawerOpen
-                                        ? 'bg-zinc-800 text-primary-300'
-                                        : 'text-zinc-400 hover:text-zinc-200'
-                                        }`}
-                                >
-                                    Custom Testcase
-                                </button>
-
-                                <button
-                                    onClick={() => {
-                                        setBottomTab('result');
-                                        setBottomDrawerOpen(true);
-                                    }}
-                                    className={`px-3 py-1 rounded text-xs font-mono font-semibold flex items-center gap-1.5 transition-colors ${bottomTab === 'result' && bottomDrawerOpen
-                                        ? 'bg-zinc-800 text-primary-300'
-                                        : 'text-zinc-400 hover:text-zinc-200'
-                                        }`}
+                                    onClick={() => setBottomDrawerOpen(true)}
+                                    className="px-3 py-1 rounded text-xs font-mono font-semibold flex items-center gap-1.5 bg-zinc-800 text-primary-300 transition-colors"
                                 >
                                     <Terminal className="w-3.5 h-3.5" />
                                     <span>Test Result</span>
@@ -588,120 +566,103 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
 
                         {bottomDrawerOpen && (
                             <div className="flex-1 overflow-y-auto p-4 font-mono text-xs text-zinc-300">
-                                {bottomTab === 'testcase' && (
-                                    <div className="space-y-3">
-                                        <div className="flex items-center justify-between text-zinc-400">
-                                            <span>Input Data:</span>
+                                <div>
+                                    {!latestResult && !isRunning && !isSubmitting && (
+                                        <div className="py-8 text-center text-zinc-500 text-xs">
+                                            Click "Run Code" or "Submit" to see execution results.
                                         </div>
-                                        <textarea
-                                            value={customInput}
-                                            onChange={(e) => setCustomInput(e.target.value)}
-                                            rows={5}
-                                            className="w-full p-3 rounded-xl bg-zinc-950 border border-zinc-800 text-xs font-mono text-primary-300 focus:outline-none focus:border-primary-500"
-                                            placeholder="Provide raw stdin testcase inputs..."
-                                        />
-                                    </div>
-                                )}
+                                    )}
 
-                                {bottomTab === 'result' && (
-                                    <div>
-                                        {!latestResult && !isRunning && !isSubmitting && (
-                                            <div className="py-8 text-center text-zinc-500 text-xs">
-                                                Click "Run Code" or "Submit" to see execution results.
-                                            </div>
-                                        )}
+                                    {(isRunning || isSubmitting) && (
+                                        <div className="py-8 flex flex-col items-center justify-center gap-2 text-zinc-400">
+                                            <div className="w-6 h-6 border-2 border-primary-400 border-t-transparent rounded-full animate-spin"></div>
+                                            <span className="text-xs font-mono">
+                                                {isSubmitting ? 'Evaluating hidden test cases...' : 'Compiling & running code...'}
+                                            </span>
+                                        </div>
+                                    )}
 
-                                        {(isRunning || isSubmitting) && (
-                                            <div className="py-8 flex flex-col items-center justify-center gap-2 text-zinc-400">
-                                                <div className="w-6 h-6 border-2 border-primary-400 border-t-transparent rounded-full animate-spin"></div>
-                                                <span className="text-xs font-mono">
-                                                    {isSubmitting ? 'Evaluating hidden test cases...' : 'Compiling & running code...'}
-                                                </span>
-                                            </div>
-                                        )}
-
-                                        {latestResult && !isRunning && !isSubmitting && (
-                                            <div className="space-y-4">
-                                                <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-zinc-950 border border-zinc-800">
-                                                    <div>
-                                                        <div className="flex items-center gap-2">
-                                                            {latestResult.status === 'Accepted' ? (
-                                                                <CheckCircle2 className="w-6 h-6 text-emerald-400" />
-                                                            ) : (
-                                                                <XCircle className="w-6 h-6 text-rose-400" />
-                                                            )}
-                                                            <span
-                                                                className={`text-lg font-extrabold ${latestResult.status === 'Accepted'
-                                                                    ? 'text-emerald-400'
-                                                                    : 'text-rose-400'
-                                                                    }`}
-                                                            >
-                                                                {latestResult.status}
-                                                            </span>
-                                                        </div>
-
-                                                        <div className="text-xs text-zinc-400 mt-1">
-                                                            Passed {latestResult.testCasesPassed} / {latestResult.totalTestCases} Test cases
-                                                        </div>
+                                    {latestResult && !isRunning && !isSubmitting && (
+                                        <div className="space-y-4">
+                                            <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-zinc-950 border border-zinc-800">
+                                                <div>
+                                                    <div className="flex items-center gap-2">
+                                                        {latestResult.status === 'Accepted' ? (
+                                                            <CheckCircle2 className="w-6 h-6 text-emerald-400" />
+                                                        ) : (
+                                                            <XCircle className="w-6 h-6 text-rose-400" />
+                                                        )}
+                                                        <span
+                                                            className={`text-lg font-extrabold ${latestResult.status === 'Accepted'
+                                                                ? 'text-emerald-400'
+                                                                : 'text-rose-400'
+                                                                }`}
+                                                        >
+                                                            {latestResult.status}
+                                                        </span>
                                                     </div>
 
-                                                    <div className="flex items-center gap-4 text-xs font-mono">
-                                                        <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-center">
-                                                            <div className="text-zinc-400 text-[10px]">Runtime</div>
-                                                            <div className="font-bold text-primary-300">{latestResult.runtimeMs} ms</div>
-                                                            <div className="text-[10px] text-emerald-400">Beats {latestResult.runtimePercentile}%</div>
-                                                        </div>
-
-                                                        <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-center">
-                                                            <div className="text-zinc-400 text-[10px]">Memory</div>
-                                                            <div className="font-bold text-primary-300">{latestResult.memoryMb} MB</div>
-                                                            <div className="text-[10px] text-emerald-400">Beats {latestResult.memoryPercentile}%</div>
-                                                        </div>
+                                                    <div className="text-xs text-zinc-400 mt-1">
+                                                        Passed {latestResult.testCasesPassed} / {latestResult.totalTestCases} Test cases
                                                     </div>
                                                 </div>
 
-                                                {latestResult.errorLog ? (
-                                                    <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-mono whitespace-pre-wrap">
-                                                        {latestResult.errorLog}
+                                                <div className="flex items-center gap-4 text-xs font-mono">
+                                                    <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-center">
+                                                        <div className="text-zinc-400 text-[10px]">Runtime</div>
+                                                        <div className="font-bold text-primary-300">{latestResult.runtimeMs} ms</div>
+                                                        <div className="text-[10px] text-emerald-400">Beats {latestResult.runtimePercentile}%</div>
                                                     </div>
-                                                ) : (latestResult.results.length > 0 && latestResult.results.every((r) => r.passed)) || latestResult.status === 'Accepted' ? (
-                                                    <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium flex items-center gap-2">
-                                                        <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
-                                                        <span>All {latestResult.totalTestCases || latestResult.results.length} test cases passed successfully!</span>
+
+                                                    <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-center">
+                                                        <div className="text-zinc-400 text-[10px]">Memory</div>
+                                                        <div className="font-bold text-primary-300">{latestResult.memoryMb} MB</div>
+                                                        <div className="text-[10px] text-emerald-400">Beats {latestResult.memoryPercentile}%</div>
                                                     </div>
-                                                ) : (
-                                                    <div className="space-y-2">
-                                                        {latestResult.results
-                                                            .map((r, i) => ({ result: r, index: i + 1 }))
-                                                            .filter(({ result }) => !result.passed)
-                                                            .map(({ result: r, index }) => (
-                                                                <div
-                                                                    key={index}
-                                                                    className="p-3 rounded-lg bg-zinc-950 border border-zinc-800 text-xs font-mono space-y-1"
-                                                                >
-                                                                    <div className="flex items-center justify-between">
-                                                                        <span className="font-bold text-zinc-300">Testcase {index}</span>
-                                                                        <span className="text-rose-400 font-bold">FAILED</span>
+                                                </div>
+                                            </div>
+
+                                            {latestResult.errorLog ? (
+                                                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-mono whitespace-pre-wrap">
+                                                    {latestResult.errorLog}
+                                                </div>
+                                            ) : (latestResult.results.length > 0 && latestResult.results.every((r) => r.passed)) || latestResult.status === 'Accepted' ? (
+                                                <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium flex items-center gap-2">
+                                                    <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+                                                    <span>All {latestResult.totalTestCases || latestResult.results.length} test cases passed successfully!</span>
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-2">
+                                                    {latestResult.results
+                                                        .map((r, i) => ({ result: r, index: i + 1 }))
+                                                        .filter(({ result }) => !result.passed)
+                                                        .map(({ result: r, index }) => (
+                                                            <div
+                                                                key={index}
+                                                                className="p-3 rounded-lg bg-zinc-950 border border-zinc-800 text-xs font-mono space-y-1"
+                                                            >
+                                                                <div className="flex items-center justify-between">
+                                                                    <span className="font-bold text-zinc-300">Testcase {index}</span>
+                                                                    <span className="text-rose-400 font-bold">FAILED</span>
+                                                                </div>
+                                                                <div className="grid grid-cols-2 gap-2 pt-1 text-[11px]">
+                                                                    <div>
+                                                                        <span className="text-zinc-500">Expected:</span>
+                                                                        <div className="bg-zinc-900 p-1.5 rounded text-emerald-300 overflow-x-auto font-mono">{r.expectedOutput}</div>
                                                                     </div>
-                                                                    <div className="grid grid-cols-2 gap-2 pt-1 text-[11px]">
-                                                                        <div>
-                                                                            <span className="text-zinc-500">Expected:</span>
-                                                                            <div className="bg-zinc-900 p-1.5 rounded text-emerald-300 overflow-x-auto font-mono">{r.expectedOutput}</div>
-                                                                        </div>
-                                                                        <div>
-                                                                            <span className="text-zinc-500">Actual:</span>
-                                                                            <div className="bg-zinc-900 p-1.5 rounded text-rose-300 overflow-x-auto font-mono">{r.actualOutput}</div>
-                                                                        </div>
+                                                                    <div>
+                                                                        <span className="text-zinc-500">Actual:</span>
+                                                                        <div className="bg-zinc-900 p-1.5 rounded text-rose-300 overflow-x-auto font-mono">{r.actualOutput}</div>
                                                                     </div>
                                                                 </div>
-                                                            ))}
-                                                    </div>
-                                                )}
+                                                            </div>
+                                                        ))}
+                                                </div>
+                                            )}
 
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
+                                        </div>
+                                    )}
+                                </div>
 
                             </div>
                         )}
