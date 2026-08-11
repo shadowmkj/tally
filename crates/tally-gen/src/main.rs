@@ -146,15 +146,13 @@ mod tests {
         let temp_dir = tempfile::tempdir().expect("failed to create temp dir");
         let output_dir = temp_dir.path().join("test_dir");
 
-        let suite = vec![
-            GeneratedTestCase {
-                id: 1,
-                input: json!({"n": 5}),
-                expected: json!(25),
-                is_hidden: false,
-                explanation: None,
-            },
-        ];
+        let suite = vec![GeneratedTestCase {
+            id: 1,
+            input: json!({"n": 5}),
+            expected: json!(25),
+            is_hidden: false,
+            explanation: None,
+        }];
 
         let res = export_test_suite(&suite, output_dir.to_str().unwrap(), OutputFormat::Dir);
         assert!(res.is_ok(), "Directory export failed");

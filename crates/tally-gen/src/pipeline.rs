@@ -36,7 +36,9 @@ pub async fn generate_test_suite(
 
         let raw_input = generate_input(generator_path, current_seed)
             .await
-            .with_context(|| format!("while generating test case #{} (seed: {})", i, current_seed))?;
+            .with_context(|| {
+                format!("while generating test case #{} (seed: {})", i, current_seed)
+            })?;
 
         let raw_expected = compute_expected(reference_path, method_name, &raw_input)
             .await

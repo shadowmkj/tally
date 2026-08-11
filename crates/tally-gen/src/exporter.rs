@@ -14,6 +14,18 @@ use std::fs;
 use std::io::Write;
 use std::path::Path;
 
+/// Ensures parent directories exist for target output file path.
+fn ensure_parent_dir(output_path: &str) -> Result<()> {
+    if let Some(parent) = Path::new(output_path)
+        .parent()
+        .filter(|p| !p.as_os_str().is_empty())
+    {
+        fs::create_dir_all(parent)
+            .with_context(|| format!("while creating output directory for '{}'", output_path))?;
+    }
+    Ok(())
+}
+
 /// Formats and exports a generated test suite to disk based on `format`.
 pub fn export_test_suite(
     suite: &[GeneratedTestCase],
@@ -22,28 +34,23 @@ pub fn export_test_suite(
 ) -> Result<()> {
     match format {
         OutputFormat::Jsonl => {
-            if let Some(parent) = Path::new(output_path).parent() {
-                if !parent.as_os_str().is_empty() {
-                    fs::create_dir_all(parent)
-                        .with_context(|| format!("while creating output directory for '{}'", output_path))?;
-                }
-            }
+            ensure_parent_dir(output_path)?;
 
-            let json_pretty = serde_json::to_string_pretty(suite)
-                .with_context(|| format!("while serializing test suite to JSON at '{}'", output_path))?;
+            let json_pretty = serde_json::to_string_pretty(suite).with_context(|| {
+                format!("while serializing test suite to JSON at '{}'", output_path)
+            })?;
 
             fs::write(output_path, json_pretty)
                 .with_context(|| format!("while writing test suite to '{}'", output_path))?;
 
-            println!("Successfully exported {} test cases to JSON at '{}'.", suite.len(), output_path);
+            println!(
+                "Successfully exported {} test cases to JSON at '{}'.",
+                suite.len(),
+                output_path
+            );
         }
         OutputFormat::Single => {
-            if let Some(parent) = Path::new(output_path).parent() {
-                if !parent.as_os_str().is_empty() {
-                    fs::create_dir_all(parent)
-                        .with_context(|| format!("while creating output directory for '{}'", output_path))?;
-                }
-            }
+            ensure_parent_dir(output_path)?;
 
             let mut file = fs::File::create(output_path)
                 .with_context(|| format!("while creating output file '{}'", output_path))?;
@@ -53,10 +60,18 @@ pub fn export_test_suite(
 
             for case in suite {
                 let input_str = serde_json::to_string(&case.input)?;
-                writeln!(file, "{}", input_str)
-                    .with_context(|| format!("while writing input for testcase #{} to '{}'", case.id, output_path))?;
+                writeln!(file, "{}", input_str).with_context(|| {
+                    format!(
+                        "while writing input for testcase #{} to '{}'",
+                        case.id, output_path
+                    )
+                })?;
             }
-            println!("Successfully exported {} test cases to single file at '{}'.", suite.len(), output_path);
+            println!(
+                "Successfully exported {} test cases to single file at '{}'.",
+                suite.len(),
+                output_path
+            );
         }
         OutputFormat::Dir => {
             fs::create_dir_all(output_path)

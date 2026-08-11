@@ -131,7 +131,10 @@ else:
     print(str(res))
 "#;
         let mut c = Command::new("python3");
-        c.arg("-c").arg(driver_snippet).arg(reference_path).arg(method_name);
+        c.arg("-c")
+            .arg(driver_snippet)
+            .arg(reference_path)
+            .arg(method_name);
         c
     } else {
         Command::new(reference_path)
@@ -150,17 +153,23 @@ else:
         stdin
             .write_all(input_data.as_bytes())
             .await
-            .with_context(|| format!("while writing input to reference stdin for '{}'", reference_path))?;
-        stdin
-            .flush()
-            .await
-            .with_context(|| format!("while flushing stdin to reference for '{}'", reference_path))?;
+            .with_context(|| {
+                format!(
+                    "while writing input to reference stdin for '{}'",
+                    reference_path
+                )
+            })?;
+        stdin.flush().await.with_context(|| {
+            format!("while flushing stdin to reference for '{}'", reference_path)
+        })?;
     }
 
-    let output = process
-        .wait_with_output()
-        .await
-        .with_context(|| format!("while waiting for reference solution execution of '{}'", reference_path))?;
+    let output = process.wait_with_output().await.with_context(|| {
+        format!(
+            "while waiting for reference solution execution of '{}'",
+            reference_path
+        )
+    })?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -187,7 +196,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_generate_input_python_script() {
-        let mut script_file = NamedTempFile::with_suffix(".py").expect("failed to create temp py file");
+        let mut script_file =
+            NamedTempFile::with_suffix(".py").expect("failed to create temp py file");
         let script_content = r#"import sys, argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('--seed', type=int, required=True)
@@ -203,16 +213,22 @@ print(f"SEED_{args.seed}")
             .to_str()
             .expect("failed to convert temp file path to string slice");
         let result = generate_input(path_str, 42).await;
-        assert!(result.is_ok(), "generate_input should succeed for Python script");
+        assert!(
+            result.is_ok(),
+            "generate_input should succeed for Python script"
+        );
         assert_eq!(
-            result.expect("expected successful generate_input output string").trim(),
+            result
+                .expect("expected successful generate_input output string")
+                .trim(),
             "SEED_42"
         );
     }
 
     #[tokio::test]
     async fn test_compute_expected_python_driver() {
-        let mut script_file = NamedTempFile::with_suffix(".py").expect("failed to create temp py file");
+        let mut script_file =
+            NamedTempFile::with_suffix(".py").expect("failed to create temp py file");
         let script_content = r#"
 def solve(nums, target):
     return [a + target for a in nums]
@@ -227,9 +243,15 @@ def solve(nums, target):
             .expect("failed to convert temp solution file path to string slice");
         let input_text = "{\"nums\": [1, 2, 3], \"target\": 10}\n";
         let result = compute_expected(path_str, "solve", input_text).await;
-        assert!(result.is_ok(), "compute_expected should succeed with Python driver: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "compute_expected should succeed with Python driver: {:?}",
+            result.err()
+        );
         assert_eq!(
-            result.expect("expected successful compute_expected output string").trim(),
+            result
+                .expect("expected successful compute_expected output string")
+                .trim(),
             "[11, 12, 13]"
         );
     }
