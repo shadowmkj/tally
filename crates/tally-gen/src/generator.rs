@@ -194,12 +194,20 @@ parser.add_argument('--seed', type=int, required=True)
 args = parser.parse_args()
 print(f"SEED_{args.seed}")
 "#;
-        script_file.write_all(script_content.as_bytes()).unwrap();
+        script_file
+            .write_all(script_content.as_bytes())
+            .expect("failed to write test Python script content");
 
-        let path_str = script_file.path().to_str().unwrap();
+        let path_str = script_file
+            .path()
+            .to_str()
+            .expect("failed to convert temp file path to string slice");
         let result = generate_input(path_str, 42).await;
         assert!(result.is_ok(), "generate_input should succeed for Python script");
-        assert_eq!(result.unwrap().trim(), "SEED_42");
+        assert_eq!(
+            result.expect("expected successful generate_input output string").trim(),
+            "SEED_42"
+        );
     }
 
     #[tokio::test]
@@ -209,12 +217,20 @@ print(f"SEED_{args.seed}")
 def solve(nums, target):
     return [a + target for a in nums]
 "#;
-        script_file.write_all(script_content.as_bytes()).unwrap();
+        script_file
+            .write_all(script_content.as_bytes())
+            .expect("failed to write test solution script content");
 
-        let path_str = script_file.path().to_str().unwrap();
+        let path_str = script_file
+            .path()
+            .to_str()
+            .expect("failed to convert temp solution file path to string slice");
         let input_text = "{\"nums\": [1, 2, 3], \"target\": 10}\n";
         let result = compute_expected(path_str, "solve", input_text).await;
         assert!(result.is_ok(), "compute_expected should succeed with Python driver: {:?}", result.err());
-        assert_eq!(result.unwrap().trim(), "[11, 12, 13]");
+        assert_eq!(
+            result.expect("expected successful compute_expected output string").trim(),
+            "[11, 12, 13]"
+        );
     }
 }

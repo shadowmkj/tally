@@ -104,9 +104,50 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, []);
 
+    const getStorageKey = (probId: string, lang: string) => `tally_code_${probId}_${lang}`;
+    const loadedKeyRef = React.useRef<string | null>(null);
+    const [isCodeLoaded, setIsCodeLoaded] = useState<boolean>(false);
+
     useEffect(() => {
-        setCode(problem.starterTemplates[language] || '');
-    }, [language, problem]);
+        if (typeof window === 'undefined') return;
+        setIsCodeLoaded(false);
+        const key = getStorageKey(problem.id, language);
+        const savedCode = localStorage.getItem(key);
+        if (savedCode !== null) {
+            setCode(savedCode);
+        } else {
+            setCode(problem.starterTemplates[language] || '');
+        }
+        loadedKeyRef.current = key;
+        setIsCodeLoaded(true);
+    }, [language, problem.id, problem.starterTemplates]);
+
+    useEffect(() => {
+        if (!isCodeLoaded || typeof window === 'undefined') return;
+        const key = getStorageKey(problem.id, language);
+
+        // Guard against race condition during language/problem switching
+        if (loadedKeyRef.current !== key) return;
+
+        const timeoutId = setTimeout(() => {
+            localStorage.setItem(key, code);
+        }, 400);
+
+        return () => clearTimeout(timeoutId);
+    }, [code, language, problem.id, isCodeLoaded]);
+
+    const handleCodeChange = (newCode: string) => {
+        setCode(newCode);
+    };
+
+    const handleResetCode = () => {
+        const defaultTemplate = problem.starterTemplates[language] || '';
+        setCode(defaultTemplate);
+        if (typeof window !== 'undefined') {
+            const key = getStorageKey(problem.id, language);
+            localStorage.removeItem(key);
+        }
+    };
 
     const handleCopySample = (text: string, idx: number) => {
         if (typeof navigator !== 'undefined') {
@@ -466,9 +507,9 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
                         </div>
 
                         <button
-                            onClick={() => setCode(problem.starterTemplates[language] || '')}
+                            onClick={handleResetCode}
                             className="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded transition-colors flex items-center gap-1"
-                            title="Reset code to starter boilerplate"
+                            title="Reset code to starter boilerplate and clear draft"
                         >
                             <RotateCcw className="w-3.5 h-3.5" />
                             <span className="text-[11px]">Reset</span>
@@ -481,7 +522,7 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
                             language={language === 'cpp' ? 'cpp' : language === 'python' ? 'python' : language}
                             theme="vs-dark"
                             value={code}
-                            onChange={(value) => setCode(value || '')}
+                            onChange={(value) => handleCodeChange(value || '')}
                             onMount={(editor, monaco) => {
                                 editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
                                     handleSubmitCodeRef.current?.();

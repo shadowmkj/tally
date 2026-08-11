@@ -44,6 +44,9 @@ pub fn update_submission_status(
         None => return Ok(None),
     };
 
+    // When an evaluation stops early on failure (e.g. Testcase 3 of 100), `results` contains
+    // only the evaluated cases up to the failure. We track `total_test_cases` independently
+    // so the database records the full problem dataset size (e.g. 100) instead of the evaluated count.
     let total = if total_test_cases > 0 {
         total_test_cases
     } else {

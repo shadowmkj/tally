@@ -22,7 +22,8 @@ pub struct Cli {
     #[arg(short = 'r', long = "reference")]
     pub reference: String,
 
-    /// Target function or method name inside the reference solution (e.g. `solve` or `twoSum`)
+    /// Target function or method name inside reference solution (defaults to "solve").
+    /// Supports both top-level functions (`def solve(...)`) and class methods (`class Solution: def solve(...)`).
     #[arg(short = 'm', long = "method", default_value = "solve")]
     pub method: String,
 

@@ -139,6 +139,8 @@ async fn main() -> Result<(), anyhow::Error> {
                                 continue;
                             }
 
+                            // Record total testcase count prior to moving `test_cases` vector into `run_all`.
+                            // This ensures the database update receives the full dataset count even if execution stops early.
                             let total_test_cases = test_cases.len();
 
                             match runner::run_all(
