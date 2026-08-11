@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import type { Problem, Submission, TestCaseResult, Language, SubmissionStatus, UserSession } from '@/context/CompetitionContext';
 import { SUPPORTED_LANGUAGES } from '@/lib/languages';
+import { formatTestCaseValue } from '@/lib/utils';
 
 function runCodeOnTestCases(problem: Problem, code: string, language: Language, customInput?: string) {
     const total = (problem.sampleTestCases?.length || 0) + (problem.testCases?.length || 0) || 1;
@@ -410,12 +411,12 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
                                                     </button>
                                                 </div>
                                                 <div>
-                                                    <span className="text-zinc-500 text-[10px] block mb-0.5">Input:</span>
-                                                    <pre className="bg-zinc-900 p-2 rounded text-zinc-200 overflow-x-auto">{stc.input}</pre>
+                                                    <span className="text-zinc-500 text-[10px] block mb-0.5 font-bold uppercase">Input:</span>
+                                                    <pre className="bg-zinc-900/90 p-2.5 rounded-xl text-zinc-200 overflow-x-auto whitespace-pre-wrap leading-relaxed border border-zinc-800/80">{formatTestCaseValue(stc.input)}</pre>
                                                 </div>
                                                 <div>
-                                                    <span className="text-zinc-500 text-[10px] block mb-0.5">Output:</span>
-                                                    <pre className="bg-zinc-900 p-2 rounded text-emerald-300 overflow-x-auto">{stc.output}</pre>
+                                                    <span className="text-zinc-500 text-[10px] block mb-0.5 font-bold uppercase">Output:</span>
+                                                    <pre className="bg-zinc-900/90 p-2.5 rounded-xl text-emerald-300 overflow-x-auto whitespace-pre-wrap leading-relaxed border border-zinc-800/80">{formatTestCaseValue(stc.output)}</pre>
                                                 </div>
                                             </div>
                                         ))}

@@ -28,6 +28,7 @@ import { useSelectedCompetition } from '@/hooks/useSelectedCompetition';
 import { authClient } from '@/lib/auth-client';
 import { problemSchema } from '@/lib/validations';
 import { SUPPORTED_LANGUAGES, LanguageId } from '@/lib/languages';
+import { CompactTestCasesViewer } from '@/components/CompactTestCasesViewer';
 import { AdminLoginForm } from '@/components/AdminLoginForm';
 import { Input } from '@/components/ui/input';
 
@@ -89,6 +90,23 @@ export function AdminProblemForm() {
         { id: 'tc-1', input: '3\n1 2 3', output: '6', hidden: false, persisted: false },
         { id: 'tc-2', input: '5\n10 20 30 40 50', output: '150', hidden: true, persisted: false }
     ]);
+
+    const allDisplayCases = useMemo(() => {
+        const samples = sampleTestCases.map(st => ({
+            id: st.id,
+            input: st.input,
+            output: st.output,
+            hidden: false,
+            explanation: st.explanation,
+        }));
+        const hiddens = hiddenTestCases.map(ht => ({
+            id: ht.id,
+            input: ht.input,
+            output: ht.output,
+            hidden: ht.hidden ?? true,
+        }));
+        return hiddens.length > 0 ? hiddens : samples;
+    }, [sampleTestCases, hiddenTestCases]);
 
     // Starter templates
     const [starterLangTab, setStarterLangTab] = useState<LanguageId>(SUPPORTED_LANGUAGES[0].id);
@@ -914,80 +932,23 @@ export function AdminProblemForm() {
                             ))}
                         </div>
 
-                        {/* Hidden Test Cases */}
+                        {/* Read-Only Compact Test Cases Viewer */}
                         <div className="space-y-4 pt-6 border-t border-zinc-800">
                             <div className="flex items-center justify-between">
-                                <h3 className="text-xs font-mono font-bold uppercase text-zinc-300">
-                                    Full Evaluation Test Cases (Passed to Docker Driver stdin)
-                                </h3>
-                                <button
-                                    type="button"
-                                    onClick={() => setHiddenTestCases(prev => [...prev, { id: `tc-${Date.now()}-${prev.length}`, input: '', output: '', hidden: true, persisted: false }])}
-                                    className="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-primary-300 font-bold text-xs flex items-center gap-1.5 cursor-pointer border border-zinc-700/60"
-                                >
-                                    <Plus className="w-3.5 h-3.5" />
-                                    <span>Add Evaluation Case</span>
-                                </button>
+                                <div>
+                                    <h3 className="text-xs font-mono font-bold uppercase text-zinc-300">
+                                        Test Cases Viewer (Read-Only)
+                                    </h3>
+                                    <p className="text-[11px] font-mono text-zinc-500 mt-0.5">
+                                        Test cases are loaded directly from server <code className="text-primary-400 font-mono">code_tests/</code> files. Manual editing is disabled.
+                                    </p>
+                                </div>
                             </div>
 
-                            {hiddenTestCases.map((htc, idx) => (
-                                <div key={htc.id} className="p-5 rounded-2xl bg-zinc-950 border border-zinc-800 space-y-3 relative">
-                                    <div className="flex items-center justify-between text-xs text-zinc-400 font-mono">
-                                        <div className="flex items-center gap-3">
-                                            <span className="font-bold text-zinc-300">Evaluation Case #{idx + 1}</span>
-                                            <label className="flex items-center gap-1.5 cursor-pointer">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={htc.hidden}
-                                                    onChange={e => {
-                                                        const isChecked = e.target.checked;
-                                                        setHiddenTestCases(prev => prev.map(item => item.id === htc.id ? { ...item, hidden: isChecked } : item));
-                                                    }}
-                                                    className="rounded bg-zinc-900 border-zinc-700 text-primary-500"
-                                                />
-                                                <span className="text-[10px] text-zinc-400">Keep Hidden</span>
-                                            </label>
-                                        </div>
-
-                                        {hiddenTestCases.length > 1 && (
-                                            <button
-                                                type="button"
-                                                onClick={() => setHiddenTestCases(prev => prev.filter(item => item.id !== htc.id))}
-                                                className="text-rose-400 hover:text-rose-300 text-xs font-semibold"
-                                            >
-                                                Remove Case
-                                            </button>
-                                        )}
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <span className="text-[10px] font-mono text-zinc-500 uppercase font-bold">Input Data</span>
-                                            <textarea
-                                                value={htc.input}
-                                                onChange={e => {
-                                                    const val = e.target.value;
-                                                    setHiddenTestCases(prev => prev.map(item => item.id === htc.id ? { ...item, input: val } : item));
-                                                }}
-                                                rows={3}
-                                                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-xs font-mono text-zinc-200 focus:outline-none"
-                                            />
-                                        </div>
-                                        <div>
-                                            <span className="text-[10px] font-mono text-zinc-500 uppercase font-bold">Expected Output</span>
-                                            <textarea
-                                                value={htc.output}
-                                                onChange={e => {
-                                                    const val = e.target.value;
-                                                    setHiddenTestCases(prev => prev.map(item => item.id === htc.id ? { ...item, output: val } : item));
-                                                }}
-                                                rows={3}
-                                                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 text-xs font-mono text-zinc-200 focus:outline-none"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
+                            <CompactTestCasesViewer
+                                testCases={allDisplayCases}
+                                fileName={testFile || selectedExistingFile || attachedTestFile}
+                            />
                         </div>
                     </div>
 
