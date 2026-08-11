@@ -4,7 +4,7 @@
 
 // This module handles serializing and saving the generated test cases to disk.
 // Supported formats:
-// - Jsonl: Newline-delimited JSON objects for Tally API / DB.
+// - Jsonl: Pretty-printed JSON array matching Tally's code_tests/*.jsonl schema.
 // - Single: Combined input file with total case count header.
 // - Dir: Paired .in / .out text files (e.g. 01.in, 01.out) for DOMjudge/Polygon.
 
@@ -29,16 +29,13 @@ pub fn export_test_suite(
                 }
             }
 
-            let mut file = fs::File::create(output_path)
-                .with_context(|| format!("while creating output file '{}'", output_path))?;
+            let json_pretty = serde_json::to_string_pretty(suite)
+                .with_context(|| format!("while serializing test suite to JSON at '{}'", output_path))?;
 
-            for case in suite {
-                let json_line = serde_json::to_string(case)
-                    .with_context(|| format!("while serializing test case '{}' to JSON", case.id))?;
-                writeln!(file, "{}", json_line)
-                    .with_context(|| format!("while writing test case '{}' to '{}'", case.id, output_path))?;
-            }
-            println!("Successfully exported {} test cases to JSONL at '{}'.", suite.len(), output_path);
+            fs::write(output_path, json_pretty)
+                .with_context(|| format!("while writing test suite to '{}'", output_path))?;
+
+            println!("Successfully exported {} test cases to JSON at '{}'.", suite.len(), output_path);
         }
         OutputFormat::Single => {
             if let Some(parent) = Path::new(output_path).parent() {
@@ -55,8 +52,9 @@ pub fn export_test_suite(
                 .with_context(|| format!("while writing count header to '{}'", output_path))?;
 
             for case in suite {
-                write!(file, "{}", case.input)
-                    .with_context(|| format!("while writing input for '{}' to '{}'", case.id, output_path))?;
+                let input_str = serde_json::to_string(&case.input)?;
+                writeln!(file, "{}", input_str)
+                    .with_context(|| format!("while writing input for testcase #{} to '{}'", case.id, output_path))?;
             }
             println!("Successfully exported {} test cases to single file at '{}'.", suite.len(), output_path);
         }
@@ -64,14 +62,16 @@ pub fn export_test_suite(
             fs::create_dir_all(output_path)
                 .with_context(|| format!("while creating target directory '{}'", output_path))?;
 
-            for (idx, case) in suite.iter().enumerate() {
-                let num = idx + 1;
-                let in_file = format!("{}/{:02}.in", output_path, num);
-                let out_file = format!("{}/{:02}.out", output_path, num);
+            for case in suite {
+                let in_file = format!("{}/{:02}.in", output_path, case.id);
+                let out_file = format!("{}/{:02}.out", output_path, case.id);
 
-                fs::write(&in_file, &case.input)
+                let input_str = serde_json::to_string_pretty(&case.input)?;
+                let expected_str = serde_json::to_string_pretty(&case.expected)?;
+
+                fs::write(&in_file, &input_str)
                     .with_context(|| format!("while writing input file '{}'", in_file))?;
-                fs::write(&out_file, &case.expected)
+                fs::write(&out_file, &expected_str)
                     .with_context(|| format!("while writing output file '{}'", out_file))?;
             }
             println!(

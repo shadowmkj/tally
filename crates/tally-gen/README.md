@@ -11,7 +11,7 @@
 
 **`tally-gen`** is a high-performance, CLI testcase generator written in Rust. It automates generating $N$ test cases for competitive programming problems, calculating ground-truth expected outputs via an official reference solution, and exporting formatted test suites.
 
-It serves as the problem authoring companion for **Tally** (and other competitive programming judges like DOMjudge, Polygon, or CMS).
+It includes **Python Driver Integration**, allowing problem authors to write clean `solution.py` files with simple functions (e.g. `def solve(nums, target)` or `def twoSum(...)`) **without needing to parse stdin or format JSON manually**.
 
 ---
 
@@ -31,8 +31,8 @@ It serves as the problem authoring companion for **Tally** (and other competitiv
                                     │
                                     ▼
                       ┌────────────────────────────┐
-                      │    Reference Solution      │
-                      │  (Computes Expected Output)│
+                      │   Python Driver Wrapper    │
+                      │  (Invokes solve(args...))  │
                       └─────────────┬──────────────┘
                                     │
                         TestCase Input + Expected
@@ -52,6 +52,7 @@ It serves as the problem authoring companion for **Tally** (and other competitiv
 
 ## ✨ Features
 
+- **🐍 Python Driver Wrapper**: Dynamically imports `solution.py` and invokes `solve(*args)` or `Solution().solve(*args)`, auto-converting inputs and return values.
 - **⚡ High-Speed Execution Engine**: Asynchronous process spawning via `tokio::process::Command` with non-blocking standard I/O streaming.
 - **🎲 Deterministic Seeding**: Accepts `--seed <u64>` to guarantee 100% reproducible test suites across different machines and environments.
 - **👁️ Sample & Hidden Case Flagging**: Automatically flags the first $K$ test cases as sample cases (`is_hidden = false`) and remaining as hidden test cases (`is_hidden = true`).
@@ -59,7 +60,6 @@ It serves as the problem authoring companion for **Tally** (and other competitiv
   - `jsonl`: Newline-delimited JSON objects matching Tally's standard database schema (`{"id": "tc-1", "input": ..., "expected": ..., "is_hidden": false}`).
   - `single`: Single combined input file (`input.txt`) with a total testcase count $T$ header line.
   - `dir`: Directory of paired `.in` and `.out` files (`01.in`, `01.out`, `02.in`, `02.out`) for DOMjudge, Polygon, or CMS.
-- **🐍 Language Agnostic Execution**: Executes `.py` generator and reference scripts natively using `python3`, or directly executes compiled binaries (C++, Rust, Go).
 
 ---
 
@@ -80,6 +80,7 @@ Usage: tally-gen [OPTIONS] --generator <GENERATOR> --reference <REFERENCE>
 Options:
   -g, --generator <GENERATOR>        Path to generator script or binary (e.g. `generator.py`)
   -r, --reference <REFERENCE>        Path to reference solution script or binary (e.g. `solution.py`)
+  -m, --method <METHOD>              Target function/method name in reference solution [default: solve]
   -n, --tests <TESTS>                Total number of test cases to generate [default: 100]
   -s, --seed <SEED>                  Base seed for deterministic random generation [default: 42]
       --sample-cases <SAMPLE_CASES>  Number of sample (visible) test cases [default: 5]
@@ -91,9 +92,11 @@ Options:
 
 ---
 
-## 📝 Example Workflow
+## 📝 Simple Example Workflow
 
-### 1. Create a Generator Script (`generator.py`)
+### 1. Minimal Generator Script (`generator.py`)
+
+Outputs standard raw lines (e.g. list and target integer):
 
 ```python
 import random
@@ -105,37 +108,23 @@ args = parser.parse_args()
 
 random.seed(args.seed)
 
-n = random.randint(1, 100)
-arr = [random.randint(-1000, 1000) for _ in range(n)]
-target = random.randint(-2000, 2000)
-
-print(f"{n} {target}")
-print(*arr)
+print([random.randint(-100, 100) for _ in range(5)])
+print(random.randint(-50, 50))
 ```
 
-### 2. Create a Reference Solution (`solution.py`)
+### 2. Clean Reference Solution (`solution.py`)
+
+Simple function receiving input parameters directly—**no stdin/stdout parsing required**:
 
 ```python
-import sys
-
-def solve():
-    lines = sys.stdin.read().split()
-    if not lines:
-        return
-    n = int(lines[0])
-    target = int(lines[1])
-    arr = list(map(int, lines[2:2+n]))
-    
+def solve(nums, target):
     seen = {}
-    for i, num in enumerate(arr):
+    for i, num in enumerate(nums):
         diff = target - num
         if diff in seen:
-            print(f"{seen[diff]} {i}")
-            return
+            return [seen[diff], i]
         seen[num] = i
-    print("-1 -1")
-
-solve()
+    return []
 ```
 
 ### 3. Run `tally-gen`
@@ -146,22 +135,11 @@ Generate 100 test cases into Tally JSONL format:
 cargo run --package tally-gen -- \
   --generator generator.py \
   --reference solution.py \
+  --method solve \
   --tests 100 \
   --seed 42 \
   --output code_tests/two-sum.jsonl \
   --format jsonl
-```
-
-Generate test cases as paired DOMjudge `.in`/`.out` files:
-
-```bash
-cargo run --package tally-gen -- \
-  --generator generator.py \
-  --reference solution.py \
-  --tests 50 \
-  --seed 123 \
-  --output-dir tests/ \
-  --format dir
 ```
 
 ---

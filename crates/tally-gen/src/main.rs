@@ -24,6 +24,7 @@ async fn main() -> Result<()> {
     let suite = generate_test_suite(
         &cli.generator,
         &cli.reference,
+        &cli.method,
         cli.tests,
         cli.sample_cases,
         cli.seed,
@@ -42,6 +43,7 @@ async fn main() -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
     use types::{GeneratedTestCase, OutputFormat};
 
     #[test]
@@ -52,6 +54,8 @@ mod tests {
             "gen.py",
             "--reference",
             "sol.py",
+            "--method",
+            "solve",
             "--tests",
             "50",
             "--seed",
@@ -68,6 +72,7 @@ mod tests {
 
         assert_eq!(cli.generator, "gen.py");
         assert_eq!(cli.reference, "sol.py");
+        assert_eq!(cli.method, "solve");
         assert_eq!(cli.tests, 50);
         assert_eq!(cli.seed, 123);
         assert_eq!(cli.sample_cases, 3);
@@ -82,16 +87,18 @@ mod tests {
 
         let suite = vec![
             GeneratedTestCase {
-                id: "tc-1".to_string(),
-                input: "5\n".to_string(),
-                expected: "10\n".to_string(),
+                id: 1,
+                input: json!({"n": 1}),
+                expected: json!(1),
                 is_hidden: false,
+                explanation: None,
             },
             GeneratedTestCase {
-                id: "tc-2".to_string(),
-                input: "10\n".to_string(),
-                expected: "20\n".to_string(),
+                id: 2,
+                input: json!({"n": 2}),
+                expected: json!(2),
                 is_hidden: true,
+                explanation: None,
             },
         ];
 
@@ -99,10 +106,9 @@ mod tests {
         assert!(res.is_ok(), "JSONL export failed");
 
         let content = std::fs::read_to_string(&output_path).expect("failed to read exported JSONL");
-        let lines: Vec<&str> = content.lines().collect();
-        assert_eq!(lines.len(), 2);
-        assert!(lines[0].contains("\"tc-1\""));
-        assert!(lines[1].contains("\"tc-2\""));
+        assert!(content.starts_with("["));
+        assert!(content.contains("\"id\": 1"));
+        assert!(content.contains("\"id\": 2"));
     }
 
     #[test]
@@ -112,16 +118,18 @@ mod tests {
 
         let suite = vec![
             GeneratedTestCase {
-                id: "tc-1".to_string(),
-                input: "1 2\n".to_string(),
-                expected: "3\n".to_string(),
+                id: 1,
+                input: json!({"nums": [1, 2]}),
+                expected: json!(3),
                 is_hidden: false,
+                explanation: None,
             },
             GeneratedTestCase {
-                id: "tc-2".to_string(),
-                input: "3 4\n".to_string(),
-                expected: "7\n".to_string(),
+                id: 2,
+                input: json!({"nums": [3, 4]}),
+                expected: json!(7),
                 is_hidden: true,
+                explanation: None,
             },
         ];
 
@@ -130,8 +138,7 @@ mod tests {
 
         let content = std::fs::read_to_string(&output_path).expect("failed to read single file");
         assert!(content.starts_with("2\n"));
-        assert!(content.contains("1 2\n"));
-        assert!(content.contains("3 4\n"));
+        assert!(content.contains("{\"nums\":[1,2]}"));
     }
 
     #[test]
@@ -141,10 +148,11 @@ mod tests {
 
         let suite = vec![
             GeneratedTestCase {
-                id: "tc-1".to_string(),
-                input: "5\n".to_string(),
-                expected: "25\n".to_string(),
+                id: 1,
+                input: json!({"n": 5}),
+                expected: json!(25),
                 is_hidden: false,
+                explanation: None,
             },
         ];
 
@@ -156,7 +164,7 @@ mod tests {
 
         let in_content = std::fs::read_to_string(output_dir.join("01.in")).unwrap();
         let out_content = std::fs::read_to_string(output_dir.join("01.out")).unwrap();
-        assert_eq!(in_content, "5\n");
-        assert_eq!(out_content, "25\n");
+        assert!(in_content.contains("\"n\": 5"));
+        assert_eq!(out_content.trim(), "25");
     }
 }

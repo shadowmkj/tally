@@ -22,6 +22,10 @@ pub struct Cli {
     #[arg(short = 'r', long = "reference")]
     pub reference: String,
 
+    /// Target function or method name inside the reference solution (e.g. `solve` or `twoSum`)
+    #[arg(short = 'm', long = "method", default_value = "solve")]
+    pub method: String,
+
     /// Number of test cases to generate
     #[arg(short = 'n', long = "tests", default_value_t = 100)]
     pub tests: usize,
