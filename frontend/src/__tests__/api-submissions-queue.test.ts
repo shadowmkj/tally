@@ -5,7 +5,7 @@ import { redis } from '../lib/redis';
 describe('Submissions Queue API Route', () => {
     test('POST /api/submissions/queue enqueues job into Redis', async () => {
         const originalRpush = redis.rpush;
-        const rpushSpy = mock((queue: string, item: string) => Promise.resolve(1));
+        const rpushSpy = mock((_queue: string, _item: string) => Promise.resolve(1));
         (redis as any).rpush = rpushSpy;
 
         try {

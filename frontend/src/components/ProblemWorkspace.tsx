@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import Editor from '@monaco-editor/react';
 import confetti from 'canvas-confetti';
 import {
@@ -24,25 +23,9 @@ import type { Problem, Submission, TestCaseResult, Language, SubmissionStatus, U
 import { SUPPORTED_LANGUAGES } from '@/lib/languages';
 import { formatTestCaseValue } from '@/lib/utils';
 
-function runCodeOnTestCases(problem: Problem) {
-    const total = (problem.sampleTestCases?.length || 0) + (problem.testCases?.length || 0) || 1;
-    return {
-        status: 'Accepted' as SubmissionStatus,
-        testCasesPassed: total,
-        totalTestCases: total,
-        results: [] as TestCaseResult[],
-        runtimeMs: 24,
-        runtimePercentile: 95.0,
-        memoryMb: 14.2,
-        memoryPercentile: 90.0,
-        errorLog: undefined,
-    };
-}
-
 interface ProblemWorkspaceProps {
     problem: Problem;
     session: UserSession | null;
-    onBackToList?: () => void;
     onSubmitFinished: (sub: Submission) => void;
     previousSubmissions: Submission[];
 }
@@ -50,19 +33,15 @@ interface ProblemWorkspaceProps {
 export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
     problem,
     session,
-    onBackToList,
     onSubmitFinished,
     previousSubmissions,
 }) => {
-    const router = useRouter();
     const [language, setLanguage] = useState<Language>('python');
     const [code, setCode] = useState<string>(problem.starterTemplates[language] || '');
     const [leftTab, setLeftTab] = useState<'description' | 'submissions' | 'hints'>('description');
     const [bottomDrawerOpen, setBottomDrawerOpen] = useState<boolean>(true);
-    const [bottomTab, setBottomTab] = useState<'result'>('result');
     const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
-    const [isRunning, setIsRunning] = useState<boolean>(false);
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const [latestResult, setLatestResult] = useState<{
         status: SubmissionStatus;
@@ -155,25 +134,9 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
         setTimeout(() => setCopiedIndex(null), 2000);
     };
 
-    const handleRunCode = () => {
-        setIsRunning(true);
-        setBottomDrawerOpen(true);
-        setBottomTab('result');
-
-        setTimeout(() => {
-            const result = runCodeOnTestCases(problem);
-            setLatestResult({
-                ...result,
-                isSubmitMode: false,
-            });
-            setIsRunning(false);
-        }, 600);
-    };
-
     const handleSubmitCode = async () => {
         setIsSubmitting(true);
         setBottomDrawerOpen(true);
-        setBottomTab('result');
 
         const submissionId = `sub-${Date.now()}`;
 
@@ -284,7 +247,7 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
                         <span className="hidden sm:inline">Problem List</span>
                         <span className="sm:hidden">List</span>
                     </Link>
-                    <div className="h-4 w-px bg-zinc-800 shrink-0"></div>
+                    <div className="h-4 w-px bg-zinc-800 shrink-0" />
                     <span className="text-xs font-bold text-zinc-200 truncate max-w-[100px] xs:max-w-[140px] sm:max-w-xs">
                         {problem.title}
                     </span>
@@ -551,7 +514,7 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
                                     <span>Test Result</span>
                                     {latestResult && (
                                         <span className={`w-2 h-2 rounded-full ${latestResult.status === 'Accepted' ? 'bg-emerald-400' : 'bg-rose-400'
-                                            }`}></span>
+                                            }`} />
                                     )}
                                 </button>
                             </div>
@@ -575,7 +538,7 @@ export const ProblemWorkspace: React.FC<ProblemWorkspaceProps> = ({
 
                                     {(isRunning || isSubmitting) && (
                                         <div className="py-8 flex flex-col items-center justify-center gap-2 text-zinc-400">
-                                            <div className="w-6 h-6 border-2 border-primary-400 border-t-transparent rounded-full animate-spin"></div>
+                                            <div className="w-6 h-6 border-2 border-primary-400 border-t-transparent rounded-full animate-spin" />
                                             <span className="text-xs font-mono">
                                                 {isSubmitting ? 'Evaluating hidden test cases...' : 'Compiling & running code...'}
                                             </span>

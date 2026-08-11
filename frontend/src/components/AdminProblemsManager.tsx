@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
     ArrowLeft,
@@ -18,8 +18,7 @@ import {
     X,
     Layers
 } from 'lucide-react';
-import { useCompetition } from '@/context/CompetitionContext';
-import type { Problem, Difficulty } from '@/context/CompetitionContext';
+import { useCompetition, type Problem, type Difficulty } from '@/context/CompetitionContext';
 import { useSelectedCompetition } from '@/hooks/useSelectedCompetition';
 import { authClient } from '@/lib/auth-client';
 import { AdminLoginForm } from '@/components/AdminLoginForm';
@@ -141,7 +140,7 @@ export function AdminProblemsManager() {
         return (
             <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
                 <div className="flex flex-col items-center gap-3">
-                    <div className="w-10 h-10 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin"></div>
+                    <div className="w-10 h-10 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin" />
                     <p className="text-sm font-mono text-zinc-400">Verifying Admin Session...</p>
                 </div>
             </div>

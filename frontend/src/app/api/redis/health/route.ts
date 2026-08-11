@@ -18,6 +18,7 @@ export async function GET() {
       status: healthy ? 'ok' : 'degraded',
       redis: {
         connected: healthy,
+        info: redisInfo,
         url: process.env.REDIS_URL ? '[CONFIGURED]' : 'redis://localhost:6379 (default)',
       },
       timestamp: new Date().toISOString(),

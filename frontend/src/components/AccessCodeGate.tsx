@@ -140,7 +140,7 @@ export const AccessCodeGate: React.FC<AccessCodeGateProps> = ({
         <Dialog open={true} onOpenChange={(open) => { if (!open && onCloseModal) onCloseModal(); }}>
             <DialogContent className="p-0">
                 {/* Top Glow Bar */}
-                <div className="h-1.5 bg-gradient-to-r from-primary-500 via-primary-400 to-yellow-500"></div>
+                <div className="h-1.5 bg-gradient-to-r from-primary-500 via-primary-400 to-yellow-500" />
 
                 <div className="p-4 sm:p-8 space-y-4 sm:space-y-6">
                     <div className="text-center space-y-2">

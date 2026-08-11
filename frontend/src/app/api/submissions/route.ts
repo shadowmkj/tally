@@ -27,7 +27,7 @@ export async function POST(req: Request) {
         }
 
         // 2. Resolve Problem ID (by ID or Slug)
-        let problem = await prisma.problem.findFirst({
+        const problem = await prisma.problem.findFirst({
             where: {
                 OR: [
                     { id: submission.problemId },

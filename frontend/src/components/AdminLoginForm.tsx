@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ShieldCheck, Lock, Mail, ArrowRight, AlertCircle } from 'lucide-react';
 import { authClient } from '@/lib/auth-client';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 
 export function AdminLoginForm() {
     const router = useRouter();
@@ -70,7 +70,7 @@ export function AdminLoginForm() {
         <div className="min-h-[85vh] flex items-center justify-center p-4">
             <Card className="w-full max-w-md animate-fadeIn">
                 {/* Glow accent */}
-                <div className="h-1.5 bg-gradient-to-r from-primary-500 via-primary-400 to-yellow-500"></div>
+                <div className="h-1.5 bg-gradient-to-r from-primary-500 via-primary-400 to-yellow-500" />
 
                 <div className="p-6 sm:p-8 space-y-6">
                     <div className="text-center space-y-2">
@@ -161,12 +161,12 @@ export function AdminLoginForm() {
                             {isSignUp ? 'Already have an admin account? Sign In' : 'Need to register a new admin account? Sign Up'}
                         </button>
                         <div className="pt-1 border-t border-zinc-800/60">
-                            <a
+                            <Link
                                 href="/problems"
                                 className="text-xs text-primary-400/90 hover:text-primary-300 font-semibold underline underline-offset-2 transition-colors inline-flex items-center gap-1 cursor-pointer"
                             >
                                 Are you a contest participant? Enter Competition Access Code
-                            </a>
+                            </Link>
                         </div>
                     </div>
                 </div>

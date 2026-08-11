@@ -8,23 +8,19 @@ import {
   Radio, 
   ShieldAlert, 
   Minus,
-  Flame,
-  ShieldCheck
+  Flame
 } from 'lucide-react';
 import type { Competition, Participant } from '@/context/CompetitionContext';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 
 interface LeaderboardProps {
   competition: Competition;
   participants: Participant[];
-  onOpenCodeGate?: () => void;
 }
 
 export const Leaderboard: React.FC<LeaderboardProps> = ({
   competition,
   participants,
-  onOpenCodeGate,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [autoRefresh, setAutoRefresh] = useState(true);

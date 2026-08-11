@@ -12,25 +12,23 @@ import {
   ArrowRight, 
   Trophy
 } from 'lucide-react';
-import type { Problem, Competition, SolvedProblemStatus } from '@/context/CompetitionContext';
+import type { Competition, SolvedProblemStatus } from '@/context/CompetitionContext';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 
 interface ProblemListProps {
   competition: Competition;
   solvedStatus: Record<string, SolvedProblemStatus>;
-  onOpenLeaderboard?: () => void;
 }
 
 export const ProblemList: React.FC<ProblemListProps> = ({
   competition,
   solvedStatus,
-  onOpenLeaderboard,
 }) => {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState<'All' | 'Easy' | 'Medium' | 'Hard'>('All');
-  const [statusFilter, setStatusFilter] = useState<'All' | 'Solved' | 'Unsolved'>('All');
+  const [statusFilter] = useState<'All' | 'Solved' | 'Unsolved'>('All');
 
   const solvedCount = (Object.values(solvedStatus) as SolvedProblemStatus[]).filter(s => s.status === 'AC').length;
   const totalCount = competition.problems.length;
@@ -60,7 +58,7 @@ export const ProblemList: React.FC<ProblemListProps> = ({
       
       {/* Contest Header Banner */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-zinc-900 via-zinc-900/90 to-zinc-900 border border-zinc-800 p-4 sm:p-8 shadow-xl">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-primary-500/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-primary-500/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
         
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
@@ -69,7 +67,7 @@ export const ProblemList: React.FC<ProblemListProps> = ({
                 ACCESS CODE: {competition.accessCode}
               </Badge>
               <Badge variant="success" className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 LIVE CONTEST
               </Badge>
             </div>
@@ -95,7 +93,7 @@ export const ProblemList: React.FC<ProblemListProps> = ({
               <div
                 className="bg-gradient-to-r from-primary-500 to-primary-400 h-full rounded-full transition-all duration-500"
                 style={{ width: `${progressPercent}%` }}
-              ></div>
+               />
             </div>
 
             <Link

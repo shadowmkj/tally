@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import {
     ShieldCheck,
     KeyRound,
@@ -55,7 +54,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [newTitle, setNewTitle] = useState('Wecode Weekly CodeRush #4');
-    const [newSubtitle, setNewSubtitle] = useState('Wecode Club - GCE Kannur');
+    const [newSubtitle] = useState('Wecode Club - GCE Kannur');
     const [newCode, setNewCode] = useState('');
     const [newDuration, setNewDuration] = useState(90);
 

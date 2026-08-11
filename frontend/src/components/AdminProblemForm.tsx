@@ -7,23 +7,17 @@ import {
     Plus,
     Check,
     AlertCircle,
-    X,
     Code2,
     FileCode,
-    Clock,
-    HardDrive,
     Sparkles,
     ListOrdered,
-    Trash2,
     Save,
     RotateCcw,
     FolderOpen,
     Upload,
-    FileCheck,
-    FileText
+    FileCheck
 } from 'lucide-react';
-import { useCompetition } from '@/context/CompetitionContext';
-import type { Problem, Difficulty, SampleTestCase, TestCase } from '@/context/CompetitionContext';
+import { useCompetition, type Problem, type Difficulty, type SampleTestCase, type TestCase } from '@/context/CompetitionContext';
 import { useSelectedCompetition } from '@/hooks/useSelectedCompetition';
 import { authClient } from '@/lib/auth-client';
 import { problemSchema } from '@/lib/validations';
@@ -35,7 +29,6 @@ import { Input } from '@/components/ui/input';
 export function AdminProblemForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const compCodeFromUrl = searchParams.get('comp') || '';
     const editProblemId = searchParams.get('edit') || '';
 
     const { data: session, isPending: sessionPending } = authClient.useSession();
@@ -399,7 +392,7 @@ export function AdminProblemForm() {
         return (
             <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
                 <div className="flex flex-col items-center gap-3">
-                    <div className="w-10 h-10 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin"></div>
+                    <div className="w-10 h-10 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin" />
                     <p className="text-sm font-mono text-zinc-400">Verifying Admin Session...</p>
                 </div>
             </div>

@@ -193,19 +193,19 @@ function formatCompetition(comp: RawCompetition): Competition {
             let starterTemplates: StarterTemplates = {};
 
             if (typeof prob.tags === 'string') {
-                try { tags = JSON.parse(prob.tags); } catch (e) { tags = []; }
+                try { tags = JSON.parse(prob.tags); } catch { tags = []; }
             } else if (Array.isArray(prob.tags)) {
                 tags = prob.tags;
             }
 
             if (typeof prob.constraints === 'string') {
-                try { constraints = JSON.parse(prob.constraints); } catch (e) { constraints = []; }
+                try { constraints = JSON.parse(prob.constraints); } catch { constraints = []; }
             } else if (Array.isArray(prob.constraints)) {
                 constraints = prob.constraints;
             }
 
             if (typeof prob.starterTemplates === 'string') {
-                try { starterTemplates = JSON.parse(prob.starterTemplates); } catch (e) { starterTemplates = {}; }
+                try { starterTemplates = JSON.parse(prob.starterTemplates); } catch { starterTemplates = {}; }
             } else if (prob.starterTemplates && typeof prob.starterTemplates === 'object') {
                 starterTemplates = prob.starterTemplates as StarterTemplates;
             }
@@ -238,7 +238,7 @@ function formatCompetition(comp: RawCompetition): Competition {
 function formatParticipant(part: RawParticipant): Participant {
     let solvedProblems: Record<string, SolvedProblemStatus> = {};
     if (typeof part.solvedProblems === 'string') {
-        try { solvedProblems = JSON.parse(part.solvedProblems); } catch (e) { solvedProblems = {}; }
+        try { solvedProblems = JSON.parse(part.solvedProblems); } catch { solvedProblems = {}; }
     } else if (part.solvedProblems && typeof part.solvedProblems === 'object') {
         solvedProblems = part.solvedProblems;
     }
@@ -305,7 +305,7 @@ export const CompetitionProvider: React.FC<{ children: ReactNode }> = ({ childre
         }
         const saved = localStorage.getItem('wecode_session');
         if (saved) {
-            try { return JSON.parse(saved); } catch (e) { /* fallback */ }
+            try { return JSON.parse(saved); } catch { /* fallback */ }
         }
         return null;
     });
