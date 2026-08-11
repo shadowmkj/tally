@@ -139,6 +139,8 @@ async fn main() -> Result<(), anyhow::Error> {
                                 continue;
                             }
 
+                            let total_test_cases = test_cases.len();
+
                             match runner::run_all(
                                 &docker,
                                 test_cases,
@@ -164,6 +166,7 @@ async fn main() -> Result<(), anyhow::Error> {
                                         &sqlite_conn,
                                         &job,
                                         &results,
+                                        total_test_cases,
                                     ) {
                                         Ok(Some(sub_id)) => {
                                             println!(
@@ -248,6 +251,7 @@ async fn main() -> Result<(), anyhow::Error> {
         let tests_path = std::path::Path::new("code_tests");
         let tests_file = tests_path.join(&cli.tests);
         let test_cases: Vec<TestCase> = serde_json::from_reader(fs::File::open(tests_file)?)?;
+        let total_test_cases = test_cases.len();
 
         // Run all test cases in a single container
         let results = runner::run_all(
@@ -266,17 +270,16 @@ async fn main() -> Result<(), anyhow::Error> {
         }
 
         // Summary
-        let total = results.len();
         let passed = results
             .iter()
             .filter(|r| r.verdict == Verdict::Accepted)
             .count();
-        if passed == total {
-            println!("\n🎉 All {} test cases passed!", total);
+        if passed == total_test_cases {
+            println!("\n🎉 All {} test cases passed!", total_test_cases);
         } else {
             println!(
                 "\n💥 {}/{} test cases passed. Stopped at first failure.",
-                passed, total
+                passed, total_test_cases
             );
         }
     }

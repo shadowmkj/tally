@@ -19,6 +19,7 @@ pub fn update_submission_status(
     conn: &Connection,
     job: &Job,
     results: &[TestCaseResult],
+    total_test_cases: usize,
 ) -> Result<Option<String>> {
     // 1. Resolve submission ID (from job payload or fallback to pending 'Evaluating' submission)
     let target_submission_id = match &job.submission_id {
@@ -43,7 +44,11 @@ pub fn update_submission_status(
         None => return Ok(None),
     };
 
-    let total = results.len();
+    let total = if total_test_cases > 0 {
+        total_test_cases
+    } else {
+        results.len()
+    };
     let passed = results
         .iter()
         .filter(|r| r.verdict == Verdict::Accepted)
@@ -253,7 +258,7 @@ mod tests {
             },
         ];
 
-        let updated_id = update_submission_status(&conn, &job, &results).unwrap();
+        let updated_id = update_submission_status(&conn, &job, &results, results.len()).unwrap();
         assert_eq!(updated_id, Some("sub-1".to_string()));
 
         let mut stmt = conn
@@ -349,7 +354,7 @@ mod tests {
             },
         ];
 
-        let updated_id = update_submission_status(&conn, &job, &results).unwrap();
+        let updated_id = update_submission_status(&conn, &job, &results, results.len()).unwrap();
         assert_eq!(updated_id, Some("sub-wa".to_string()));
 
         let status: String = conn
@@ -399,7 +404,7 @@ mod tests {
             verdict: Verdict::RuntimeError("ZeroDivisionError: division by zero".to_string()),
         }];
 
-        let updated_id = update_submission_status(&conn, &job, &results).unwrap();
+        let updated_id = update_submission_status(&conn, &job, &results, results.len()).unwrap();
         assert_eq!(updated_id, Some("sub-re".to_string()));
 
         let (status, err_log): (String, Option<String>) = conn
@@ -432,7 +437,7 @@ mod tests {
             user: "milan".to_string(),
             user_id: "u1".to_string(),
         };
-        let res = update_submission_status(&conn, &job_no_sub, &[]).unwrap();
+        let res = update_submission_status(&conn, &job_no_sub, &[], 0).unwrap();
         assert_eq!(res, None);
 
         // 2. Missing submission ID with matching 'Evaluating' submission by problemId
@@ -455,7 +460,7 @@ mod tests {
             user_id: "u1".to_string(),
         };
 
-        let updated_id = update_submission_status(&conn, &job_fallback, &[]).unwrap();
+        let updated_id = update_submission_status(&conn, &job_fallback, &[], 0).unwrap();
         assert_eq!(updated_id, Some("sub-fallback".to_string()));
 
         let status: String = conn

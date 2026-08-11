@@ -81,7 +81,7 @@ fn test_full_submission_db_lifecycle() {
     ];
 
     // 4. Update status
-    let updated = update_submission_status(&conn, &job, &results).unwrap();
+    let updated = update_submission_status(&conn, &job, &results, results.len()).unwrap();
     assert_eq!(updated, Some("sub-100".to_string()));
 
     // 5. Query submission row
@@ -183,7 +183,7 @@ fn test_submission_db_wrong_answer_lifecycle() {
         },
     ];
 
-    let updated = update_submission_status(&conn, &job, &results).unwrap();
+    let updated = update_submission_status(&conn, &job, &results, results.len()).unwrap();
     assert_eq!(updated, Some("sub-200".to_string()));
 
     let (status, passed, total): (String, i32, i32) = conn
